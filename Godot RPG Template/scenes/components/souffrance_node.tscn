@@ -1,0 +1,66 @@
+[gd_scene load_steps=3 format=3 uid="uid://dns3quhbw1hhx"]
+
+[ext_resource type="Script" uid="uid://1q8hqt5sprek" path="res://scripts/souffrance_node.gd" id="1_souff"]
+[ext_resource type="Theme" path="res://themes/character_sheet_theme.tres" id="2_theme"]
+
+[node name="SouffranceNode" type="VBoxContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme = ExtResource("2_theme")
+theme_override_constants/separation = 2
+script = ExtResource("1_souff")
+clip_contents = true
+
+[node name="HeaderContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_constants/separation = 4
+
+[node name="LevelLabel" type="Label" parent="HeaderContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+horizontal_alignment = 0
+theme_override_colors/font_color = Color(1, 0.94509804, 0.79607844, 1)
+text = "N0"
+vertical_alignment = 1
+
+[node name="DiceLabel" type="Label" parent="HeaderContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+horizontal_alignment = 0
+theme_override_colors/font_color = Color(1, 0.94509804, 0.79607844, 1)
+text = "0 Dés"
+vertical_alignment = 1
+
+[node name="NameLabel" type="Label" parent="HeaderContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+horizontal_alignment = 0
+text = "Blessures"
+vertical_alignment = 1
+clip_contents = true
+autowrap_mode = 0
+text_overrun_behavior = 3
+
+[node name="MarksProgressBar" type="ProgressBar" parent="."]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+size_flags_horizontal = 3
+show_percentage = false
+
+[node name="RealizeSeparator" type="HSeparator" parent="."]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RealizeButton" type="Button" parent="."]
+visible = false
+custom_minimum_size = Vector2(80, 18)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+text = "Réaliser"

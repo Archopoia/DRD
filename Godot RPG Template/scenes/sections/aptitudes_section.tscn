@@ -1,0 +1,77 @@
+[gd_scene load_steps=3 format=3 uid="uid://be7o6gl5mmegn"]
+
+[ext_resource type="PackedScene" uid="uid://cvu8hl5ebie1o" path="res://scenes/components/aptitude_column.tscn" id="1_apt7"]
+[ext_resource type="Theme" uid="uid://bk5igrtvvlm3j" path="res://themes/character_sheet_theme.tres" id="2_theme"]
+
+[node name="AptitudesSection" type="HBoxContainer"]
+clip_contents = true
+size_flags_horizontal = 3
+theme = ExtResource("2_theme")
+theme_override_constants/separation = 8
+
+[node name="ColumnSeparator0" type="VSeparator" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="AptitudePUISSANCE" parent="." instance=ExtResource("1_apt7")]
+layout_mode = 2
+
+[node name="ColumnSeparator1" type="VSeparator" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="AptitudeAISANCE" parent="." instance=ExtResource("1_apt7")]
+layout_mode = 2
+aptitude_id = 1
+
+[node name="ColumnSeparator2" type="VSeparator" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="AptitudePRECISION" parent="." instance=ExtResource("1_apt7")]
+layout_mode = 2
+aptitude_id = 2
+
+[node name="ColumnSeparator3" type="VSeparator" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="AptitudeATHLETISME" parent="." instance=ExtResource("1_apt7")]
+layout_mode = 2
+aptitude_id = 3
+
+[node name="ColumnSeparator4" type="VSeparator" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="AptitudeCHARISME" parent="." instance=ExtResource("1_apt7")]
+layout_mode = 2
+aptitude_id = 4
+
+[node name="ColumnSeparator5" type="VSeparator" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="AptitudeDETECTION" parent="." instance=ExtResource("1_apt7")]
+layout_mode = 2
+aptitude_id = 5
+
+[node name="ColumnSeparator6" type="VSeparator" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="AptitudeREFLEXION" parent="." instance=ExtResource("1_apt7")]
+layout_mode = 2
+aptitude_id = 6
+
+[node name="ColumnSeparator7" type="VSeparator" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="AptitudeDOMINATION" parent="." instance=ExtResource("1_apt7")]
+layout_mode = 2
+aptitude_id = 7
+
+[node name="ColumnSeparator9" type="VSeparator" parent="."]
+layout_mode = 2
+size_flags_vertical = 3

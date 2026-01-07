@@ -1,0 +1,99 @@
+---
+alwaysApply: true
+---
+# Cursor Rules for Daggerfall-like RPG Project
+
+## Testing and Debugging Requirements
+
+### Always Test Before Completing
+1. **ALWAYS run the game** after making changes to verify it works
+2. **ALWAYS check for linting errors** using `read_lints` before completing
+3. **ALWAYS add error handling** to critical paths (initialization, render loops, event handlers)
+4. **ALWAYS add debug logging** for important operations using the `Debug` utility
+
+### Debug Utility Usage
+- Use `Debug.log()` for informational messages during development
+- Use `Debug.error()` for error conditions
+- Use `Debug.warn()` for warnings (performance issues, invalid inputs, etc.)
+- Use `Debug.startMeasure()` and `Debug.endMeasure()` for performance monitoring
+- All debug output is automatically disabled in production builds
+
+### Error Handling Standards
+1. **Game Initialization**: Wrap in try-catch, log errors, provide user-friendly error messages
+2. **Render Loop**: Catch and log errors without stopping the game loop
+3. **Event Handlers**: Validate inputs, handle edge cases, log failures
+4. **WebGL Operations**: Check for WebGL support before initialization
+5. **Canvas Operations**: Verify canvas exists and is valid before use
+
+### Testing Checklist
+Before marking any task as complete:
+- [ ] Code compiles without TypeScript errors
+- [ ] No linting errors (`read_lints` shows no issues)
+- [ ] Game initializes without errors (check browser console)
+- [ ] Game renders correctly (scene visible)
+- [ ] Controls work (WASD movement, mouse look)
+- [ ] No console errors during gameplay
+- [ ] Performance is acceptable (FPS counter shows reasonable values)
+- [ ] Window resize works correctly
+- [ ] Cleanup works (no memory leaks on unmount)
+
+### Performance Monitoring
+- FPS counter is displayed in development mode
+- Performance warnings logged for operations taking >16ms
+- Large delta time warnings logged for frame skips
+- Average performance metrics tracked for key operations
+
+### Code Quality Standards
+1. **TypeScript**: Use strict typing, avoid `any` types
+2. **Error Messages**: Provide clear, actionable error messages
+3. **Logging**: Include context (component/class name) in all log messages
+4. **Validation**: Validate inputs (dimensions > 0, objects not null, etc.)
+5. **Cleanup**: Always dispose resources (event listeners, geometries, materials)
+
+### Browser Compatibility
+- Check WebGL support before initializing renderer
+- Handle pointer lock API failures gracefully
+- Validate window/document objects exist (SSR safety)
+- Use feature detection, not browser sniffing
+
+### React Component Guidelines
+- Use `'use client'` directive for client components
+- Handle loading and error states
+- Clean up resources in useEffect cleanup
+- Use refs for DOM elements and game instances
+- Display user-friendly error messages in UI
+
+### Game Loop Guidelines
+- Always cap delta time to prevent large jumps
+- Log warnings for unusual delta times
+- Handle errors in update/render without stopping loop
+- Track FPS and warn on low performance
+
+### File Structure
+- Keep game logic in `src/game/`
+- Keep React components in `src/components/`
+- Keep utilities in `src/game/utils/`
+- Keep constants in `src/lib/`
+- Use TypeScript for all game code
+
+### When Adding New Features
+1. Add debug logging for initialization
+2. Add error handling for failures
+3. Add performance measurements for expensive operations
+4. Test in development mode
+5. Verify no console errors
+6. Check FPS impact
+7. Update documentation if needed
+
+### Debug Output in Development
+- FPS counter visible in top-right corner
+- All debug logs visible in browser console
+- Performance warnings for slow operations
+- Error messages with stack traces
+
+### Production Builds
+- Debug logging automatically disabled
+- FPS counter hidden
+- Only errors are logged (for production debugging)
+- Performance monitoring disabled
+

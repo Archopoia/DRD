@@ -1,0 +1,99 @@
+[gd_scene load_steps=5 format=3 uid="uid://c0hor8vg8qc5x"]
+
+[ext_resource type="Script" uid="uid://cx518sex4nrtb" path="res://scripts/character_sheet.gd" id="1_2ycnj"]
+[ext_resource type="PackedScene" uid="uid://be7o6gl5mmegn" path="res://scenes/sections/aptitudes_section.tscn" id="2_apts"]
+[ext_resource type="Theme" uid="uid://bk5igrtvvlm3j" path="res://themes/character_sheet_theme.tres" id="3_theme"]
+[ext_resource type="Script" uid="uid://b667o1r808gc3" path="res://scripts/stats_debug_overlay.gd" id="4_7lrwm"]
+
+[node name="CharacterSheet" type="Control"]
+layout_mode = 3
+anchor_right = 1.365
+anchor_bottom = 1.0
+offset_right = -0.47998047
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("3_theme")
+script = ExtResource("1_2ycnj")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MainContainer" type="VBoxContainer" parent="ScrollContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="ScrollContainer/MainContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.94509804, 0.79607844, 1)
+theme_override_font_sizes/font_size = 12
+text = "Feuille de Personnage - Des Recits Discordants"
+horizontal_alignment = 1
+
+[node name="TitleSeparator" type="HSeparator" parent="ScrollContainer/MainContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AptitudesSectionLabel" type="Label" parent="ScrollContainer/MainContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.94509804, 0.79607844, 1)
+theme_override_font_sizes/font_size = 11
+text = "APTITUDES"
+horizontal_alignment = 1
+
+[node name="AptitudesSection" parent="ScrollContainer/MainContainer" instance=ExtResource("2_apts")]
+layout_mode = 2
+
+[node name="SectionSeparator" type="HSeparator" parent="ScrollContainer/MainContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ExperienceSystem" type="Control" parent="ScrollContainer/MainContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="FreeMarksLabel" type="Label" parent="ScrollContainer/MainContainer/ExperienceSystem"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 8
+text = "Marques Gratuites: 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StatsOverlay" type="Control" parent="."]
+anchors_preset = 0
+offset_top = 359.0
+offset_right = 1571.0
+offset_bottom = 789.0
+script = ExtResource("4_7lrwm")
+
+[node name="Scroll" type="ScrollContainer" parent="StatsOverlay"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Columns" type="HBoxContainer" parent="StatsOverlay/Scroll"]
+layout_mode = 2
+
+[node name="StatsLabel" type="Label" parent="StatsOverlay/Scroll/Columns"]
+layout_mode = 2
+text = "Stats will appear here"
+
+[node name="Col1" type="Label" parent="StatsOverlay/Scroll/Columns"]
+layout_mode = 2
+
+[node name="Col2" type="Label" parent="StatsOverlay/Scroll/Columns"]
+layout_mode = 2
+
+[node name="Col3" type="Label" parent="StatsOverlay/Scroll/Columns"]
+layout_mode = 2
