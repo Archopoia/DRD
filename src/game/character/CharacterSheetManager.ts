@@ -29,7 +29,7 @@ export interface CharacterSheetState {
 export interface CompetenceData {
   diceCount: number;
   isRevealed: boolean;
-  marks: boolean[]; // 10 marks
+  marks: boolean[]; // 100 marks
   eternalMarks: number;
   eternalMarkIndices: number[];
   masteries: MasteryData[];
@@ -43,7 +43,7 @@ export interface MasteryData {
 
 export interface SouffranceData {
   diceCount: number;
-  marks: boolean[]; // 10 marks
+  marks: boolean[]; // 100 marks
   eternalMarks: number;
   eternalMarkIndices: number[];
 }
@@ -86,7 +86,7 @@ export class CharacterSheetManager {
       competences[comp] = {
         diceCount: 0,
         isRevealed: false,
-        marks: new Array(10).fill(false),
+        marks: new Array(100).fill(false),
         eternalMarks: 0,
         eternalMarkIndices: [],
         masteries: [],
@@ -99,7 +99,7 @@ export class CharacterSheetManager {
     Object.values(Souffrance).forEach((souf) => {
       souffrances[souf] = {
         diceCount: 0,
-        marks: new Array(10).fill(false),
+        marks: new Array(100).fill(false),
         eternalMarks: 0,
         eternalMarkIndices: [],
       };
@@ -208,7 +208,7 @@ export class CharacterSheetManager {
 
   addCompetenceMark(competence: Competence, isEternal: boolean = false): void {
     const comp = this.state.competences[competence];
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 100; i++) {
       if (!comp.marks[i]) {
         comp.marks[i] = true;
         if (isEternal) {
@@ -235,7 +235,7 @@ export class CharacterSheetManager {
   }
 
   isCompetenceEprouvee(competence: Competence): boolean {
-    return this.getTotalMarks(competence) >= 10;
+    return this.getTotalMarks(competence) >= 100;
   }
 
   realizeCompetence(competence: Competence): void {
@@ -255,7 +255,7 @@ export class CharacterSheetManager {
     }
     
     // Clear non-eternal marks
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 100; i++) {
       if (!comp.eternalMarkIndices.includes(i)) {
         comp.marks[i] = false;
       }

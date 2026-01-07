@@ -20,7 +20,6 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
   const [expandedActions, setExpandedActions] = useState<Set<Action>>(new Set());
   const [expandedCompetences, setExpandedCompetences] = useState<Set<Competence>>(new Set());
   const [masterySelectionOpen, setMasterySelectionOpen] = useState<Competence | null>(null);
-  const [pinnedAptitude, setPinnedAptitude] = useState<Aptitude | null>(null);
 
   useEffect(() => {
     const currentState = manager.getState();
@@ -41,34 +40,6 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [masterySelectionOpen]);
-
-  // Apply pinned state effect
-  useEffect(() => {
-    if (pinnedAptitude === null) return;
-    
-    const container = document.querySelector('.aptitudes-container');
-    if (!container) return;
-    
-    const cards = Array.from(container.children) as HTMLElement[];
-    const pinnedIndex = Object.values(Aptitude).indexOf(pinnedAptitude);
-    
-    cards.forEach((card, cardIndex) => {
-      if (cardIndex === pinnedIndex) {
-        card.style.zIndex = '100';
-        card.style.transform = 'translateY(-20px) scale(1.05) translateX(0)';
-        card.style.boxShadow = '0 0 15px 6px #ffebc6, 0 6px 12px rgba(0, 0, 0, 0.3), inset 0 0 0 2px #eacb66';
-      } else {
-        if (cardIndex < pinnedIndex) {
-          // Cards to the left: don't move (stay in place to avoid going outside UI)
-          card.style.transform = 'translateX(0)';
-        } else {
-          // Cards to the right: push right by exactly 100px to clear the overlap
-          card.style.transform = 'translateX(100px)';
-        }
-        card.style.transition = 'transform 0.3s ease';
-      }
-    });
-  }, [pinnedAptitude]);
 
   if (!isOpen) return null;
 
@@ -184,10 +155,10 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
         <div className="character-sheet-content flex-1 overflow-y-auto overflow-x-visible p-8 relative z-10" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
 
           {/* Aptitudes Section - 8 Columns Side by Side */}
-          <section className="mt-8 relative flex gap-4 items-start" style={{ paddingTop: '30px', marginBottom: '30px', overflow: 'visible' }}>
+          <section className="mt-8 relative flex gap-4 items-start">
             {/* Vertical title on the left - letter by letter */}
             <div className="flex flex-col items-center justify-start gap-0.5 pt-2 flex-shrink-0" style={{ width: '30px', alignSelf: 'stretch' }}>
-              {Array.from("Aptitudes Actions Compétences".toUpperCase()).map((char, index) => (
+              {Array.from("Aptitudes Souffrances Actions Compétences".toUpperCase()).map((char, index) => (
                 char === ' ' ? (
                   <div key={index} className="h-1" />
                 ) : (
@@ -201,181 +172,117 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                 )
               ))}
             </div>
-            <div className="relative overflow-x-auto overflow-y-visible pb-4 flex-1" style={{ paddingTop: '30px', overflowY: 'visible' }}>
-              <div className="aptitudes-container flex relative" style={{ width: 'fit-content', minWidth: '100%', alignItems: 'flex-start' }}>
-                {Object.values(Aptitude).map((aptitude, index) => {
+            <div className="flex gap-2 flex-1 items-start" style={{ minWidth: 0 }}>
+                {Object.values(Aptitude).map((aptitude) => {
                 const [atb1, atb2, atb3] = getAptitudeAttributes(aptitude);
                 const level = state.aptitudeLevels[aptitude];
                 const actions = getActionsForAptitude(aptitude);
-                const isPinned = pinnedAptitude === aptitude;
-                
-                const applyHoverEffect = (cardElement: HTMLElement, isHovered: boolean) => {
-                  const container = cardElement.parentElement;
-                  if (!container) return;
-                  
-                  const cards = Array.from(container.children) as HTMLElement[];
-                  const currentIndex = cards.indexOf(cardElement);
-                  
-                  if (isHovered || isPinned) {
-                    // Bring hovered/pinned card to front
-                    cardElement.style.zIndex = '100';
-                    cardElement.style.transform = 'translateY(-20px) scale(1.05) translateX(0)';
-                    cardElement.style.boxShadow = '0 0 15px 6px #ffebc6, 0 6px 12px rgba(0, 0, 0, 0.3), inset 0 0 0 2px #eacb66';
-                    
-                    // Cards to the left stay in place to avoid going outside the UI
-                    // Push cards to the right (later in the array) right enough to reveal full width
-                    // Cards overlap by 100px (50% of 200px width), so push exactly 100px to clear
-                    cards.forEach((card, cardIndex) => {
-                      if (cardIndex !== currentIndex) {
-                        if (cardIndex < currentIndex) {
-                          // Cards to the left: don't move (stay in place to avoid going outside UI)
-                          card.style.transform = 'translateX(0)';
-                          card.style.transition = 'transform 0.3s ease';
-                        } else {
-                          // Cards to the right: push right by exactly 100px to clear the overlap
-                          card.style.transform = 'translateX(100px)';
-                          card.style.transition = 'transform 0.3s ease';
-                        }
-                      }
-                    });
-                  } else {
-                    // Reset this card
-                    cardElement.style.zIndex = String(currentIndex + 1);
-                    cardElement.style.transform = 'translateY(0) scale(1) translateX(0)';
-                    cardElement.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1), inset 0 0 0 1px #ceb68d';
-                    
-                    // Reset other cards if no card is pinned or if they're not the pinned one
-                    if (pinnedAptitude === null) {
-                      cards.forEach((card, cardIdx) => {
-                        if (card !== cardElement) {
-                          // Only reset cards to the right of the previously hovered card
-                          if (cardIdx > currentIndex) {
-                            card.style.transform = 'translateX(0)';
-                          }
-                        }
-                      });
-                    } else {
-                      // If another card is pinned, maintain that card's push effect
-                      const pinnedIndex = Object.values(Aptitude).indexOf(pinnedAptitude);
-                      cards.forEach((card, cardIdx) => {
-                        if (cardIdx !== pinnedIndex) {
-                          if (cardIdx > pinnedIndex) {
-                            // Cards to the right of pinned card: push right by exactly 100px
-                            card.style.transform = 'translateX(100px)';
-                          } else {
-                            card.style.transform = 'translateX(0)';
-                          }
-                        }
-                      });
-                    }
-                  }
-                };
                 
                 return (
                   <div 
                     key={aptitude} 
-                    className="bg-hover-bg border-2 border-border-tan rounded-lg p-3 transition-all duration-300 hover:bg-parchment-light hover:border-gold-glow relative flex-shrink-0 cursor-pointer"
+                    className="bg-hover-bg border-2 border-border-tan rounded-lg p-3 transition-all duration-300 hover:bg-parchment-light hover:border-gold-glow relative flex-1"
                     style={{
-                      boxShadow: isPinned ? '0 0 15px 6px #ffebc6, 0 6px 12px rgba(0, 0, 0, 0.3), inset 0 0 0 2px #eacb66' : '0 2px 4px rgba(0, 0, 0, 0.1), inset 0 0 0 1px #ceb68d',
-                      width: '200px',
-                      marginLeft: index > 0 ? '-100px' : '0',
-                      zIndex: isPinned ? 100 : index + 1,
-                      position: 'relative',
-                      transform: isPinned ? 'translateY(-20px) scale(1.05)' : 'translateY(0) scale(1)',
+                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1), inset 0 0 0 1px #ceb68d',
                       alignSelf: 'flex-start',
-                      height: 'auto'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (pinnedAptitude === null || pinnedAptitude === aptitude) {
-                        applyHoverEffect(e.currentTarget, true);
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isPinned) {
-                        applyHoverEffect(e.currentTarget, false);
-                      }
-                    }}
-                    onClick={(e) => {
-                      // Only handle click if it's not on an interactive element
-                      const target = e.target as HTMLElement;
-                      if (target.tagName === 'INPUT' || target.tagName === 'BUTTON' || target.closest('input, button')) {
-                        return;
-                      }
-                      
-                      // Toggle pin state
-                      if (pinnedAptitude === aptitude) {
-                        setPinnedAptitude(null);
-                        // Reset all cards
-                        const container = e.currentTarget.parentElement;
-                        if (container) {
-                          const cards = Array.from(container.children) as HTMLElement[];
-                          cards.forEach((card) => {
-                            const cardIndex = cards.indexOf(card);
-                            card.style.zIndex = String(cardIndex + 1);
-                            card.style.transform = 'translateY(0) scale(1) translateX(0)';
-                            card.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1), inset 0 0 0 1px #ceb68d';
-                          });
-                        }
-                      } else {
-                        setPinnedAptitude(aptitude);
-                        applyHoverEffect(e.currentTarget, true);
-                      }
+                      height: 'auto',
+                      minWidth: 0
                     }}
                   >
-                    {/* Aptitude Column Layout: Left (Aptitude) and Right (Attribute) */}
-                    <div className="flex gap-2 mb-3 pb-3 border-b-2 border-border-dark" onClick={(e) => e.stopPropagation()}>
-                      {/* Left Section: Aptitude */}
-                      <div className="flex-[2] flex flex-col justify-center items-center">
-                        <div className="font-medieval text-xs font-bold text-red-theme mb-1 uppercase tracking-wide text-center">
-                          {getAptitudeName(aptitude)}
-                        </div>
-                        <div className="font-medieval text-2xl font-bold text-text-dark text-center w-full" style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.2)' }}>
+                    {/* Aptitude Name - On its own line at the top */}
+                    <div className="mb-2 pb-2 border-b-2 border-border-dark">
+                      <div className="font-medieval text-xs font-bold text-red-theme uppercase tracking-wide text-center">
+                        {getAptitudeName(aptitude)}
+                      </div>
+                    </div>
+
+                    {/* Two Column Layout: Aptitude Modifier (Left) and Attributes (Right) */}
+                    <div className="flex gap-2 mb-3 pb-3 border-b-2 border-border-dark">
+                      {/* Left Column: Aptitude Modifier */}
+                      <div className="flex flex-col justify-center items-center flex-shrink-0">
+                        <div className="font-medieval text-2xl font-bold text-text-dark text-center" style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.2)' }}>
                           {level >= 0 ? '+' : ''}{level}
                         </div>
                       </div>
 
-                      {/* Right Section: Attribute */}
+                      {/* Right Column: Attributes */}
                       <div className="flex-1 flex flex-col">
-                        <label className="font-medieval text-xs font-bold text-red-theme mb-1 uppercase tracking-wide">
-                          {getAttributeName(atb1).toUpperCase()}
-                        </label>
-                        <input
-                          type="number"
-                          min="-50"
-                          max="50"
-                          value={state.attributes[atb1]}
-                          onChange={(e) => handleAttributeChange(atb1, parseInt(e.target.value) || 0)}
-                          className="w-full px-2 py-1.5 bg-parchment-aged border-2 border-border-dark rounded text-text-dark font-medieval text-sm font-semibold text-center transition-all duration-300 focus:outline-none focus:border-gold-glow focus:bg-parchment-light mb-2"
-                          style={{
-                            boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'
-                          }}
-                          onFocus={(e) => {
-                            e.target.style.boxShadow = '0 0 10px #ffebc6, inset 0 2px 4px rgba(0, 0, 0, 0.1)';
-                          }}
-                          onBlur={(e) => {
-                            e.target.style.boxShadow = 'inset 0 2px 4px rgba(0, 0, 0, 0.1)';
-                          }}
-                        />
+                        <div className="flex items-center gap-2 mb-2">
+                          <label className="font-medieval text-xs font-bold text-red-theme uppercase tracking-wide whitespace-nowrap" title={`${getAttributeName(atb1)}: ${Math.floor(state.attributes[atb1] * 6 / 10)} (6/10)`}>
+                            {getAttributeAbbreviation(atb1)}
+                          </label>
+                          <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            min="-50"
+                            max="50"
+                            value={state.attributes[atb1]}
+                            onChange={(e) => handleAttributeChange(atb1, parseInt(e.target.value) || 0)}
+                            className="w-10 px-1 py-1 bg-parchment-aged border border-border-dark rounded text-text-dark font-medieval text-sm font-semibold text-center transition-all duration-300 focus:outline-none focus:border-gold-glow focus:bg-parchment-light"
+                            style={{
+                              boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'
+                            }}
+                            onFocus={(e) => {
+                              e.target.style.boxShadow = '0 0 10px #ffebc6, inset 0 2px 4px rgba(0, 0, 0, 0.1)';
+                            }}
+                            onBlur={(e) => {
+                              e.target.style.boxShadow = 'inset 0 2px 4px rgba(0, 0, 0, 0.1)';
+                            }}
+                            title={`${getAttributeName(atb1)}: ${Math.floor(state.attributes[atb1] * 6 / 10)} (6/10)`}
+                          />
+                          <div className="flex flex-col h-[calc(1.5rem+0.5rem)]">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newValue = Math.min(50, state.attributes[atb1] + 1);
+                                handleAttributeChange(atb1, newValue);
+                              }}
+                              className="bg-parchment-aged border border-border-dark rounded px-1 text-text-dark font-medieval font-bold text-xs transition-all duration-300 hover:bg-hover-bg hover:border-gold-glow flex-1 flex items-center justify-center"
+                              style={{
+                                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d',
+                                borderBottom: 'none',
+                                borderBottomLeftRadius: 0,
+                                borderBottomRightRadius: 0,
+                                minHeight: 0
+                              }}
+                              disabled={state.attributes[atb1] >= 50}
+                            >
+                              +
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newValue = Math.max(-50, state.attributes[atb1] - 1);
+                                handleAttributeChange(atb1, newValue);
+                              }}
+                              className="bg-parchment-aged border border-border-dark rounded px-1 text-text-dark font-medieval font-bold text-xs transition-all duration-300 hover:bg-hover-bg hover:border-gold-glow flex-1 flex items-center justify-center"
+                              style={{
+                                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d',
+                                borderTop: 'none',
+                                borderTopLeftRadius: 0,
+                                borderTopRightRadius: 0,
+                                minHeight: 0
+                              }}
+                              disabled={state.attributes[atb1] <= -50}
+                            >
+                              −
+                              </button>
+                          </div>
+                          </div>
+                        </div>
                         <div className="space-y-1 text-xs">
                           <div 
                             className="flex justify-between items-center cursor-help"
-                            title={`${getAttributeAbbreviation(atb1)}: ${Math.floor(state.attributes[atb1] * 6 / 10)} (6/10)`}
+                            title={getAttributeName(atb2)}
                           >
-                            <span>{getAttributeAbbreviation(atb1)}:</span>
-                            <span className="font-semibold">{Math.floor(state.attributes[atb1] * 6 / 10)}</span>
-                          </div>
-                          <div 
-                            className="flex justify-between items-center cursor-help"
-                            title={`${getAttributeAbbreviation(atb2)}: ${Math.floor(state.attributes[atb2] * 3 / 10)} (3/10)`}
-                          >
-                            <span>{getAttributeAbbreviation(atb2)}:</span>
+                            <span>{getAttributeAbbreviation(atb2).charAt(0) + getAttributeAbbreviation(atb2).slice(1).toLowerCase()}:</span>
                             <span className="font-semibold">{Math.floor(state.attributes[atb2] * 3 / 10)}</span>
                           </div>
                           <div 
                             className="flex justify-between items-center cursor-help"
-                            title={`${getAttributeAbbreviation(atb3)}: ${Math.floor(state.attributes[atb3] * 1 / 10)} (1/10)`}
+                            title={getAttributeName(atb3)}
                           >
-                            <span>{getAttributeAbbreviation(atb3)}:</span>
+                            <span>{getAttributeAbbreviation(atb3).toLowerCase()}:</span>
                             <span className="font-semibold">{Math.floor(state.attributes[atb3] * 1 / 10)}</span>
                           </div>
                         </div>
@@ -408,21 +315,62 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                 <div 
                                   className="h-full bg-gradient-to-r from-red-theme to-yellow-theme transition-all duration-300"
                                   style={{ 
-                                    width: `${(totalMarks / 10) * 100}%`,
+                                    width: `${Math.min(totalMarks, 100)}%`,
                                     boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.3)'
                                   }}
                                 />
                               </div>
-                              <input
-                                type="number"
-                                min="0"
-                                value={soufData.diceCount}
-                                onChange={(e) => {
-                                  manager.setSouffranceDice(souf, parseInt(e.target.value) || 0);
-                                  setState(manager.getState());
-                                }}
-                                className="w-full px-1 py-1 bg-parchment-aged border border-border-dark rounded text-text-dark font-medieval text-[0.7rem] text-center"
-                              />
+                              <div className="flex items-center gap-0.5 justify-center">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={soufData.diceCount}
+                                  onChange={(e) => {
+                                    manager.setSouffranceDice(souf, parseInt(e.target.value) || 0);
+                                    setState(manager.getState());
+                                  }}
+                                  className="w-8 px-0.5 py-0.5 bg-parchment-aged border border-border-dark rounded text-text-dark font-medieval text-[0.7rem] text-center"
+                                />
+                                <div className="flex flex-col h-[calc(0.875rem+0.25rem)]">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const newValue = soufData.diceCount + 1;
+                                      manager.setSouffranceDice(souf, newValue);
+                                      setState(manager.getState());
+                                    }}
+                                    className="bg-parchment-aged border border-border-dark rounded px-0.5 text-text-dark font-medieval font-bold text-[0.6rem] transition-all duration-300 hover:bg-hover-bg hover:border-gold-glow flex-1 flex items-center justify-center"
+                                    style={{
+                                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d',
+                                      borderBottom: 'none',
+                                      borderBottomLeftRadius: 0,
+                                      borderBottomRightRadius: 0,
+                                      minHeight: 0
+                                    }}
+                                  >
+                                    +
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const newValue = Math.max(0, soufData.diceCount - 1);
+                                      manager.setSouffranceDice(souf, newValue);
+                                      setState(manager.getState());
+                                    }}
+                                    className="bg-parchment-aged border border-border-dark rounded px-0.5 text-text-dark font-medieval font-bold text-[0.6rem] transition-all duration-300 hover:bg-hover-bg hover:border-gold-glow flex-1 flex items-center justify-center"
+                                    style={{
+                                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d',
+                                      borderTop: 'none',
+                                      borderTopLeftRadius: 0,
+                                      borderTopRightRadius: 0,
+                                      minHeight: 0
+                                    }}
+                                    disabled={soufData.diceCount <= 0}
+                                  >
+                                    −
+                                  </button>
+                                </div>
+                              </div>
                             </div>
                           );
                         }
@@ -488,7 +436,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                               <div 
                                                 className="h-full bg-gradient-to-r from-red-theme to-yellow-theme transition-all duration-300"
                                                 style={{ 
-                                                  width: `${(totalMarks / 10) * 100}%`,
+                                                  width: `${Math.min(totalMarks, 100)}%`,
                                                   boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.3)'
                                                 }}
                                               />
@@ -499,16 +447,57 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                             <div className="mt-1 space-y-1 pt-1 border-t border-border-tan">
                                               <div className="flex gap-2 items-center">
                                                 <label className="text-xs">Dés:</label>
-                                                <input
-                                                  type="number"
-                                                  min="0"
-                                                  value={compData.diceCount}
-                                                  onChange={(e) => {
-                                                    manager.setCompetenceDice(comp, parseInt(e.target.value) || 0);
-                                                    setState(manager.getState());
-                                                  }}
-                                                  className="w-12 px-1 py-1 bg-parchment-aged border border-border-dark rounded text-text-dark font-medieval text-xs text-center"
-                                                />
+                                                <div className="flex items-center gap-0.5">
+                                                  <input
+                                                    type="number"
+                                                    min="0"
+                                                    value={compData.diceCount}
+                                                    onChange={(e) => {
+                                                      manager.setCompetenceDice(comp, parseInt(e.target.value) || 0);
+                                                      setState(manager.getState());
+                                                    }}
+                                                    className="w-8 px-0.5 py-0.5 bg-parchment-aged border border-border-dark rounded text-text-dark font-medieval text-xs text-center"
+                                                  />
+                                                  <div className="flex flex-col h-[calc(0.875rem+0.25rem)]">
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => {
+                                                        const newValue = compData.diceCount + 1;
+                                                        manager.setCompetenceDice(comp, newValue);
+                                                        setState(manager.getState());
+                                                      }}
+                                                      className="bg-parchment-aged border border-border-dark rounded px-0.5 text-text-dark font-medieval font-bold text-[0.65rem] transition-all duration-300 hover:bg-hover-bg hover:border-gold-glow flex-1 flex items-center justify-center"
+                                                      style={{
+                                                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d',
+                                                        borderBottom: 'none',
+                                                        borderBottomLeftRadius: 0,
+                                                        borderBottomRightRadius: 0,
+                                                        minHeight: 0
+                                                      }}
+                                                    >
+                                                      +
+                                                    </button>
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => {
+                                                        const newValue = Math.max(0, compData.diceCount - 1);
+                                                        manager.setCompetenceDice(comp, newValue);
+                                                        setState(manager.getState());
+                                                      }}
+                                                      className="bg-parchment-aged border border-border-dark rounded px-0.5 text-text-dark font-medieval font-bold text-[0.65rem] transition-all duration-300 hover:bg-hover-bg hover:border-gold-glow flex-1 flex items-center justify-center"
+                                                      style={{
+                                                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d',
+                                                        borderTop: 'none',
+                                                        borderTopLeftRadius: 0,
+                                                        borderTopRightRadius: 0,
+                                                        minHeight: 0
+                                                      }}
+                                                      disabled={compData.diceCount <= 0}
+                                                    >
+                                                      −
+                                                    </button>
+                                                  </div>
+                                                </div>
                                               </div>
                                               
                                               {manager.isCompetenceEprouvee(comp) && (
@@ -666,7 +655,6 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                 );
                 })}
               </div>
-            </div>
           </section>
         </div>
       </div>
