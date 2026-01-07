@@ -62,9 +62,8 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
           // Cards to the left: don't move (stay in place to avoid going outside UI)
           card.style.transform = 'translateX(0)';
         } else {
-          const distance = cardIndex - pinnedIndex;
-          const offset = Math.max(100, distance * 50); // At least 100px, more for further cards
-          card.style.transform = `translateX(${offset}px)`;
+          // Cards to the right: push right by exactly 100px to clear the overlap
+          card.style.transform = 'translateX(100px)';
         }
         card.style.transition = 'transform 0.3s ease';
       }
@@ -225,7 +224,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                     
                     // Cards to the left stay in place to avoid going outside the UI
                     // Push cards to the right (later in the array) right enough to reveal full width
-                    // Cards overlap by 100px (50% of 200px width), so need to push at least 100px to clear
+                    // Cards overlap by 100px (50% of 200px width), so push exactly 100px to clear
                     cards.forEach((card, cardIndex) => {
                       if (cardIndex !== currentIndex) {
                         if (cardIndex < currentIndex) {
@@ -233,10 +232,8 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                           card.style.transform = 'translateX(0)';
                           card.style.transition = 'transform 0.3s ease';
                         } else {
-                          // Cards to the right: push right by 100px minimum, plus extra for visual spacing
-                          const distance = cardIndex - currentIndex;
-                          const offset = Math.max(100, distance * 50); // At least 100px, more for further cards
-                          card.style.transform = `translateX(${offset}px)`;
+                          // Cards to the right: push right by exactly 100px to clear the overlap
+                          card.style.transform = 'translateX(100px)';
                           card.style.transition = 'transform 0.3s ease';
                         }
                       }
@@ -249,9 +246,25 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                     
                     // Reset other cards if no card is pinned or if they're not the pinned one
                     if (pinnedAptitude === null) {
-                      cards.forEach((card) => {
+                      cards.forEach((card, cardIdx) => {
                         if (card !== cardElement) {
-                          card.style.transform = 'translateY(0) translateX(0)';
+                          // Only reset cards to the right of the previously hovered card
+                          if (cardIdx > currentIndex) {
+                            card.style.transform = 'translateX(0)';
+                          }
+                        }
+                      });
+                    } else {
+                      // If another card is pinned, maintain that card's push effect
+                      const pinnedIndex = Object.values(Aptitude).indexOf(pinnedAptitude);
+                      cards.forEach((card, cardIdx) => {
+                        if (cardIdx !== pinnedIndex) {
+                          if (cardIdx > pinnedIndex) {
+                            // Cards to the right of pinned card: push right by exactly 100px
+                            card.style.transform = 'translateX(100px)';
+                          } else {
+                            card.style.transform = 'translateX(0)';
+                          }
                         }
                       });
                     }
