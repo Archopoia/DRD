@@ -20,6 +20,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
   const [expandedActions, setExpandedActions] = useState<Set<Action>>(new Set());
   const [expandedCompetences, setExpandedCompetences] = useState<Set<Competence>>(new Set());
   const [masterySelectionOpen, setMasterySelectionOpen] = useState<Competence | null>(null);
+  const [pinnedAptitude, setPinnedAptitude] = useState<Aptitude | null>(null);
 
   useEffect(() => {
     const currentState = manager.getState();
@@ -40,6 +41,35 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [masterySelectionOpen]);
+
+  // Apply pinned state effect
+  useEffect(() => {
+    if (pinnedAptitude === null) return;
+    
+    const container = document.querySelector('.aptitudes-container');
+    if (!container) return;
+    
+    const cards = Array.from(container.children) as HTMLElement[];
+    const pinnedIndex = Object.values(Aptitude).indexOf(pinnedAptitude);
+    
+    cards.forEach((card, cardIndex) => {
+      if (cardIndex === pinnedIndex) {
+        card.style.zIndex = '100';
+        card.style.transform = 'translateY(-20px) scale(1.05) translateX(0)';
+        card.style.boxShadow = '0 0 15px 6px #ffebc6, 0 6px 12px rgba(0, 0, 0, 0.3), inset 0 0 0 2px #eacb66';
+      } else {
+        if (cardIndex < pinnedIndex) {
+          // Cards to the left: don't move (stay in place to avoid going outside UI)
+          card.style.transform = 'translateX(0)';
+        } else {
+          const distance = cardIndex - pinnedIndex;
+          const offset = Math.max(100, distance * 50); // At least 100px, more for further cards
+          card.style.transform = `translateX(${offset}px)`;
+        }
+        card.style.transition = 'transform 0.3s ease';
+      }
+    });
+  }, [pinnedAptitude]);
 
   if (!isOpen) return null;
 
@@ -213,28 +243,113 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
           {/* Aptitudes Section - 8 Columns Side by Side */}
           <section className="mt-8">
             <h3 className="font-medieval text-2xl text-text-dark mb-4 pb-2 border-b-2 border-border-dark">Aptitudes, Actions et Compétences</h3>
-            <div className="grid grid-cols-8 gap-3">
-              {Object.values(Aptitude).map((aptitude) => {
+            <div className="relative overflow-x-auto pb-4" style={{ width: '100%' }}>
+              <div className="aptitudes-container flex relative" style={{ width: 'fit-content', minWidth: '100%' }}>
+                {Object.values(Aptitude).map((aptitude, index) => {
                 const [atb1, atb2, atb3] = getAptitudeAttributes(aptitude);
                 const level = state.aptitudeLevels[aptitude];
                 const actions = getActionsForAptitude(aptitude);
+                const isPinned = pinnedAptitude === aptitude;
+                
+                const applyHoverEffect = (cardElement: HTMLElement, isHovered: boolean) => {
+                  const container = cardElement.parentElement;
+                  if (!container) return;
+                  
+                  const cards = Array.from(container.children) as HTMLElement[];
+                  const currentIndex = cards.indexOf(cardElement);
+                  
+                  if (isHovered || isPinned) {
+                    // Bring hovered/pinned card to front
+                    cardElement.style.zIndex = '100';
+                    cardElement.style.transform = 'translateY(-20px) scale(1.05) translateX(0)';
+                    cardElement.style.boxShadow = '0 0 15px 6px #ffebc6, 0 6px 12px rgba(0, 0, 0, 0.3), inset 0 0 0 2px #eacb66';
+                    
+                    // Cards to the left stay in place to avoid going outside the UI
+                    // Push cards to the right (later in the array) right enough to reveal full width
+                    // Cards overlap by 100px (50% of 200px width), so need to push at least 100px to clear
+                    cards.forEach((card, cardIndex) => {
+                      if (cardIndex !== currentIndex) {
+                        if (cardIndex < currentIndex) {
+                          // Cards to the left: don't move (stay in place to avoid going outside UI)
+                          card.style.transform = 'translateX(0)';
+                          card.style.transition = 'transform 0.3s ease';
+                        } else {
+                          // Cards to the right: push right by 100px minimum, plus extra for visual spacing
+                          const distance = cardIndex - currentIndex;
+                          const offset = Math.max(100, distance * 50); // At least 100px, more for further cards
+                          card.style.transform = `translateX(${offset}px)`;
+                          card.style.transition = 'transform 0.3s ease';
+                        }
+                      }
+                    });
+                  } else {
+                    // Reset this card
+                    cardElement.style.zIndex = String(currentIndex + 1);
+                    cardElement.style.transform = 'translateY(0) scale(1) translateX(0)';
+                    cardElement.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1), inset 0 0 0 1px #ceb68d';
+                    
+                    // Reset other cards if no card is pinned or if they're not the pinned one
+                    if (pinnedAptitude === null) {
+                      cards.forEach((card) => {
+                        if (card !== cardElement) {
+                          card.style.transform = 'translateY(0) translateX(0)';
+                        }
+                      });
+                    }
+                  }
+                };
                 
                 return (
                   <div 
                     key={aptitude} 
-                    className="bg-hover-bg border-2 border-border-tan rounded-lg p-3 transition-all duration-300 hover:bg-parchment-light hover:border-gold-glow"
+                    className="bg-hover-bg border-2 border-border-tan rounded-lg p-3 transition-all duration-300 hover:bg-parchment-light hover:border-gold-glow relative flex-shrink-0 cursor-pointer"
                     style={{
-                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1), inset 0 0 0 1px #ceb68d'
+                      boxShadow: isPinned ? '0 0 15px 6px #ffebc6, 0 6px 12px rgba(0, 0, 0, 0.3), inset 0 0 0 2px #eacb66' : '0 2px 4px rgba(0, 0, 0, 0.1), inset 0 0 0 1px #ceb68d',
+                      width: '200px',
+                      marginLeft: index > 0 ? '-100px' : '0',
+                      zIndex: isPinned ? 100 : index + 1,
+                      position: 'relative',
+                      transform: isPinned ? 'translateY(-20px) scale(1.05)' : 'translateY(0) scale(1)'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.boxShadow = '0 0 10px 4px #ffebc6, 0 4px 8px rgba(0, 0, 0, 0.2), inset 0 0 0 2px #eacb66';
+                      if (pinnedAptitude === null || pinnedAptitude === aptitude) {
+                        applyHoverEffect(e.currentTarget, true);
+                      }
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1), inset 0 0 0 1px #ceb68d';
+                      if (!isPinned) {
+                        applyHoverEffect(e.currentTarget, false);
+                      }
+                    }}
+                    onClick={(e) => {
+                      // Only handle click if it's not on an interactive element
+                      const target = e.target as HTMLElement;
+                      if (target.tagName === 'INPUT' || target.tagName === 'BUTTON' || target.closest('input, button')) {
+                        return;
+                      }
+                      
+                      // Toggle pin state
+                      if (pinnedAptitude === aptitude) {
+                        setPinnedAptitude(null);
+                        // Reset all cards
+                        const container = e.currentTarget.parentElement;
+                        if (container) {
+                          const cards = Array.from(container.children) as HTMLElement[];
+                          cards.forEach((card) => {
+                            const cardIndex = cards.indexOf(card);
+                            card.style.zIndex = String(cardIndex + 1);
+                            card.style.transform = 'translateY(0) scale(1) translateX(0)';
+                            card.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1), inset 0 0 0 1px #ceb68d';
+                          });
+                        }
+                      } else {
+                        setPinnedAptitude(aptitude);
+                        applyHoverEffect(e.currentTarget, true);
+                      }
                     }}
                   >
                     {/* Aptitude Column Layout: Left (Attribute) and Right (Aptitude) */}
-                    <div className="flex gap-2 mb-3 pb-3 border-b-2 border-border-dark">
+                    <div className="flex gap-2 mb-3 pb-3 border-b-2 border-border-dark" onClick={(e) => e.stopPropagation()}>
                       {/* Left Section: Attribute */}
                       <div className="flex-1 flex flex-col">
                         <label className="font-medieval text-xs font-bold text-red-theme mb-1 uppercase tracking-wide">
@@ -551,7 +666,8 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                     </div>
                   </div>
                 );
-              })}
+                })}
+              </div>
             </div>
           </section>
         </div>
