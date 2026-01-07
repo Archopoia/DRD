@@ -181,10 +181,10 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
         </div>
 
         {/* Content - Scrollable */}
-        <div className="character-sheet-content flex-1 overflow-y-auto p-8 relative z-10">
+        <div className="character-sheet-content flex-1 overflow-y-auto overflow-x-visible p-8 relative z-10" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
 
           {/* Aptitudes Section - 8 Columns Side by Side */}
-          <section className="mt-8 relative flex gap-4 items-start">
+          <section className="mt-8 relative flex gap-4 items-start" style={{ paddingTop: '30px', marginBottom: '30px', overflow: 'visible' }}>
             {/* Vertical title on the left - letter by letter */}
             <div className="flex flex-col items-center justify-start gap-0.5 pt-2 flex-shrink-0" style={{ width: '30px', alignSelf: 'stretch' }}>
               {Array.from("Aptitudes Actions Compétences".toUpperCase()).map((char, index) => (
@@ -201,7 +201,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                 )
               ))}
             </div>
-            <div className="relative overflow-x-auto pb-4 flex-1">
+            <div className="relative overflow-x-auto overflow-y-visible pb-4 flex-1" style={{ paddingTop: '30px', overflowY: 'visible' }}>
               <div className="aptitudes-container flex relative" style={{ width: 'fit-content', minWidth: '100%', alignItems: 'flex-start' }}>
                 {Object.values(Aptitude).map((aptitude, index) => {
                 const [atb1, atb2, atb3] = getAptitudeAttributes(aptitude);
@@ -399,8 +399,20 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                             <div key={souf} className="text-xs bg-red-theme-alpha border-2 border-border-dark rounded p-2" style={{
                               boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
                             }}>
-                              <div className="font-bold text-text-cream mb-1">{getSouffranceName(souf)}</div>
-                              <div className="text-text-cream mb-2 text-[0.7rem]">{soufData.diceCount} Dés | N{level} | {totalMarks}/10</div>
+                              <div className="font-bold text-text-cream mb-1 flex justify-between items-center">
+                                <span>{getSouffranceName(souf)}</span>
+                                <span className="text-[0.7rem] font-normal">{soufData.diceCount} Dés | N{level}</span>
+                              </div>
+                              {/* Progress bar for marks */}
+                              <div className="w-full h-2 bg-parchment-dark border border-border-dark rounded mb-2 overflow-hidden">
+                                <div 
+                                  className="h-full bg-gradient-to-r from-red-theme to-yellow-theme transition-all duration-300"
+                                  style={{ 
+                                    width: `${(totalMarks / 10) * 100}%`,
+                                    boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.3)'
+                                  }}
+                                />
+                              </div>
                               <input
                                 type="number"
                                 min="0"
@@ -459,17 +471,29 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                         </button>
                                       ) : (
                                         <>
-                                          <button
-                                            onClick={() => toggleCompetence(comp)}
-                                            className="w-full text-left flex items-center justify-between mb-1 font-medieval font-semibold text-text-dark transition-colors duration-300 hover:text-red-theme"
-                                          >
-                                            <span className="text-xs">
-                                              {isCompExpanded ? '▼' : '▶'} {getCompetenceName(comp)}
-                                            </span>
-                                            <span className="text-xs text-text-secondary">
-                                              {compData.diceCount}D N{level} {totalMarks}/10
-                                            </span>
-                                          </button>
+                                          <div className="mb-1">
+                                            <button
+                                              onClick={() => toggleCompetence(comp)}
+                                              className="w-full text-left flex items-center justify-between font-medieval font-semibold text-text-dark transition-colors duration-300 hover:text-red-theme"
+                                            >
+                                              <span className="text-xs">
+                                                {isCompExpanded ? '▼' : '▶'} {getCompetenceName(comp)}
+                                              </span>
+                                              <span className="text-xs text-text-secondary">
+                                                {compData.diceCount} Dés | N{level}
+                                              </span>
+                                            </button>
+                                            {/* Progress bar for marks */}
+                                            <div className="w-full h-1.5 bg-parchment-dark border border-border-dark rounded mt-1 overflow-hidden">
+                                              <div 
+                                                className="h-full bg-gradient-to-r from-red-theme to-yellow-theme transition-all duration-300"
+                                                style={{ 
+                                                  width: `${(totalMarks / 10) * 100}%`,
+                                                  boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.3)'
+                                                }}
+                                              />
+                                            </div>
+                                          </div>
                                           
                                           {isCompExpanded && (
                                             <div className="mt-1 space-y-1 pt-1 border-t border-border-tan">
