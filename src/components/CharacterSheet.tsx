@@ -348,9 +348,19 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                       }
                     }}
                   >
-                    {/* Aptitude Column Layout: Left (Attribute) and Right (Aptitude) */}
+                    {/* Aptitude Column Layout: Left (Aptitude) and Right (Attribute) */}
                     <div className="flex gap-2 mb-3 pb-3 border-b-2 border-border-dark" onClick={(e) => e.stopPropagation()}>
-                      {/* Left Section: Attribute */}
+                      {/* Left Section: Aptitude */}
+                      <div className="flex-[2] flex flex-col justify-center items-center">
+                        <div className="font-medieval text-xs font-bold text-red-theme mb-1 uppercase tracking-wide text-center">
+                          {getAptitudeName(aptitude)}
+                        </div>
+                        <div className="font-medieval text-2xl font-bold text-text-dark text-center w-full" style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.2)' }}>
+                          {level >= 0 ? '+' : ''}{level}
+                        </div>
+                      </div>
+
+                      {/* Right Section: Attribute */}
                       <div className="flex-1 flex flex-col">
                         <label className="font-medieval text-xs font-bold text-red-theme mb-1 uppercase tracking-wide">
                           {getAttributeName(atb1).toUpperCase()}
@@ -394,16 +404,6 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                             <span>{getAttributeAbbreviation(atb3)}:</span>
                             <span className="font-semibold">{Math.floor(state.attributes[atb3] * 1 / 10)}</span>
                           </div>
-                        </div>
-                      </div>
-
-                      {/* Right Section: Aptitude */}
-                      <div className="flex-[2] flex flex-col justify-center items-center">
-                        <div className="font-medieval text-xs font-bold text-red-theme mb-1 uppercase tracking-wide text-center">
-                          {getAptitudeName(aptitude)}
-                        </div>
-                        <div className="font-medieval text-2xl font-bold text-text-dark text-center w-full" style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.2)' }}>
-                          {level >= 0 ? '+' : ''}{level}
                         </div>
                       </div>
                     </div>
