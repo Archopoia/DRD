@@ -91,13 +91,12 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
           background: `
             radial-gradient(#6100001f 3px, transparent 4px),
             radial-gradient(#6100001f 3px, transparent 4px),
-            linear-gradient(#9c8e72 4px, transparent 0),
             linear-gradient(45deg, transparent 74px, #78c9a3 75px, transparent 76px, transparent 109px),
             linear-gradient(-45deg, transparent 75px, #78c9a3 76px, transparent 77px, transparent 109px),
             #fffaec
           `,
-          backgroundSize: '109px 109px, 109px 109px, 100% 6px, 109px 109px, 109px 109px',
-          backgroundPosition: '54px 55px, 0px 0px, 0px 0px, 0px 0px, 0px 0px',
+          backgroundSize: '109px 109px, 109px 109px, 109px 109px, 109px 109px',
+          backgroundPosition: '54px 55px, 0px 0px, 0px 0px, 0px 0px',
           boxShadow: `
             0 0 20px rgba(0, 0, 0, 0.5),
             inset 0 0 0 2px #ceb68d,
