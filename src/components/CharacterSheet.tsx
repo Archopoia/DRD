@@ -8,23 +8,36 @@ import { Action, getActionName, getActionAptitude, getActionLinkedAttribute } fr
 import { Competence, getCompetenceName, getCompetenceAction } from '@/game/character/data/CompetenceData';
 import { Souffrance, getSouffranceName, getSouffranceAttribute } from '@/game/character/data/SouffranceData';
 import { getMasteries } from '@/game/character/data/MasteryRegistry';
+import { getLevelName, getLevelFromDiceCount } from '@/lib/utils';
+import DiceInput from './ui/DiceInput';
+import ProgressBar from './ui/ProgressBar';
+import ExpandableSection from './ui/ExpandableSection';
 
 interface CharacterSheetProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+/**
+ * Custom hook to manage character sheet state updates
+ * Simplifies the pattern of manager.setX() + setState(manager.getState())
+ */
+function useCharacterSheet(manager: CharacterSheetManager) {
+  const [state, setState] = useState(manager.getState());
+
+  const updateState = () => {
+    setState(manager.getState());
+  };
+
+  return { state, updateState };
+}
+
 export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps) {
   const [manager] = useState(() => new CharacterSheetManager());
-  const [state, setState] = useState(manager.getState());
+  const { state, updateState } = useCharacterSheet(manager);
   const [expandedActions, setExpandedActions] = useState<Set<Action>>(new Set());
   const [expandedCompetences, setExpandedCompetences] = useState<Set<Competence>>(new Set());
   const [masterySelectionOpen, setMasterySelectionOpen] = useState<Competence | null>(null);
-
-  useEffect(() => {
-    const currentState = manager.getState();
-    setState(currentState);
-  }, [manager]);
 
   // Close mastery selection when clicking outside
   useEffect(() => {
@@ -45,32 +58,30 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
 
   const handleAttributeChange = (attr: Attribute, value: number) => {
     manager.setAttribute(attr, value);
-    setState(manager.getState());
+    updateState();
+  };
+
+  const toggleSet = <T,>(set: Set<T>, item: T): Set<T> => {
+    const newSet = new Set(set);
+    if (newSet.has(item)) {
+      newSet.delete(item);
+    } else {
+      newSet.add(item);
+    }
+    return newSet;
   };
 
   const toggleAction = (action: Action) => {
-    const newSet = new Set(expandedActions);
-    if (newSet.has(action)) {
-      newSet.delete(action);
-    } else {
-      newSet.add(action);
-    }
-    setExpandedActions(newSet);
+    setExpandedActions(toggleSet(expandedActions, action));
   };
 
   const toggleCompetence = (comp: Competence) => {
-    const newSet = new Set(expandedCompetences);
-    if (newSet.has(comp)) {
-      newSet.delete(comp);
-    } else {
-      newSet.add(comp);
-    }
-    setExpandedCompetences(newSet);
+    setExpandedCompetences(toggleSet(expandedCompetences, comp));
   };
 
   const revealCompetence = (comp: Competence) => {
     manager.revealCompetence(comp);
-    setState(manager.getState());
+    updateState();
   };
 
   // Get actions for an aptitude
@@ -81,19 +92,6 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
   // Get competences for an action
   const getCompetencesForAction = (action: Action): Competence[] => {
     return Object.values(Competence).filter((comp) => getCompetenceAction(comp) === action);
-  };
-
-  // Get level name from level number
-  const getLevelName = (level: number): string => {
-    switch (level) {
-      case 0: return 'Néophyte';
-      case 1: return 'Initié';
-      case 2: return 'Disciple';
-      case 3: return 'Adepte';
-      case 4: return 'Expert';
-      case 5: return 'Maître';
-      default: return `N${level}`;
-    }
   };
 
   return (
@@ -224,64 +222,13 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                           <label className="font-medieval text-xs font-bold text-red-theme uppercase tracking-wide whitespace-nowrap" title={`${getAttributeName(atb1)}: ${Math.floor(state.attributes[atb1] * 6 / 10)} (6/10)`}>
                             {getAttributeAbbreviation(atb1)}
                           </label>
-                          <div className="flex items-center gap-0">
-                          <input
-                            type="number"
-                            min="-50"
-                            max="50"
+                          <DiceInput
                             value={state.attributes[atb1]}
-                            onChange={(e) => handleAttributeChange(atb1, parseInt(e.target.value) || 0)}
-                            className="w-7 px-1 py-1 bg-parchment-aged border border-border-dark rounded text-text-dark font-medieval text-sm font-semibold text-center transition-all duration-300 focus:outline-none focus:border-gold-glow focus:bg-parchment-light"
-                            style={{
-                              boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'
-                            }}
-                            onFocus={(e) => {
-                              e.target.style.boxShadow = '0 0 10px #ffebc6, inset 0 2px 4px rgba(0, 0, 0, 0.1)';
-                            }}
-                            onBlur={(e) => {
-                              e.target.style.boxShadow = 'inset 0 2px 4px rgba(0, 0, 0, 0.1)';
-                            }}
-                            title={`${getAttributeName(atb1)}: ${Math.floor(state.attributes[atb1] * 6 / 10)} (6/10)`}
+                            onChange={(value) => handleAttributeChange(atb1, value)}
+                            min={-50}
+                            max={50}
+                            size="md"
                           />
-                          <div className="flex flex-col h-[calc(1.5rem+0.5rem)]">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const newValue = Math.min(50, state.attributes[atb1] + 1);
-                                handleAttributeChange(atb1, newValue);
-                              }}
-                              className="bg-parchment-aged border border-border-dark rounded px-1 text-text-dark font-medieval font-bold text-xs transition-all duration-300 hover:bg-hover-bg hover:border-gold-glow flex-1 flex items-center justify-center"
-                              style={{
-                                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d',
-                                borderBottom: 'none',
-                                borderBottomLeftRadius: 0,
-                                borderBottomRightRadius: 0,
-                                minHeight: 0
-                              }}
-                              disabled={state.attributes[atb1] >= 50}
-                            >
-                              +
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const newValue = Math.max(-50, state.attributes[atb1] - 1);
-                                handleAttributeChange(atb1, newValue);
-                              }}
-                              className="bg-parchment-aged border border-border-dark rounded px-1 text-text-dark font-medieval font-bold text-xs transition-all duration-300 hover:bg-hover-bg hover:border-gold-glow flex-1 flex items-center justify-center"
-                              style={{
-                                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d',
-                                borderTop: 'none',
-                                borderTopLeftRadius: 0,
-                                borderTopRightRadius: 0,
-                                minHeight: 0
-                              }}
-                              disabled={state.attributes[atb1] <= -50}
-                            >
-                              −
-                              </button>
-                          </div>
-                          </div>
                         </div>
                         <div className="space-y-1 text-xs">
                           <div 
@@ -308,11 +255,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                         const soufAttr = getSouffranceAttribute(souf);
                         if (soufAttr === atb1) {
                           const soufData = state.souffrances[souf];
-                          const level = soufData.diceCount === 0 ? 0 :
-                            soufData.diceCount <= 2 ? 1 :
-                            soufData.diceCount <= 5 ? 2 :
-                            soufData.diceCount <= 9 ? 3 :
-                            soufData.diceCount <= 14 ? 4 : 5;
+                          const level = getLevelFromDiceCount(soufData.diceCount);
                           const totalMarks = soufData.marks.filter(m => m).length;
                           
                           return (
@@ -322,68 +265,19 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                               <div className="font-bold text-text-cream mb-1 flex justify-between items-center">
                                 <span>{getSouffranceName(souf)}</span>
                                 <div className="flex items-center gap-0">
-                                  <input
-                                    type="number"
-                                    min="0"
+                                  <DiceInput
                                     value={soufData.diceCount}
-                                    onChange={(e) => {
-                                      manager.setSouffranceDice(souf, parseInt(e.target.value) || 0);
-                                      setState(manager.getState());
+                                    onChange={(value) => {
+                                      manager.setSouffranceDice(souf, value);
+                                      updateState();
                                     }}
-                                    className="w-5 px-0.5 py-0.5 bg-parchment-aged border border-border-dark rounded text-text-dark font-medieval text-[0.7rem] text-center"
+                                    min={0}
+                                    size="sm"
                                   />
-                                  <div className="flex flex-col h-[calc(0.875rem+0.25rem)]">
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        const newValue = soufData.diceCount + 1;
-                                        manager.setSouffranceDice(souf, newValue);
-                                        setState(manager.getState());
-                                      }}
-                                      className="bg-parchment-aged border border-border-dark rounded px-0.5 text-text-dark font-medieval font-bold text-[0.6rem] transition-all duration-300 hover:bg-hover-bg hover:border-gold-glow flex-1 flex items-center justify-center"
-                                      style={{
-                                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d',
-                                        borderBottom: 'none',
-                                        borderBottomLeftRadius: 0,
-                                        borderBottomRightRadius: 0,
-                                        minHeight: 0
-                                      }}
-                                    >
-                                      +
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        const newValue = Math.max(0, soufData.diceCount - 1);
-                                        manager.setSouffranceDice(souf, newValue);
-                                        setState(manager.getState());
-                                      }}
-                                      className="bg-parchment-aged border border-border-dark rounded px-0.5 text-text-dark font-medieval font-bold text-[0.6rem] transition-all duration-300 hover:bg-hover-bg hover:border-gold-glow flex-1 flex items-center justify-center"
-                                      style={{
-                                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d',
-                                        borderTop: 'none',
-                                        borderTopLeftRadius: 0,
-                                        borderTopRightRadius: 0,
-                                        minHeight: 0
-                                      }}
-                                      disabled={soufData.diceCount <= 0}
-                                    >
-                                      −
-                                    </button>
-                                  </div>
-                                  <span className="text-[0.7rem] font-normal">{getLevelName(level)}</span>
+                                  <span className="text-[0.7rem] font-normal ml-1">{getLevelName(level)}</span>
                                 </div>
                               </div>
-                              {/* Progress bar for marks */}
-                              <div className="w-full h-2 bg-parchment-dark border border-border-dark rounded mb-2 overflow-hidden">
-                                <div 
-                                  className="h-full bg-gradient-to-r from-red-theme to-yellow-theme transition-all duration-300"
-                                  style={{ 
-                                    width: `${Math.min(totalMarks, 100)}%`,
-                                    boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.3)'
-                                  }}
-                                />
-                              </div>
+                              <ProgressBar value={totalMarks} max={100} height="md" className="mb-2" />
                             </div>
                           );
                         }
@@ -400,264 +294,208 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                         
                         return (
                           <div key={action} className="bg-parchment-aged border border-border-tan rounded p-2 text-xs">
-                            <button
-                              onClick={() => toggleAction(action)}
-                              className="w-full text-left flex items-center justify-between mb-1 font-medieval font-semibold text-text-dark transition-colors duration-300 hover:text-red-theme"
+                            <ExpandableSection
+                              isExpanded={isExpanded}
+                              onToggle={() => toggleAction(action)}
+                              title={
+                                <>
+                                  {getActionName(action)}
+                                  <span className="text-text-secondary ml-1">({getAttributeAbbreviation(linkedAttr)})</span>
+                                </>
+                              }
+                              contentClassName="mt-1 space-y-0.5 pl-2 border-l-2 border-border-tan"
                             >
-                              <span>
-                                {isExpanded ? '▼' : '▶'} {getActionName(action)}
-                              </span>
-                              <span className="text-text-secondary">({getAttributeAbbreviation(linkedAttr)})</span>
-                            </button>
-                            
-                            {isExpanded && (
-                              <div className="mt-1 space-y-0.5 pl-2 border-l-2 border-border-tan">
-                                {competences.map((comp) => {
-                                  const compData = state.competences[comp];
-                                  const isCompExpanded = expandedCompetences.has(comp);
-                                  const level = manager.getCompetenceLevel(comp);
-                                  const totalMarks = manager.getTotalMarks(comp);
-                                  
-                                  return (
-                                    <div key={comp} className="bg-hover-bg border border-border-tan rounded p-2 text-xs relative">
-                                      {!compData.isRevealed ? (
-                                        <button
-                                          onClick={() => revealCompetence(comp)}
-                                          className="w-full px-2 py-2 bg-teal-theme text-text-cream border border-border-dark rounded font-medieval font-semibold text-center transition-all duration-300 hover:bg-hover-bg hover:text-text-dark hover:-translate-y-0.5"
-                                          style={{
-                                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
-                                          }}
-                                        >
-                                          Révéler {getCompetenceName(comp)}?
-                                        </button>
-                                      ) : (
-                                        <>
-                                          <div className="mb-1">
-                                            <button
-                                              onClick={() => toggleCompetence(comp)}
-                                              className="w-full text-left flex items-center justify-between font-medieval font-semibold text-text-dark transition-colors duration-300 hover:text-red-theme"
-                                            >
-                                              <span className="text-xs">
-                                                {isCompExpanded ? '▼' : '▶'} {getCompetenceName(comp)}
-                                              </span>
+                              {competences.map((comp) => {
+                                const compData = state.competences[comp];
+                                const isCompExpanded = expandedCompetences.has(comp);
+                                const level = manager.getCompetenceLevel(comp);
+                                const totalMarks = manager.getTotalMarks(comp);
+                                
+                                return (
+                                  <div key={comp} className="bg-hover-bg border border-border-tan rounded p-2 text-xs relative">
+                                    {!compData.isRevealed ? (
+                                      <button
+                                        onClick={() => revealCompetence(comp)}
+                                        className="w-full px-2 py-2 bg-teal-theme text-text-cream border border-border-dark rounded font-medieval font-semibold text-center transition-all duration-300 hover:bg-hover-bg hover:text-text-dark hover:-translate-y-0.5"
+                                        style={{
+                                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                                        }}
+                                      >
+                                        Révéler {getCompetenceName(comp)}?
+                                      </button>
+                                    ) : (
+                                      <>
+                                        <div className="mb-1">
+                                          <ExpandableSection
+                                            isExpanded={isCompExpanded}
+                                            onToggle={() => toggleCompetence(comp)}
+                                            title={<span className="text-xs">{getCompetenceName(comp)}</span>}
+                                            headerActions={
                                               <div className="flex items-center gap-0">
-                                                <input
-                                                  type="number"
-                                                  min="0"
+                                                <DiceInput
                                                   value={compData.diceCount}
-                                                  onChange={(e) => {
-                                                    manager.setCompetenceDice(comp, parseInt(e.target.value) || 0);
-                                                    setState(manager.getState());
+                                                  onChange={(value) => {
+                                                    manager.setCompetenceDice(comp, value);
+                                                    updateState();
                                                   }}
-                                                  onClick={(e) => e.stopPropagation()}
-                                                  className="w-5 px-0.5 py-0.5 bg-parchment-aged border border-border-dark rounded text-text-dark font-medieval text-xs text-center"
+                                                  min={0}
+                                                  size="sm"
                                                 />
-                                                <div className="flex flex-col h-[calc(0.875rem+0.25rem)]">
-                                                  <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      const newValue = compData.diceCount + 1;
-                                                      manager.setCompetenceDice(comp, newValue);
-                                                      setState(manager.getState());
-                                                    }}
-                                                    className="bg-parchment-aged border border-border-dark rounded px-0.5 text-text-dark font-medieval font-bold text-[0.65rem] transition-all duration-300 hover:bg-hover-bg hover:border-gold-glow flex-1 flex items-center justify-center"
-                                                    style={{
-                                                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d',
-                                                      borderBottom: 'none',
-                                                      borderBottomLeftRadius: 0,
-                                                      borderBottomRightRadius: 0,
-                                                      minHeight: 0
-                                                    }}
-                                                  >
-                                                    +
-                                                  </button>
-                                                  <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      const newValue = Math.max(0, compData.diceCount - 1);
-                                                      manager.setCompetenceDice(comp, newValue);
-                                                      setState(manager.getState());
-                                                    }}
-                                                    className="bg-parchment-aged border border-border-dark rounded px-0.5 text-text-dark font-medieval font-bold text-[0.65rem] transition-all duration-300 hover:bg-hover-bg hover:border-gold-glow flex-1 flex items-center justify-center"
-                                                    style={{
-                                                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d',
-                                                      borderTop: 'none',
-                                                      borderTopLeftRadius: 0,
-                                                      borderTopRightRadius: 0,
-                                                      minHeight: 0
-                                                    }}
-                                                    disabled={compData.diceCount <= 0}
-                                                  >
-                                                    −
-                                                  </button>
-                                                </div>
-                                                <span className="text-xs text-text-secondary">| {getLevelName(level)}</span>
+                                                <span className="text-xs text-text-secondary ml-1">| {getLevelName(level)}</span>
                                               </div>
-                                            </button>
-                                            {/* Progress bar for marks */}
-                                            <div className="w-full h-1.5 bg-parchment-dark border border-border-dark rounded mt-1 overflow-hidden">
-                                              <div 
-                                                className="h-full bg-gradient-to-r from-red-theme to-yellow-theme transition-all duration-300"
-                                                style={{ 
-                                                  width: `${Math.min(totalMarks, 100)}%`,
-                                                  boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.3)'
+                                            }
+                                            headerFooter={
+                                              <ProgressBar value={totalMarks} max={100} height="sm" />
+                                            }
+                                            headerClassName="mb-1"
+                                            contentClassName="mt-1 space-y-1 pt-1 border-t border-border-tan"
+                                          >
+                                            {manager.isCompetenceEprouvee(comp) && (
+                                              <button
+                                                onClick={() => {
+                                                  manager.realizeCompetence(comp);
+                                                  updateState();
                                                 }}
-                                              />
+                                                className="w-full px-2 py-2 bg-green-theme text-text-cream border border-border-dark rounded font-medieval font-semibold text-xs transition-all duration-300 hover:bg-hover-bg hover:text-text-dark hover:-translate-y-0.5"
+                                                style={{
+                                                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                                                }}
+                                              >
+                                                Réaliser (+{level})
+                                              </button>
+                                            )}
+                                            
+                                            {/* Mastery Points Display */}
+                                            <div className="text-xs mb-2">
+                                              <span className="text-orange-theme font-bold">
+                                                Points MT: {manager.getMasteryPoints(comp)}
+                                              </span>
                                             </div>
-                                          </div>
-                                          
-                                          {isCompExpanded && (
-                                            <div className="mt-1 space-y-1 pt-1 border-t border-border-tan">
-                                              
-                                              {manager.isCompetenceEprouvee(comp) && (
-                                                <button
-                                                  onClick={() => {
-                                                    manager.realizeCompetence(comp);
-                                                    setState(manager.getState());
-                                                  }}
-                                                  className="w-full px-2 py-2 bg-green-theme text-text-cream border border-border-dark rounded font-medieval font-semibold text-xs transition-all duration-300 hover:bg-hover-bg hover:text-text-dark hover:-translate-y-0.5"
-                                                  style={{
-                                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
-                                                  }}
-                                                >
-                                                  Réaliser (+{level})
-                                                </button>
-                                              )}
-                                              
-                                              {/* Mastery Points Display */}
-                                              <div className="text-xs mb-2">
-                                                <span className="text-orange-theme font-bold">
-                                                  Points MT: {manager.getMasteryPoints(comp)}
-                                                </span>
+                                            
+                                            {/* Masteries Section */}
+                                            <div className="space-y-1 mt-2 pt-2 border-t border-border-tan">
+                                              <div className="text-xs font-bold text-text-dark mb-2">
+                                                Maîtrises:
                                               </div>
                                               
-                                              {/* Masteries Section */}
-                                              <div className="space-y-1 mt-2 pt-2 border-t border-border-tan">
-                                                <div className="text-xs font-bold text-text-dark mb-2">
-                                                  Maîtrises:
-                                                </div>
-                                                
-                                                {/* List of unlocked masteries */}
-                                                <div className="space-y-1 mb-2">
-                                                  {compData.masteries.map((mastery, masteryIdx) => {
-                                                    const maxDice = level;
-                                                    const canUpgrade = mastery.diceCount < maxDice && manager.getMasteryPoints(comp) > 0;
+                                              {/* List of unlocked masteries */}
+                                              <div className="space-y-1 mb-2">
+                                                {compData.masteries.map((mastery, masteryIdx) => {
+                                                  const maxDice = level;
+                                                  const canUpgrade = mastery.diceCount < maxDice && manager.getMasteryPoints(comp) > 0;
+                                                  
+                                                  return (
+                                                    <div key={masteryIdx} className="bg-parchment-aged border border-border-tan rounded p-2 text-xs flex items-center justify-between">
+                                                      <span className="flex-1">{mastery.name}</span>
+                                                      <div className="flex items-center gap-1">
+                                                        <span className="text-text-secondary text-xs">{mastery.diceCount}D</span>
+                                                        {canUpgrade && (
+                                                          <button
+                                                            onClick={() => {
+                                                              manager.upgradeMastery(comp, mastery.name);
+                                                              updateState();
+                                                            }}
+                                                            className="px-2 py-1 bg-blue-600 text-white border border-border-dark rounded font-medieval font-semibold text-xs transition-all duration-300 hover:bg-hover-bg hover:text-text-dark"
+                                                            title="Upgrade (+1 point)"
+                                                          >
+                                                            +1
+                                                          </button>
+                                                        )}
+                                                      </div>
+                                                    </div>
+                                                  );
+                                                })}
+                                              </div>
+                                              
+                                              {/* Unlock new mastery button */}
+                                              {manager.getMasteryPoints(comp) > 0 && (
+                                                <div className="relative mastery-selection-container" style={{ zIndex: masterySelectionOpen === comp ? 1000 : 'auto' }}>
+                                                  <button
+                                                    onClick={() => setMasterySelectionOpen(masterySelectionOpen === comp ? null : comp)}
+                                                    className="w-full px-2 py-2 bg-green-theme text-text-cream border border-border-dark rounded font-medieval font-semibold text-xs text-center transition-all duration-300 hover:bg-hover-bg hover:text-text-dark hover:-translate-y-0.5"
+                                                    style={{
+                                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                                                    }}
+                                                  >
+                                                    + Débloquer Maîtrise (1 point)
+                                                  </button>
+                                                  
+                                                  {/* Mastery selection dropdown */}
+                                                  {masterySelectionOpen === comp && (() => {
+                                                    const availableMasteries = getMasteries(comp);
+                                                    const unlockedMasteryNames = compData.masteries.map(m => m.name);
+                                                    const unselectedMasteries = availableMasteries.filter(
+                                                      masteryName => !unlockedMasteryNames.includes(masteryName)
+                                                    );
+                                                    
+                                                    if (process.env.NODE_ENV === 'development') {
+                                                      console.log('Mastery dropdown for', getCompetenceName(comp), {
+                                                        available: availableMasteries.length,
+                                                        unlocked: unlockedMasteryNames.length,
+                                                        unselected: unselectedMasteries.length,
+                                                        unselectedList: unselectedMasteries
+                                                      });
+                                                    }
                                                     
                                                     return (
-                                                      <div key={masteryIdx} className="bg-parchment-aged border border-border-tan rounded p-2 text-xs flex items-center justify-between">
-                                                        <span className="flex-1">{mastery.name}</span>
-                                                        <div className="flex items-center gap-1">
-                                                          <span className="text-text-secondary text-xs">{mastery.diceCount}D</span>
-                                                          {canUpgrade && (
+                                                      <div 
+                                                        className="absolute mt-1 bg-parchment-dark border-2 border-gold-glow rounded shadow-2xl max-h-40 overflow-y-auto w-full min-w-[200px] z-[10000]"
+                                                        style={{
+                                                          boxShadow: '0 0 0 1px #643030, 0 0 0 2px #ffebc6, 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 0 0 1px #ceb68d'
+                                                        }}
+                                                      >
+                                                        {unselectedMasteries.length > 0 ? (
+                                                          unselectedMasteries.map((masteryName) => (
                                                             <button
-                                                              onClick={() => {
-                                                                manager.upgradeMastery(comp, mastery.name);
-                                                                setState(manager.getState());
+                                                              key={masteryName}
+                                                              onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                e.preventDefault();
+                                                                manager.unlockMastery(comp, masteryName);
+                                                                if (process.env.NODE_ENV === 'development') {
+                                                                  console.log('Unlock mastery:', {
+                                                                    competence: getCompetenceName(comp),
+                                                                    mastery: masteryName,
+                                                                    success: true,
+                                                                    pointsBefore: manager.getMasteryPoints(comp) + 1,
+                                                                    pointsAfter: manager.getMasteryPoints(comp)
+                                                                  });
+                                                                }
+                                                                updateState();
+                                                                setMasterySelectionOpen(null);
                                                               }}
-                                                              className="px-2 py-1 bg-blue-600 text-white border border-border-dark rounded font-medieval font-semibold text-xs transition-all duration-300 hover:bg-hover-bg hover:text-text-dark"
-                                                              title="Upgrade (+1 point)"
+                                                              className="w-full px-2 py-2 text-xs text-left font-medieval text-text-dark block whitespace-nowrap transition-colors duration-300 hover:bg-hover-bg hover:text-red-theme border-b border-border-tan last:border-b-0"
                                                             >
-                                                              +1
+                                                              {masteryName}
                                                             </button>
-                                                          )}
-                                                        </div>
+                                                          ))
+                                                        ) : (
+                                                          <div className="px-2 py-2 text-xs text-text-secondary italic">
+                                                            {availableMasteries.length === 0 
+                                                              ? 'Aucune maîtrise disponible' 
+                                                              : 'Toutes les maîtrises sont débloquées'}
+                                                          </div>
+                                                        )}
                                                       </div>
                                                     );
-                                                  })}
+                                                  })()}
                                                 </div>
-                                                
-                                                {/* Unlock new mastery button */}
-                                                {manager.getMasteryPoints(comp) > 0 && (
-                                                  <div className="relative mastery-selection-container" style={{ zIndex: masterySelectionOpen === comp ? 1000 : 'auto' }}>
-                                                    <button
-                                                      onClick={() => setMasterySelectionOpen(masterySelectionOpen === comp ? null : comp)}
-                                                      className="w-full px-2 py-2 bg-green-theme text-text-cream border border-border-dark rounded font-medieval font-semibold text-xs text-center transition-all duration-300 hover:bg-hover-bg hover:text-text-dark hover:-translate-y-0.5"
-                                                      style={{
-                                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
-                                                      }}
-                                                    >
-                                                      + Débloquer Maîtrise (1 point)
-                                                    </button>
-                                                    
-                                                    {/* Mastery selection dropdown */}
-                                                    {masterySelectionOpen === comp && (() => {
-                                                      const availableMasteries = getMasteries(comp);
-                                                      const unlockedMasteryNames = compData.masteries.map(m => m.name);
-                                                      const unselectedMasteries = availableMasteries.filter(
-                                                        masteryName => !unlockedMasteryNames.includes(masteryName)
-                                                      );
-                                                      
-                                                      if (process.env.NODE_ENV === 'development') {
-                                                        console.log('Mastery dropdown for', getCompetenceName(comp), {
-                                                          available: availableMasteries.length,
-                                                          unlocked: unlockedMasteryNames.length,
-                                                          unselected: unselectedMasteries.length,
-                                                          unselectedList: unselectedMasteries
-                                                        });
-                                                      }
-                                                      
-                                                      return (
-                                                        <div 
-                                                          className="absolute mt-1 bg-parchment-dark border-2 border-gold-glow rounded shadow-2xl max-h-40 overflow-y-auto w-full min-w-[200px] z-[10000]"
-                                                          style={{
-                                                            boxShadow: '0 0 0 1px #643030, 0 0 0 2px #ffebc6, 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 0 0 1px #ceb68d'
-                                                          }}
-                                                        >
-                                                          {unselectedMasteries.length > 0 ? (
-                                                            unselectedMasteries.map((masteryName) => (
-                                                              <button
-                                                                key={masteryName}
-                                                                onClick={(e) => {
-                                                                  e.stopPropagation();
-                                                                  e.preventDefault();
-                                                                  const success = manager.unlockMastery(comp, masteryName);
-                                                                  if (process.env.NODE_ENV === 'development') {
-                                                                    console.log('Unlock mastery:', {
-                                                                      competence: getCompetenceName(comp),
-                                                                      mastery: masteryName,
-                                                                      success,
-                                                                      pointsBefore: manager.getMasteryPoints(comp) + 1,
-                                                                      pointsAfter: manager.getMasteryPoints(comp)
-                                                                    });
-                                                                  }
-                                                                  setState(manager.getState());
-                                                                  setMasterySelectionOpen(null);
-                                                                }}
-                                                                className="w-full px-2 py-2 text-xs text-left font-medieval text-text-dark block whitespace-nowrap transition-colors duration-300 hover:bg-hover-bg hover:text-red-theme border-b border-border-tan last:border-b-0"
-                                                              >
-                                                                {masteryName}
-                                                              </button>
-                                                            ))
-                                                          ) : (
-                                                            <div className="px-2 py-2 text-xs text-text-secondary italic">
-                                                              {availableMasteries.length === 0 
-                                                                ? 'Aucune maîtrise disponible' 
-                                                                : 'Toutes les maîtrises sont débloquées'}
-                                                            </div>
-                                                          )}
-                                                        </div>
-                                                      );
-                                                    })()}
-                                                  </div>
-                                                )}
-                                                
-                                                {compData.masteries.length === 0 && manager.getMasteryPoints(comp) === 0 && (
-                                                  <div className="text-xs text-text-secondary italic">
-                                                    Aucune maîtrise
-                                                  </div>
-                                                )}
-                                              </div>
+                                              )}
+                                              
+                                              {compData.masteries.length === 0 && manager.getMasteryPoints(comp) === 0 && (
+                                                <div className="text-xs text-text-secondary italic">
+                                                  Aucune maîtrise
+                                                </div>
+                                              )}
                                             </div>
-                                          )}
-                                        </>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
+                                          </ExpandableSection>
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </ExpandableSection>
                           </div>
                         );
                       })}
