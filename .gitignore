@@ -34,5 +34,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# TTRPG source materials and Godot template
+Des Récits Discordants 2025/
+Godot RPG Template/
+
 
 
