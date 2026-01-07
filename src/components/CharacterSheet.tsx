@@ -184,67 +184,26 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
         {/* Content - Scrollable */}
         <div className="character-sheet-content flex-1 overflow-y-auto p-8 relative z-10">
 
-          {/* Attributes Row - 8 columns */}
-          <section className="mb-8">
-            <h3 className="font-medieval text-2xl text-text-dark mb-4 pb-2 border-b-2 border-border-dark">Attributs (ATB)</h3>
-            <div className="grid grid-cols-8 gap-3">
-              {Object.values(Attribute).map((attr) => (
-                <div 
-                  key={attr} 
-                  className="bg-hover-bg border-2 border-border-tan rounded-lg p-3 text-center transition-all duration-300 hover:bg-parchment-light hover:border-gold-glow hover:-translate-y-0.5"
-                  style={{
-                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1), inset 0 0 0 1px #ceb68d'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = '0 0 10px 4px #ffebc6, 0 4px 8px rgba(0, 0, 0, 0.2), inset 0 0 0 2px #eacb66';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1), inset 0 0 0 1px #ceb68d';
-                  }}
-                >
-                  <label className="block text-xs font-bold text-red-theme mb-2 uppercase tracking-wide">
-                    {getAttributeAbbreviation(attr)}
-                  </label>
-                  <input
-                    type="number"
-                    min="-50"
-                    max="50"
-                    value={state.attributes[attr]}
-                    onChange={(e) => handleAttributeChange(attr, parseInt(e.target.value) || 0)}
-                    className="w-full px-2 py-2 bg-parchment-aged border-2 border-border-dark rounded text-text-dark font-medieval text-base font-semibold text-center transition-all duration-300 focus:outline-none focus:border-gold-glow focus:bg-parchment-light"
-                    style={{
-                      boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.boxShadow = '0 0 10px #ffebc6, inset 0 2px 4px rgba(0, 0, 0, 0.1)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.boxShadow = 'inset 0 2px 4px rgba(0, 0, 0, 0.1)';
-                    }}
-                  />
-                  <div className="text-xs text-text-secondary mt-2 italic">
-                    {getAttributeName(attr)}
+          {/* Aptitudes Section - 8 Columns Side by Side */}
+          <section className="mt-8 relative flex gap-4 items-stretch">
+            {/* Vertical title on the left - letter by letter */}
+            <div className="flex flex-col items-center justify-start gap-0.5 pt-2 flex-shrink-0" style={{ width: '30px', minHeight: '100%' }}>
+              {Array.from("Aptitudes Actions Compétences".toUpperCase()).map((char, index) => (
+                char === ' ' ? (
+                  <div key={index} className="h-1" />
+                ) : (
+                  <div 
+                    key={index} 
+                    className="font-medieval text-sm text-text-dark font-bold"
+                    style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.2)', lineHeight: '1.1' }}
+                  >
+                    {char}
                   </div>
-                </div>
+                )
               ))}
             </div>
-          </section>
-
-          {/* Free Marks */}
-          <section className="mb-6 p-4 bg-yellow-theme-alpha border-[3px] border-border-dark rounded-lg text-center" style={{
-            boxShadow: '0 0 0 1px #ffebc6, 0 4px 8px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d'
-          }}>
-            <span className="font-medieval text-lg font-semibold text-text-dark mr-2">Marques Gratuites:</span>
-            <span className="font-medieval text-3xl font-bold text-red-theme" style={{ textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)' }}>
-              {state.freeMarks}
-            </span>
-          </section>
-
-          {/* Aptitudes Section - 8 Columns Side by Side */}
-          <section className="mt-8">
-            <h3 className="font-medieval text-2xl text-text-dark mb-4 pb-2 border-b-2 border-border-dark">Aptitudes, Actions et Compétences</h3>
-            <div className="relative overflow-x-auto pb-4" style={{ width: '100%' }}>
-              <div className="aptitudes-container flex relative" style={{ width: 'fit-content', minWidth: '100%' }}>
+            <div className="relative overflow-x-auto pb-4 flex-1 flex flex-col">
+              <div className="aptitudes-container flex relative flex-1" style={{ width: 'fit-content', minWidth: '100%' }}>
                 {Object.values(Aptitude).map((aptitude, index) => {
                 const [atb1, atb2, atb3] = getAptitudeAttributes(aptitude);
                 const level = state.aptitudeLevels[aptitude];
