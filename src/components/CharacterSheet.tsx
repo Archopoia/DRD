@@ -185,9 +185,9 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
         <div className="character-sheet-content flex-1 overflow-y-auto p-8 relative z-10">
 
           {/* Aptitudes Section - 8 Columns Side by Side */}
-          <section className="mt-8 relative flex gap-4 items-stretch">
+          <section className="mt-8 relative flex gap-4 items-start">
             {/* Vertical title on the left - letter by letter */}
-            <div className="flex flex-col items-center justify-start gap-0.5 pt-2 flex-shrink-0" style={{ width: '30px', minHeight: '100%' }}>
+            <div className="flex flex-col items-center justify-start gap-0.5 pt-2 flex-shrink-0" style={{ width: '30px', alignSelf: 'stretch' }}>
               {Array.from("Aptitudes Actions Compétences".toUpperCase()).map((char, index) => (
                 char === ' ' ? (
                   <div key={index} className="h-1" />
@@ -202,8 +202,8 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                 )
               ))}
             </div>
-            <div className="relative overflow-x-auto pb-4 flex-1 flex flex-col">
-              <div className="aptitudes-container flex relative flex-1" style={{ width: 'fit-content', minWidth: '100%' }}>
+            <div className="relative overflow-x-auto pb-4 flex-1">
+              <div className="aptitudes-container flex relative" style={{ width: 'fit-content', minWidth: '100%', alignItems: 'flex-start' }}>
                 {Object.values(Aptitude).map((aptitude, index) => {
                 const [atb1, atb2, atb3] = getAptitudeAttributes(aptitude);
                 const level = state.aptitudeLevels[aptitude];
@@ -268,7 +268,9 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                       marginLeft: index > 0 ? '-100px' : '0',
                       zIndex: isPinned ? 100 : index + 1,
                       position: 'relative',
-                      transform: isPinned ? 'translateY(-20px) scale(1.05)' : 'translateY(0) scale(1)'
+                      transform: isPinned ? 'translateY(-20px) scale(1.05)' : 'translateY(0) scale(1)',
+                      alignSelf: 'flex-start',
+                      height: 'auto'
                     }}
                     onMouseEnter={(e) => {
                       if (pinnedAptitude === null || pinnedAptitude === aptitude) {
