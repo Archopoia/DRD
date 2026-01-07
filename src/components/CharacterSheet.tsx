@@ -84,28 +84,96 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center p-4">
-      <div className="bg-gray-900 text-white w-full max-w-[95vw] h-[95vh] rounded-lg shadow-2xl flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
+      <div 
+        className="w-full max-w-[95vw] h-[95vh] max-h-[95vh] flex flex-col rounded-lg border-4 border-border-dark shadow-2xl animate-swing-in overflow-hidden"
+        style={{
+          background: `
+            radial-gradient(#6100001f 3px, transparent 4px),
+            radial-gradient(#6100001f 3px, transparent 4px),
+            linear-gradient(#9c8e72 4px, transparent 0),
+            linear-gradient(45deg, transparent 74px, #78c9a3 75px, transparent 76px, transparent 109px),
+            linear-gradient(-45deg, transparent 75px, #78c9a3 76px, transparent 77px, transparent 109px),
+            #fffaec
+          `,
+          backgroundSize: '109px 109px, 109px 109px, 100% 6px, 109px 109px, 109px 109px',
+          backgroundPosition: '54px 55px, 0px 0px, 0px 0px, 0px 0px, 0px 0px',
+          boxShadow: `
+            0 0 20px rgba(0, 0, 0, 0.5),
+            inset 0 0 0 2px #ceb68d,
+            inset 0 0 0 5px #ffebc6,
+            0 0 40px rgba(100, 48, 48, 0.6)
+          `
+        }}
+      >
         {/* Header */}
-        <div className="flex justify-between items-center p-4 border-b border-gray-700">
-          <h2 className="text-2xl font-bold">Feuille de Personnage</h2>
+        <div 
+          className="flex justify-between items-center px-6 py-4 border-b-[3px] border-border-dark relative z-10"
+          style={{
+            background: `
+              radial-gradient(circle at 20% 20%, rgba(100, 48, 48, 0.3) 0%, transparent 50%),
+              radial-gradient(circle at 80% 80%, rgba(100, 48, 48, 0.3) 0%, transparent 50%),
+              linear-gradient(135deg, #643030b9 0%, #643030 100%)
+            `,
+            boxShadow: 'inset 0 0 0 2px #ceb68d'
+          }}
+        >
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: `repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 20px,
+                rgba(184, 134, 11, 0.1) 20px,
+                rgba(184, 134, 11, 0.1) 21px
+              )`
+            }}
+          />
+          <h2 className="font-medieval text-3xl font-bold text-text-cream relative z-10 tracking-wide" style={{
+            textShadow: '0 1px black, 0 2px rgb(19, 19, 19), 0 3px rgb(30, 30, 30), 0 4px rgb(50, 50, 50), 0 5px rgb(70, 70, 70), 0 6px #555'
+          }}>
+            Feuille de Personnage
+          </h2>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded"
+            className="px-4 py-2 bg-red-theme text-text-cream border-2 border-border-dark rounded font-medieval font-semibold transition-all duration-300 relative z-10 hover:bg-hover-bg hover:text-text-dark hover:-translate-y-0.5"
+            style={{
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3), inset 0 0 0 1px #ffebc6'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = '0 0 15px 5px #ffebc6, 0 4px 8px rgba(0, 0, 0, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.3), inset 0 0 0 1px #ffebc6';
+            }}
           >
             Fermer (C)
           </button>
         </div>
 
         {/* Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="character-sheet-content flex-1 overflow-y-auto p-8 relative z-10">
+
           {/* Attributes Row - 8 columns */}
-          <section className="mb-6">
-            <h3 className="text-xl font-semibold mb-3">Attributs (ATB)</h3>
-            <div className="grid grid-cols-8 gap-2">
+          <section className="mb-8">
+            <h3 className="font-medieval text-2xl text-text-dark mb-4 pb-2 border-b-2 border-border-dark">Attributs (ATB)</h3>
+            <div className="grid grid-cols-8 gap-3">
               {Object.values(Attribute).map((attr) => (
-                <div key={attr} className="bg-gray-800 p-2 rounded">
-                  <label className="block text-xs mb-1 text-center">
+                <div 
+                  key={attr} 
+                  className="bg-hover-bg border-2 border-border-tan rounded-lg p-3 text-center transition-all duration-300 hover:bg-parchment-light hover:border-gold-glow hover:-translate-y-0.5"
+                  style={{
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1), inset 0 0 0 1px #ceb68d'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = '0 0 10px 4px #ffebc6, 0 4px 8px rgba(0, 0, 0, 0.2), inset 0 0 0 2px #eacb66';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1), inset 0 0 0 1px #ceb68d';
+                  }}
+                >
+                  <label className="block text-xs font-bold text-red-theme mb-2 uppercase tracking-wide">
                     {getAttributeAbbreviation(attr)}
                   </label>
                   <input
@@ -114,9 +182,18 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                     max="50"
                     value={state.attributes[attr]}
                     onChange={(e) => handleAttributeChange(attr, parseInt(e.target.value) || 0)}
-                    className="w-full px-1 py-1 bg-gray-700 text-white rounded text-sm text-center"
+                    className="w-full px-2 py-2 bg-parchment-aged border-2 border-border-dark rounded text-text-dark font-medieval text-base font-semibold text-center transition-all duration-300 focus:outline-none focus:border-gold-glow focus:bg-parchment-light"
+                    style={{
+                      boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.boxShadow = '0 0 10px #ffebc6, inset 0 2px 4px rgba(0, 0, 0, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.boxShadow = 'inset 0 2px 4px rgba(0, 0, 0, 0.1)';
+                    }}
                   />
-                  <div className="text-xs text-gray-400 text-center mt-1">
+                  <div className="text-xs text-text-secondary mt-2 italic">
                     {getAttributeName(attr)}
                   </div>
                 </div>
@@ -125,40 +202,54 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
           </section>
 
           {/* Free Marks */}
-          <section className="mb-4">
-            <div className="bg-yellow-900 bg-opacity-50 p-2 rounded text-center">
-              <span className="font-semibold">Marques Gratuites: </span>
-              <span className="text-xl">{state.freeMarks}</span>
-            </div>
+          <section className="mb-6 p-4 bg-yellow-theme-alpha border-[3px] border-border-dark rounded-lg text-center" style={{
+            boxShadow: '0 0 0 1px #ffebc6, 0 4px 8px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d'
+          }}>
+            <span className="font-medieval text-lg font-semibold text-text-dark mr-2">Marques Gratuites:</span>
+            <span className="font-medieval text-3xl font-bold text-red-theme" style={{ textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)' }}>
+              {state.freeMarks}
+            </span>
           </section>
 
           {/* Aptitudes Section - 8 Columns Side by Side */}
-          <section>
-            <h3 className="text-xl font-semibold mb-3">Aptitudes, Actions et Compétences</h3>
-            <div className="grid grid-cols-8 gap-2">
+          <section className="mt-8">
+            <h3 className="font-medieval text-2xl text-text-dark mb-4 pb-2 border-b-2 border-border-dark">Aptitudes, Actions et Compétences</h3>
+            <div className="grid grid-cols-8 gap-3">
               {Object.values(Aptitude).map((aptitude) => {
                 const [atb1, atb2, atb3] = getAptitudeAttributes(aptitude);
                 const level = state.aptitudeLevels[aptitude];
                 const actions = getActionsForAptitude(aptitude);
                 
                 return (
-                  <div key={aptitude} className="bg-gray-800 p-2 rounded border border-gray-700">
+                  <div 
+                    key={aptitude} 
+                    className="bg-hover-bg border-2 border-border-tan rounded-lg p-3 transition-all duration-300 hover:bg-parchment-light hover:border-gold-glow"
+                    style={{
+                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1), inset 0 0 0 1px #ceb68d'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.boxShadow = '0 0 10px 4px #ffebc6, 0 4px 8px rgba(0, 0, 0, 0.2), inset 0 0 0 2px #eacb66';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1), inset 0 0 0 1px #ceb68d';
+                    }}
+                  >
                     {/* Aptitude Header */}
-                    <div className="mb-2 pb-2 border-b border-gray-600">
-                      <div className="font-semibold text-sm text-center mb-1">
+                    <div className="mb-3 pb-3 border-b-2 border-border-dark">
+                      <div className="font-medieval text-sm font-bold text-red-theme text-center mb-1 uppercase tracking-wide">
                         {getAptitudeName(aptitude)}
                       </div>
-                      <div className="text-xs text-gray-400 text-center mb-1">
+                      <div className="text-xs text-text-secondary text-center mb-1">
                         {getAttributeAbbreviation(atb1)}+3, {getAttributeAbbreviation(atb2)}+2, {getAttributeAbbreviation(atb3)}+1
                       </div>
-                      <div className="text-lg font-bold text-center">
+                      <div className="font-medieval text-xl font-bold text-text-dark text-center" style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.2)' }}>
                         {level >= 0 ? '+' : ''}{level}
                       </div>
                     </div>
 
                     {/* Main Attribute Input */}
-                    <div className="mb-2">
-                      <label className="block text-xs mb-1 text-center">
+                    <div className="mb-3">
+                      <label className="block text-xs font-bold text-red-theme text-center mb-2 uppercase tracking-wide">
                         {getAttributeName(atb1).toUpperCase()}
                       </label>
                       <input
@@ -167,12 +258,21 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                         max="50"
                         value={state.attributes[atb1]}
                         onChange={(e) => handleAttributeChange(atb1, parseInt(e.target.value) || 0)}
-                        className="w-full px-1 py-1 bg-gray-700 text-white rounded text-sm text-center"
+                        className="w-full px-2 py-2 bg-parchment-aged border-2 border-border-dark rounded text-text-dark font-medieval text-base font-semibold text-center transition-all duration-300 focus:outline-none focus:border-gold-glow focus:bg-parchment-light"
+                        style={{
+                          boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.boxShadow = '0 0 10px #ffebc6, inset 0 2px 4px rgba(0, 0, 0, 0.1)';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.boxShadow = 'inset 0 2px 4px rgba(0, 0, 0, 0.1)';
+                        }}
                       />
                     </div>
 
                     {/* ATB Values Display */}
-                    <div className="mb-2 text-xs space-y-1">
+                    <div className="mb-3 text-xs space-y-1 pb-3 border-b border-border-tan">
                       <div className="flex justify-between">
                         <span>{getAttributeAbbreviation(atb1)}:</span>
                         <span>{Math.floor(state.attributes[atb1] * 6 / 10)}</span>
@@ -188,10 +288,9 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                     </div>
 
                     {/* Souffrance - Right under aptitude, above actions */}
-                    <div className="mb-2 pb-2 border-b border-gray-600">
+                    <div className="mb-3 pb-3 border-b-2 border-border-dark">
                       {Object.values(Souffrance).map((souf) => {
                         const soufAttr = getSouffranceAttribute(souf);
-                        // Check if this souffrance is tied to the main attribute (atb1)
                         if (soufAttr === atb1) {
                           const soufData = state.souffrances[souf];
                           const level = soufData.diceCount === 0 ? 0 :
@@ -202,9 +301,11 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                           const totalMarks = soufData.marks.filter(m => m).length;
                           
                           return (
-                            <div key={souf} className="text-xs bg-gray-700 p-1 rounded">
-                              <div className="font-semibold mb-1">{getSouffranceName(souf)}</div>
-                              <div className="mb-1">{soufData.diceCount} Dés | N{level} | {totalMarks}/10</div>
+                            <div key={souf} className="text-xs bg-red-theme-alpha border-2 border-border-dark rounded p-2" style={{
+                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                            }}>
+                              <div className="font-bold text-text-cream mb-1">{getSouffranceName(souf)}</div>
+                              <div className="text-text-cream mb-2 text-[0.7rem]">{soufData.diceCount} Dés | N{level} | {totalMarks}/10</div>
                               <input
                                 type="number"
                                 min="0"
@@ -213,7 +314,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                   manager.setSouffranceDice(souf, parseInt(e.target.value) || 0);
                                   setState(manager.getState());
                                 }}
-                                className="w-full px-1 py-0.5 bg-gray-600 text-white rounded text-xs"
+                                className="w-full px-1 py-1 bg-parchment-aged border border-border-dark rounded text-text-dark font-medieval text-[0.7rem] text-center"
                               />
                             </div>
                           );
@@ -230,19 +331,19 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                         const linkedAttr = getActionLinkedAttribute(action);
                         
                         return (
-                          <div key={action} className="bg-gray-700 p-1 rounded text-xs">
+                          <div key={action} className="bg-parchment-aged border border-border-tan rounded p-2 text-xs">
                             <button
                               onClick={() => toggleAction(action)}
-                              className="w-full text-left flex items-center justify-between mb-1"
+                              className="w-full text-left flex items-center justify-between mb-1 font-medieval font-semibold text-text-dark transition-colors duration-300 hover:text-red-theme"
                             >
-                              <span className="font-medium">
+                              <span>
                                 {isExpanded ? '▼' : '▶'} {getActionName(action)}
                               </span>
-                              <span className="text-gray-400">({getAttributeAbbreviation(linkedAttr)})</span>
+                              <span className="text-text-secondary">({getAttributeAbbreviation(linkedAttr)})</span>
                             </button>
                             
                             {isExpanded && (
-                              <div className="mt-1 space-y-0.5">
+                              <div className="mt-1 space-y-0.5 pl-2 border-l-2 border-border-tan">
                                 {competences.map((comp) => {
                                   const compData = state.competences[comp];
                                   const isCompExpanded = expandedCompetences.has(comp);
@@ -250,11 +351,14 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                   const totalMarks = manager.getTotalMarks(comp);
                                   
                                   return (
-                                    <div key={comp} className="bg-gray-600 p-1 rounded text-xs relative">
+                                    <div key={comp} className="bg-hover-bg border border-border-tan rounded p-2 text-xs relative">
                                       {!compData.isRevealed ? (
                                         <button
                                           onClick={() => revealCompetence(comp)}
-                                          className="text-blue-400 hover:text-blue-300 text-xs w-full text-left"
+                                          className="w-full px-2 py-2 bg-teal-theme text-text-cream border border-border-dark rounded font-medieval font-semibold text-center transition-all duration-300 hover:bg-hover-bg hover:text-text-dark hover:-translate-y-0.5"
+                                          style={{
+                                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                                          }}
                                         >
                                           Révéler {getCompetenceName(comp)}?
                                         </button>
@@ -262,19 +366,19 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                         <>
                                           <button
                                             onClick={() => toggleCompetence(comp)}
-                                            className="w-full text-left flex items-center justify-between mb-0.5"
+                                            className="w-full text-left flex items-center justify-between mb-1 font-medieval font-semibold text-text-dark transition-colors duration-300 hover:text-red-theme"
                                           >
                                             <span className="text-xs">
                                               {isCompExpanded ? '▼' : '▶'} {getCompetenceName(comp)}
                                             </span>
-                                            <span className="text-xs text-gray-400">
+                                            <span className="text-xs text-text-secondary">
                                               {compData.diceCount}D N{level} {totalMarks}/10
                                             </span>
                                           </button>
                                           
                                           {isCompExpanded && (
-                                            <div className="ml-2 mt-0.5 space-y-0.5 relative">
-                                              <div className="flex gap-1 items-center">
+                                            <div className="mt-1 space-y-1 pt-1 border-t border-border-tan">
+                                              <div className="flex gap-2 items-center">
                                                 <label className="text-xs">Dés:</label>
                                                 <input
                                                   type="number"
@@ -284,7 +388,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                                     manager.setCompetenceDice(comp, parseInt(e.target.value) || 0);
                                                     setState(manager.getState());
                                                   }}
-                                                  className="w-12 px-1 py-0.5 bg-gray-700 text-white rounded text-xs"
+                                                  className="w-12 px-1 py-1 bg-parchment-aged border border-border-dark rounded text-text-dark font-medieval text-xs text-center"
                                                 />
                                               </div>
                                               
@@ -294,58 +398,66 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                                     manager.realizeCompetence(comp);
                                                     setState(manager.getState());
                                                   }}
-                                                  className="px-1 py-0.5 bg-green-600 hover:bg-green-700 rounded text-xs w-full"
+                                                  className="w-full px-2 py-2 bg-green-theme text-text-cream border border-border-dark rounded font-medieval font-semibold text-xs transition-all duration-300 hover:bg-hover-bg hover:text-text-dark hover:-translate-y-0.5"
+                                                  style={{
+                                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                                                  }}
                                                 >
                                                   Réaliser (+{level})
                                                 </button>
                                               )}
                                               
                                               {/* Mastery Points Display */}
-                                              <div className="text-xs mb-1">
-                                                <span className="text-yellow-400 font-semibold">
+                                              <div className="text-xs mb-2">
+                                                <span className="text-orange-theme font-bold">
                                                   Points MT: {manager.getMasteryPoints(comp)}
                                                 </span>
                                               </div>
                                               
                                               {/* Masteries Section */}
-                                              <div className="space-y-1">
-                                                <div className="text-xs font-semibold text-gray-300">
+                                              <div className="space-y-1 mt-2 pt-2 border-t border-border-tan">
+                                                <div className="text-xs font-bold text-text-dark mb-2">
                                                   Maîtrises:
                                                 </div>
                                                 
                                                 {/* List of unlocked masteries */}
-                                                {compData.masteries.map((mastery, masteryIdx) => {
-                                                  const maxDice = level;
-                                                  const canUpgrade = mastery.diceCount < maxDice && manager.getMasteryPoints(comp) > 0;
-                                                  
-                                                  return (
-                                                    <div key={masteryIdx} className="bg-gray-700 p-1 rounded text-xs flex items-center justify-between">
-                                                      <span className="flex-1">{mastery.name}</span>
-                                                      <div className="flex items-center gap-1">
-                                                        <span className="text-gray-400">{mastery.diceCount}D</span>
-                                                        {canUpgrade && (
-                                                          <button
-                                                            onClick={() => {
-                                                              manager.upgradeMastery(comp, mastery.name);
-                                                              setState(manager.getState());
-                                                            }}
-                                                            className="px-1 py-0.5 bg-blue-600 hover:bg-blue-700 rounded text-xs"
-                                                            title="Upgrade (+1 point)"
-                                                          >
-                                                            +1
-                                                          </button>
-                                                        )}
+                                                <div className="space-y-1 mb-2">
+                                                  {compData.masteries.map((mastery, masteryIdx) => {
+                                                    const maxDice = level;
+                                                    const canUpgrade = mastery.diceCount < maxDice && manager.getMasteryPoints(comp) > 0;
+                                                    
+                                                    return (
+                                                      <div key={masteryIdx} className="bg-parchment-aged border border-border-tan rounded p-2 text-xs flex items-center justify-between">
+                                                        <span className="flex-1">{mastery.name}</span>
+                                                        <div className="flex items-center gap-1">
+                                                          <span className="text-text-secondary text-xs">{mastery.diceCount}D</span>
+                                                          {canUpgrade && (
+                                                            <button
+                                                              onClick={() => {
+                                                                manager.upgradeMastery(comp, mastery.name);
+                                                                setState(manager.getState());
+                                                              }}
+                                                              className="px-2 py-1 bg-blue-600 text-white border border-border-dark rounded font-medieval font-semibold text-xs transition-all duration-300 hover:bg-hover-bg hover:text-text-dark"
+                                                              title="Upgrade (+1 point)"
+                                                            >
+                                                              +1
+                                                            </button>
+                                                          )}
+                                                        </div>
                                                       </div>
-                                                    </div>
-                                                  );
-                                                })}
+                                                    );
+                                                  })}
+                                                </div>
                                                 
                                                 {/* Unlock new mastery button */}
                                                 {manager.getMasteryPoints(comp) > 0 && (
                                                   <div className="relative mastery-selection-container" style={{ zIndex: masterySelectionOpen === comp ? 1000 : 'auto' }}>
                                                     <button
                                                       onClick={() => setMasterySelectionOpen(masterySelectionOpen === comp ? null : comp)}
-                                                      className="w-full px-1 py-0.5 bg-green-600 hover:bg-green-700 rounded text-xs text-center"
+                                                      className="w-full px-2 py-2 bg-green-theme text-text-cream border border-border-dark rounded font-medieval font-semibold text-xs text-center transition-all duration-300 hover:bg-hover-bg hover:text-text-dark hover:-translate-y-0.5"
+                                                      style={{
+                                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                                                      }}
                                                     >
                                                       + Débloquer Maîtrise (1 point)
                                                     </button>
@@ -358,7 +470,6 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                                         masteryName => !unlockedMasteryNames.includes(masteryName)
                                                       );
                                                       
-                                                      // Debug logging
                                                       if (process.env.NODE_ENV === 'development') {
                                                         console.log('Mastery dropdown for', getCompetenceName(comp), {
                                                           available: availableMasteries.length,
@@ -370,14 +481,9 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                                       
                                                       return (
                                                         <div 
-                                                          className="absolute mt-1 bg-gray-800 border-2 border-yellow-500 rounded shadow-2xl max-h-40 overflow-y-auto w-full min-w-[200px]" 
-                                                          style={{ 
-                                                            top: '100%', 
-                                                            left: 0,
-                                                            zIndex: 10000,
-                                                            position: 'absolute',
-                                                            backgroundColor: '#1f2937',
-                                                            display: 'block'
+                                                          className="absolute mt-1 bg-parchment-dark border-2 border-gold-glow rounded shadow-2xl max-h-40 overflow-y-auto w-full min-w-[200px] z-[10000]"
+                                                          style={{
+                                                            boxShadow: '0 0 0 1px #643030, 0 0 0 2px #ffebc6, 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 0 0 1px #ceb68d'
                                                           }}
                                                         >
                                                           {unselectedMasteries.length > 0 ? (
@@ -400,13 +506,13 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                                                   setState(manager.getState());
                                                                   setMasterySelectionOpen(null);
                                                                 }}
-                                                                className="w-full px-2 py-1 text-xs text-left hover:bg-gray-700 text-white block whitespace-nowrap"
+                                                                className="w-full px-2 py-2 text-xs text-left font-medieval text-text-dark block whitespace-nowrap transition-colors duration-300 hover:bg-hover-bg hover:text-red-theme border-b border-border-tan last:border-b-0"
                                                               >
                                                                 {masteryName}
                                                               </button>
                                                             ))
                                                           ) : (
-                                                            <div className="px-2 py-1 text-xs text-gray-400 italic">
+                                                            <div className="px-2 py-2 text-xs text-text-secondary italic">
                                                               {availableMasteries.length === 0 
                                                                 ? 'Aucune maîtrise disponible' 
                                                                 : 'Toutes les maîtrises sont débloquées'}
@@ -419,7 +525,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                                 )}
                                                 
                                                 {compData.masteries.length === 0 && manager.getMasteryPoints(comp) === 0 && (
-                                                  <div className="text-xs text-gray-500 italic">
+                                                  <div className="text-xs text-text-secondary italic">
                                                     Aucune maîtrise
                                                   </div>
                                                 )}

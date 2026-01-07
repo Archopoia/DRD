@@ -103,7 +103,9 @@ export default function GameCanvas() {
         style={{ display: 'block' }}
       />
       {process.env.NODE_ENV === 'development' && (
-        <div className="absolute top-4 right-4 text-white text-xs font-mono bg-black bg-opacity-50 p-2 rounded pointer-events-none">
+        <div className="absolute top-4 right-4 bg-red-theme/90 border-2 border-border-dark rounded px-4 py-2 text-text-cream font-mono text-sm z-10 pointer-events-auto" style={{
+          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3), inset 0 0 0 1px #ffebc6'
+        }}>
           <div>FPS: {fps}</div>
         </div>
       )}
