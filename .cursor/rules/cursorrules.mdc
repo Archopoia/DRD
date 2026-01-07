@@ -1,7 +1,184 @@
----
-alwaysApply: true
----
 # Cursor Rules for Daggerfall-like RPG Project
+
+## Primary Goal
+
+Build a retro, Daggerfall-like first-person RPG fully in the browser, optimized for AI-assisted development and rapid iteration.
+
+## Core Principles: AI-Optimized Development
+
+### 1. Language: TypeScript
+**Rule:**
+- All game code should be written in TypeScript with strict type checking
+- Avoid `any` types - use explicit types or `unknown` with proper type guards
+- Prefer interfaces and type unions over complex inheritance
+
+**Why:**
+- Prevents common math/type mistakes common in 3D games
+- Provides strong autocomplete and API safety for AI
+- Allows AI to refactor and extend code with fewer errors
+- Scales cleanly as the game grows (ECS, world gen, physics, etc.)
+- AI can better understand and modify type-safe code
+
+### 2. Rendering: Three.js (WebGL)
+**Rule:**
+- Use Three.js as the rendering engine, with custom shaders for retro aesthetics
+- Keep shader code well-commented and modular
+- Use TypeScript types for Three.js objects
+
+**Why:**
+- Lightweight and pure code → very AI-friendly
+- Perfect control over shaders to reproduce Daggerfall look
+- Excellent TypeScript typings and documentation
+- Easy handling of: billboards, procedural levels, chunk loading
+- Works perfectly inside browser + React frameworks
+- AI can easily reason about Three.js patterns
+
+### 3. UI Framework: React + Next.js
+**Rule:**
+- Use Next.js + React for all non-renderer UI:
+  - Menus
+  - Inventory
+  - Dialogues
+  - Character sheets
+  - Settings
+- Use `'use client'` directive for client components
+- Keep components small and focused
+
+**Why:**
+- Consistent, modern workflow
+- Fast iteration (hot reload)
+- Avoids clunky in-engine UI systems
+- Easy styling and component organization
+- Integrates perfectly into web deployment
+- React patterns are well-understood by AI
+
+### 4. Styling: Tailwind CSS
+**Rule:**
+- Use Tailwind CSS for styling all React UI components
+- Prefer Tailwind utility classes over custom CSS
+- Extend Tailwind config with project-specific colors/utilities
+- Use inline Tailwind classes - avoid separate CSS files
+
+**Why:**
+- Super fast interface design
+- Keeps UI clean, responsive, consistent
+- Avoids writing large CSS files
+- AI works extremely well with utility classes
+- Better autocomplete and IntelliSense
+- Easier for AI to read and modify
+
+### 5. Physics: Cannon.js or Rapier
+**Rule:**
+- Start with Cannon.js (JS-based)
+- Optionally upgrade to Rapier (WASM) if performance needed
+- Keep physics logic isolated in separate modules
+
+**Why:**
+- Simple and readable → AI-friendly
+- Enough functionality for retro FPS physics
+- Integrates cleanly with Three.js
+- Collision, simple rigid bodies, player capsule support
+- AI can easily understand and modify physics code
+
+### 6. Data Storage: LocalStorage/IndexedDB
+**Rule:**
+- Use localStorage for simple saves
+- Use IndexedDB for large save files or world streaming
+- Keep storage logic abstracted in utility modules
+
+**Why:**
+- Zero backend needed
+- Instant builds and deploys
+- Supports procedural chunk saves
+- Can add Supabase/Firebase later without rewriting architecture
+- AI can easily work with browser storage APIs
+
+### 7. Project Architecture
+**Rule:**
+Organize code into clear modules following this structure:
+
+```
+/src
+  /app              # Next.js App Router pages
+  /components       # React UI components
+  /game
+    /core           # Game engine, loop, initialization
+    /renderer       # Three.js rendering and shaders
+    /camera         # Camera controls
+    /world          # Scene setup, chunks, terrain
+    /character      # Character system and data
+    /physics        # Physics integration (future)
+    /utils          # Utilities and helpers
+  /lib              # Constants and shared code
+```
+
+**Why:**
+- Keeps game logic isolated from UI
+- Maximizes clarity for both human and AI collaborators
+- Clear separation of concerns
+- Easy generation of new systems
+- AI can easily navigate and understand the codebase
+
+### 8. Aesthetic Direction
+**Rule:**
+The game should intentionally aim for a retro, low-fidelity Daggerfall look, using:
+
+- Nearest-neighbor textures
+- Billboard sprites for enemies
+- Low FOV / retro camera constraints
+- Simple lighting (flat, vertex, or custom fragment shaders)
+- Medieval/Final Fantasy Crystal Chronicles UI styling
+
+**Why:**
+- Easier to build
+- Fits browser performance
+- Perfect for custom shaders
+- Reduces content workload
+- Matches nostalgic style (pixelated 3D + sprites)
+- AI can easily understand and modify retro-style code
+
+### 9. Deployment: Browser-First
+**Rule:**
+- The entire game must run natively in the browser — no downloads, no installs
+- Keep bundle size reasonable (<5–10 MB)
+- Use code splitting for large features
+
+**Why:**
+- Instant playability
+- Shareable via simple link
+- No engine runtimes
+- Lightweight builds
+- AI can manage the whole stack
+- Easy deployment to Vercel/Netlify
+
+## Code Quality Standards
+
+### TypeScript Best Practices
+1. **Strict Typing**: Use strict mode, avoid `any` types
+2. **Type Definitions**: Create explicit interfaces and types for all data structures
+3. **Type Guards**: Use type guards for runtime type checking
+4. **Enums**: Use enums for game constants (Attributes, Aptitudes, Actions, etc.)
+5. **Helper Functions**: Create typed helper functions for common operations
+
+### File Organization
+1. **One File, One Purpose**: Each file should have a single, clear responsibility
+2. **Named Exports**: Prefer named exports over default exports for better AI clarity
+3. **Barrel Exports**: Use index files sparingly, prefer explicit imports
+4. **Clear Naming**: Use descriptive names that explain purpose (e.g., `CharacterSheetManager`, not `Manager`)
+
+### Component Patterns
+1. **Functional Components**: Always use functional React components
+2. **Hooks**: Use hooks for state and side effects
+3. **Props Interfaces**: Always define TypeScript interfaces for component props
+4. **Small Components**: Break large components into smaller, focused ones
+5. **Custom Hooks**: Extract reusable logic into custom hooks
+
+### Error Handling
+1. **Try-Catch**: Wrap critical operations in try-catch blocks
+2. **User-Friendly Messages**: Provide clear, actionable error messages
+3. **Logging**: Use the Debug utility for all logging
+4. **Validation**: Validate inputs and state before operations
+5. **Graceful Degradation**: Handle missing features gracefully
 
 ## Testing and Debugging Requirements
 
@@ -17,13 +194,6 @@ alwaysApply: true
 - Use `Debug.warn()` for warnings (performance issues, invalid inputs, etc.)
 - Use `Debug.startMeasure()` and `Debug.endMeasure()` for performance monitoring
 - All debug output is automatically disabled in production builds
-
-### Error Handling Standards
-1. **Game Initialization**: Wrap in try-catch, log errors, provide user-friendly error messages
-2. **Render Loop**: Catch and log errors without stopping the game loop
-3. **Event Handlers**: Validate inputs, handle edge cases, log failures
-4. **WebGL Operations**: Check for WebGL support before initialization
-5. **Canvas Operations**: Verify canvas exists and is valid before use
 
 ### Testing Checklist
 Before marking any task as complete:
@@ -42,13 +212,6 @@ Before marking any task as complete:
 - Performance warnings logged for operations taking >16ms
 - Large delta time warnings logged for frame skips
 - Average performance metrics tracked for key operations
-
-### Code Quality Standards
-1. **TypeScript**: Use strict typing, avoid `any` types
-2. **Error Messages**: Provide clear, actionable error messages
-3. **Logging**: Include context (component/class name) in all log messages
-4. **Validation**: Validate inputs (dimensions > 0, objects not null, etc.)
-5. **Cleanup**: Always dispose resources (event listeners, geometries, materials)
 
 ### Browser Compatibility
 - Check WebGL support before initializing renderer
@@ -69,31 +232,111 @@ Before marking any task as complete:
 - Handle errors in update/render without stopping loop
 - Track FPS and warn on low performance
 
-### File Structure
+## AI-Assisted Development Best Practices
+
+### Writing AI-Friendly Code
+1. **Clear Intent**: Write code that clearly expresses intent - AI understands well-commented, self-documenting code
+2. **Consistent Patterns**: Follow established patterns in the codebase
+3. **Modular Design**: Break complex features into smaller, composable pieces
+4. **Type Safety**: Leverage TypeScript for AI to understand data structures
+5. **Inline Comments**: Add comments explaining "why" not just "what"
+
+### Prompting Strategy
+When asking AI to implement features:
+- Reference specific files and line numbers
+- Show examples of similar code in the codebase
+- Break complex features into smaller tasks
+- Ask for type-safe implementations
+- Request debug logging for new features
+- Specify Tailwind classes for UI components
+- Reference the TTRPG rules from `systeme_drd/` when implementing game mechanics
+
+### Code Review for AI
+Before accepting AI-generated code:
+1. Verify it follows project patterns
+2. Check TypeScript types are correct
+3. Ensure Tailwind classes are used (not custom CSS)
+4. Verify error handling is present
+5. Check that debug logging is added
+6. Ensure component structure matches project style
+
+## Styling Guidelines
+
+### Tailwind CSS
+- **Always use Tailwind utility classes** for styling
+- **Extend Tailwind config** with project-specific colors/tokens
+- **Avoid custom CSS files** - use inline Tailwind classes
+- **Use arbitrary values** when needed (e.g., `bg-[#color]`)
+- **Leverage Tailwind's responsive utilities** for mobile support
+
+### Color Palette
+- Use theme colors from `tailwind.config.js`:
+  - `parchment-*` for backgrounds
+  - `text-*` for text colors
+  - `red-theme`, `yellow-theme`, etc. for accent colors
+  - `border-*` for borders
+  - `gold-glow` for highlights
+
+### Component Styling
+- Keep styling inline with components
+- Use consistent spacing scales (Tailwind's default)
+- Apply hover/focus states with Tailwind variants
+- Use transitions for smooth interactions
+
+## Documentation Standards
+
+### Code Comments
+- Add JSDoc comments for public functions/classes
+- Explain complex logic and game mechanics
+- Reference TTRPG rules when implementing mechanics
+- Document why choices were made, not just what code does
+
+### File Headers
+- Include a brief description at the top of complex files
+- Note dependencies and relationships to other files
+- Document any non-obvious patterns or conventions
+
+## When Adding New Features
+
+### Development Workflow
+1. **Read TTRPG Rules**: Understand mechanic from `systeme_drd/` if applicable
+2. **Design Data Structure**: Create TypeScript interfaces/enums first
+3. **Implement Logic**: Build managers/calculators with type safety
+4. **Create UI**: Build React components using Tailwind
+5. **Add Debug Logging**: Log important operations
+6. **Test**: Verify functionality and check console
+7. **Check Performance**: Monitor FPS and warn on issues
+8. **Document**: Add comments explaining the implementation
+
+### Feature Checklist
+- [ ] TypeScript types defined
+- [ ] Error handling added
+- [ ] Debug logging included
+- [ ] UI uses Tailwind classes
+- [ ] Component follows React patterns
+- [ ] Code follows project structure
+- [ ] No linting errors
+- [ ] Tested in browser
+- [ ] Performance acceptable
+
+## File Structure Rules
+
 - Keep game logic in `src/game/`
 - Keep React components in `src/components/`
 - Keep utilities in `src/game/utils/`
 - Keep constants in `src/lib/`
 - Use TypeScript for all game code
+- Keep styling in Tailwind classes, not CSS files
+- Organize by feature/domain, not by file type
 
-### When Adding New Features
-1. Add debug logging for initialization
-2. Add error handling for failures
-3. Add performance measurements for expensive operations
-4. Test in development mode
-5. Verify no console errors
-6. Check FPS impact
-7. Update documentation if needed
+## Summary
 
-### Debug Output in Development
-- FPS counter visible in top-right corner
-- All debug logs visible in browser console
-- Performance warnings for slow operations
-- Error messages with stack traces
+This project prioritizes:
+1. **AI-Assisted Development**: Code should be clear, type-safe, and follow consistent patterns
+2. **TypeScript First**: Strong typing enables better AI understanding and refactoring
+3. **Tailwind CSS**: Utility-first styling that AI can easily read and modify
+4. **Modular Architecture**: Clear separation of concerns for easy navigation
+5. **Browser-First**: Everything runs in the browser for instant deployment
+6. **Retro Aesthetic**: Low-fidelity graphics that are easier to implement and iterate on
 
-### Production Builds
-- Debug logging automatically disabled
-- FPS counter hidden
-- Only errors are logged (for production debugging)
-- Performance monitoring disabled
-
+Every code decision should consider: "Is this easy for AI to understand and modify?"
