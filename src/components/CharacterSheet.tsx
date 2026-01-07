@@ -83,6 +83,19 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
     return Object.values(Competence).filter((comp) => getCompetenceAction(comp) === action);
   };
 
+  // Get level name from level number
+  const getLevelName = (level: number): string => {
+    switch (level) {
+      case 0: return 'Néophyte';
+      case 1: return 'Initié';
+      case 2: return 'Disciple';
+      case 3: return 'Adepte';
+      case 4: return 'Expert';
+      case 5: return 'Maître';
+      default: return `N${level}`;
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
       <div 
@@ -211,14 +224,14 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                           <label className="font-medieval text-xs font-bold text-red-theme uppercase tracking-wide whitespace-nowrap" title={`${getAttributeName(atb1)}: ${Math.floor(state.attributes[atb1] * 6 / 10)} (6/10)`}>
                             {getAttributeAbbreviation(atb1)}
                           </label>
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-0">
                           <input
                             type="number"
                             min="-50"
                             max="50"
                             value={state.attributes[atb1]}
                             onChange={(e) => handleAttributeChange(atb1, parseInt(e.target.value) || 0)}
-                            className="w-10 px-1 py-1 bg-parchment-aged border border-border-dark rounded text-text-dark font-medieval text-sm font-semibold text-center transition-all duration-300 focus:outline-none focus:border-gold-glow focus:bg-parchment-light"
+                            className="w-7 px-1 py-1 bg-parchment-aged border border-border-dark rounded text-text-dark font-medieval text-sm font-semibold text-center transition-all duration-300 focus:outline-none focus:border-gold-glow focus:bg-parchment-light"
                             style={{
                               boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'
                             }}
@@ -308,7 +321,58 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                             }}>
                               <div className="font-bold text-text-cream mb-1 flex justify-between items-center">
                                 <span>{getSouffranceName(souf)}</span>
-                                <span className="text-[0.7rem] font-normal">{soufData.diceCount} Dés | N{level}</span>
+                                <div className="flex items-center gap-0">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={soufData.diceCount}
+                                    onChange={(e) => {
+                                      manager.setSouffranceDice(souf, parseInt(e.target.value) || 0);
+                                      setState(manager.getState());
+                                    }}
+                                    className="w-5 px-0.5 py-0.5 bg-parchment-aged border border-border-dark rounded text-text-dark font-medieval text-[0.7rem] text-center"
+                                  />
+                                  <div className="flex flex-col h-[calc(0.875rem+0.25rem)]">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const newValue = soufData.diceCount + 1;
+                                        manager.setSouffranceDice(souf, newValue);
+                                        setState(manager.getState());
+                                      }}
+                                      className="bg-parchment-aged border border-border-dark rounded px-0.5 text-text-dark font-medieval font-bold text-[0.6rem] transition-all duration-300 hover:bg-hover-bg hover:border-gold-glow flex-1 flex items-center justify-center"
+                                      style={{
+                                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d',
+                                        borderBottom: 'none',
+                                        borderBottomLeftRadius: 0,
+                                        borderBottomRightRadius: 0,
+                                        minHeight: 0
+                                      }}
+                                    >
+                                      +
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const newValue = Math.max(0, soufData.diceCount - 1);
+                                        manager.setSouffranceDice(souf, newValue);
+                                        setState(manager.getState());
+                                      }}
+                                      className="bg-parchment-aged border border-border-dark rounded px-0.5 text-text-dark font-medieval font-bold text-[0.6rem] transition-all duration-300 hover:bg-hover-bg hover:border-gold-glow flex-1 flex items-center justify-center"
+                                      style={{
+                                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d',
+                                        borderTop: 'none',
+                                        borderTopLeftRadius: 0,
+                                        borderTopRightRadius: 0,
+                                        minHeight: 0
+                                      }}
+                                      disabled={soufData.diceCount <= 0}
+                                    >
+                                      −
+                                    </button>
+                                  </div>
+                                  <span className="text-[0.7rem] font-normal">{getLevelName(level)}</span>
+                                </div>
                               </div>
                               {/* Progress bar for marks */}
                               <div className="w-full h-2 bg-parchment-dark border border-border-dark rounded mb-2 overflow-hidden">
@@ -319,57 +383,6 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                     boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.3)'
                                   }}
                                 />
-                              </div>
-                              <div className="flex items-center gap-0.5 justify-center">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  value={soufData.diceCount}
-                                  onChange={(e) => {
-                                    manager.setSouffranceDice(souf, parseInt(e.target.value) || 0);
-                                    setState(manager.getState());
-                                  }}
-                                  className="w-8 px-0.5 py-0.5 bg-parchment-aged border border-border-dark rounded text-text-dark font-medieval text-[0.7rem] text-center"
-                                />
-                                <div className="flex flex-col h-[calc(0.875rem+0.25rem)]">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const newValue = soufData.diceCount + 1;
-                                      manager.setSouffranceDice(souf, newValue);
-                                      setState(manager.getState());
-                                    }}
-                                    className="bg-parchment-aged border border-border-dark rounded px-0.5 text-text-dark font-medieval font-bold text-[0.6rem] transition-all duration-300 hover:bg-hover-bg hover:border-gold-glow flex-1 flex items-center justify-center"
-                                    style={{
-                                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d',
-                                      borderBottom: 'none',
-                                      borderBottomLeftRadius: 0,
-                                      borderBottomRightRadius: 0,
-                                      minHeight: 0
-                                    }}
-                                  >
-                                    +
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const newValue = Math.max(0, soufData.diceCount - 1);
-                                      manager.setSouffranceDice(souf, newValue);
-                                      setState(manager.getState());
-                                    }}
-                                    className="bg-parchment-aged border border-border-dark rounded px-0.5 text-text-dark font-medieval font-bold text-[0.6rem] transition-all duration-300 hover:bg-hover-bg hover:border-gold-glow flex-1 flex items-center justify-center"
-                                    style={{
-                                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d',
-                                      borderTop: 'none',
-                                      borderTopLeftRadius: 0,
-                                      borderTopRightRadius: 0,
-                                      minHeight: 0
-                                    }}
-                                    disabled={soufData.diceCount <= 0}
-                                  >
-                                    −
-                                  </button>
-                                </div>
                               </div>
                             </div>
                           );
@@ -427,9 +440,61 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                               <span className="text-xs">
                                                 {isCompExpanded ? '▼' : '▶'} {getCompetenceName(comp)}
                                               </span>
-                                              <span className="text-xs text-text-secondary">
-                                                {compData.diceCount} Dés | N{level}
-                                              </span>
+                                              <div className="flex items-center gap-0">
+                                                <input
+                                                  type="number"
+                                                  min="0"
+                                                  value={compData.diceCount}
+                                                  onChange={(e) => {
+                                                    manager.setCompetenceDice(comp, parseInt(e.target.value) || 0);
+                                                    setState(manager.getState());
+                                                  }}
+                                                  onClick={(e) => e.stopPropagation()}
+                                                  className="w-5 px-0.5 py-0.5 bg-parchment-aged border border-border-dark rounded text-text-dark font-medieval text-xs text-center"
+                                                />
+                                                <div className="flex flex-col h-[calc(0.875rem+0.25rem)]">
+                                                  <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      const newValue = compData.diceCount + 1;
+                                                      manager.setCompetenceDice(comp, newValue);
+                                                      setState(manager.getState());
+                                                    }}
+                                                    className="bg-parchment-aged border border-border-dark rounded px-0.5 text-text-dark font-medieval font-bold text-[0.65rem] transition-all duration-300 hover:bg-hover-bg hover:border-gold-glow flex-1 flex items-center justify-center"
+                                                    style={{
+                                                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d',
+                                                      borderBottom: 'none',
+                                                      borderBottomLeftRadius: 0,
+                                                      borderBottomRightRadius: 0,
+                                                      minHeight: 0
+                                                    }}
+                                                  >
+                                                    +
+                                                  </button>
+                                                  <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      const newValue = Math.max(0, compData.diceCount - 1);
+                                                      manager.setCompetenceDice(comp, newValue);
+                                                      setState(manager.getState());
+                                                    }}
+                                                    className="bg-parchment-aged border border-border-dark rounded px-0.5 text-text-dark font-medieval font-bold text-[0.65rem] transition-all duration-300 hover:bg-hover-bg hover:border-gold-glow flex-1 flex items-center justify-center"
+                                                    style={{
+                                                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d',
+                                                      borderTop: 'none',
+                                                      borderTopLeftRadius: 0,
+                                                      borderTopRightRadius: 0,
+                                                      minHeight: 0
+                                                    }}
+                                                    disabled={compData.diceCount <= 0}
+                                                  >
+                                                    −
+                                                  </button>
+                                                </div>
+                                                <span className="text-xs text-text-secondary">| {getLevelName(level)}</span>
+                                              </div>
                                             </button>
                                             {/* Progress bar for marks */}
                                             <div className="w-full h-1.5 bg-parchment-dark border border-border-dark rounded mt-1 overflow-hidden">
@@ -445,60 +510,6 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                           
                                           {isCompExpanded && (
                                             <div className="mt-1 space-y-1 pt-1 border-t border-border-tan">
-                                              <div className="flex gap-2 items-center">
-                                                <label className="text-xs">Dés:</label>
-                                                <div className="flex items-center gap-0.5">
-                                                  <input
-                                                    type="number"
-                                                    min="0"
-                                                    value={compData.diceCount}
-                                                    onChange={(e) => {
-                                                      manager.setCompetenceDice(comp, parseInt(e.target.value) || 0);
-                                                      setState(manager.getState());
-                                                    }}
-                                                    className="w-8 px-0.5 py-0.5 bg-parchment-aged border border-border-dark rounded text-text-dark font-medieval text-xs text-center"
-                                                  />
-                                                  <div className="flex flex-col h-[calc(0.875rem+0.25rem)]">
-                                                    <button
-                                                      type="button"
-                                                      onClick={() => {
-                                                        const newValue = compData.diceCount + 1;
-                                                        manager.setCompetenceDice(comp, newValue);
-                                                        setState(manager.getState());
-                                                      }}
-                                                      className="bg-parchment-aged border border-border-dark rounded px-0.5 text-text-dark font-medieval font-bold text-[0.65rem] transition-all duration-300 hover:bg-hover-bg hover:border-gold-glow flex-1 flex items-center justify-center"
-                                                      style={{
-                                                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d',
-                                                        borderBottom: 'none',
-                                                        borderBottomLeftRadius: 0,
-                                                        borderBottomRightRadius: 0,
-                                                        minHeight: 0
-                                                      }}
-                                                    >
-                                                      +
-                                                    </button>
-                                                    <button
-                                                      type="button"
-                                                      onClick={() => {
-                                                        const newValue = Math.max(0, compData.diceCount - 1);
-                                                        manager.setCompetenceDice(comp, newValue);
-                                                        setState(manager.getState());
-                                                      }}
-                                                      className="bg-parchment-aged border border-border-dark rounded px-0.5 text-text-dark font-medieval font-bold text-[0.65rem] transition-all duration-300 hover:bg-hover-bg hover:border-gold-glow flex-1 flex items-center justify-center"
-                                                      style={{
-                                                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px #ceb68d',
-                                                        borderTop: 'none',
-                                                        borderTopLeftRadius: 0,
-                                                        borderTopRightRadius: 0,
-                                                        minHeight: 0
-                                                      }}
-                                                      disabled={compData.diceCount <= 0}
-                                                    >
-                                                      −
-                                                    </button>
-                                                  </div>
-                                                </div>
-                                              </div>
                                               
                                               {manager.isCompetenceEprouvee(comp) && (
                                                 <button

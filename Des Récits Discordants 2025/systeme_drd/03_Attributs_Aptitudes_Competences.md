@@ -129,10 +129,12 @@ Chaque Compétence a des **Maîtrises** (Spécialités) qui sont des sous-compé
 ## Système de Compétences
 
 ### Niveaux de Compétence
-- **Niv 0** : Incompétent
-- **Niv 1-4** : Novice à Compétent
-- **Niv 5-9** : Expert
-- **Niv 10+** : Maître
+- **N0** (0 Dé) : Néophyte (aucune expérience/désir d'apprendre la compétence)
+- **N1** (1 à 2 Dés) : Initié (incompétence inconsciente, la mauvaise intuition)
+- **N2** (3 à 5 Dés) : Disciple (incompétence consciente, la mauvaise analyse)
+- **N3** (6 à 9 Dés) : Adepte (compétence consciente, la bonne analyse)
+- **N4** (10 à 14 Dés) : Expert (compétence inconsciente, la bonne intuition)
+- **N5** (15 Dés et plus) : Maître (l'atteinte maximum de votre propre potentiel)
 
 ### Dés de Compétence
 - Chaque Compétence a des Dés supplémentaires
