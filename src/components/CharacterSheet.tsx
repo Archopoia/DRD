@@ -233,56 +233,63 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                       e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1), inset 0 0 0 1px #ceb68d';
                     }}
                   >
-                    {/* Aptitude Header */}
-                    <div className="mb-3 pb-3 border-b-2 border-border-dark">
-                      <div className="font-medieval text-sm font-bold text-red-theme text-center mb-1 uppercase tracking-wide">
-                        {getAptitudeName(aptitude)}
+                    {/* Aptitude Column Layout: Left (Attribute) and Right (Aptitude) */}
+                    <div className="flex gap-2 mb-3 pb-3 border-b-2 border-border-dark">
+                      {/* Left Section: Attribute */}
+                      <div className="flex-1 flex flex-col">
+                        <label className="font-medieval text-xs font-bold text-red-theme mb-1 uppercase tracking-wide">
+                          {getAttributeName(atb1).toUpperCase()}
+                        </label>
+                        <input
+                          type="number"
+                          min="-50"
+                          max="50"
+                          value={state.attributes[atb1]}
+                          onChange={(e) => handleAttributeChange(atb1, parseInt(e.target.value) || 0)}
+                          className="w-full px-2 py-1.5 bg-parchment-aged border-2 border-border-dark rounded text-text-dark font-medieval text-sm font-semibold text-center transition-all duration-300 focus:outline-none focus:border-gold-glow focus:bg-parchment-light mb-2"
+                          style={{
+                            boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.boxShadow = '0 0 10px #ffebc6, inset 0 2px 4px rgba(0, 0, 0, 0.1)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.boxShadow = 'inset 0 2px 4px rgba(0, 0, 0, 0.1)';
+                          }}
+                        />
+                        <div className="space-y-1 text-xs">
+                          <div 
+                            className="flex justify-between items-center cursor-help"
+                            title={`${getAttributeAbbreviation(atb1)}: ${Math.floor(state.attributes[atb1] * 6 / 10)} (6/10)`}
+                          >
+                            <span>{getAttributeAbbreviation(atb1)}:</span>
+                            <span className="font-semibold">{Math.floor(state.attributes[atb1] * 6 / 10)}</span>
+                          </div>
+                          <div 
+                            className="flex justify-between items-center cursor-help"
+                            title={`${getAttributeAbbreviation(atb2)}: ${Math.floor(state.attributes[atb2] * 3 / 10)} (3/10)`}
+                          >
+                            <span>{getAttributeAbbreviation(atb2)}:</span>
+                            <span className="font-semibold">{Math.floor(state.attributes[atb2] * 3 / 10)}</span>
+                          </div>
+                          <div 
+                            className="flex justify-between items-center cursor-help"
+                            title={`${getAttributeAbbreviation(atb3)}: ${Math.floor(state.attributes[atb3] * 1 / 10)} (1/10)`}
+                          >
+                            <span>{getAttributeAbbreviation(atb3)}:</span>
+                            <span className="font-semibold">{Math.floor(state.attributes[atb3] * 1 / 10)}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-xs text-text-secondary text-center mb-1">
-                        {getAttributeAbbreviation(atb1)}+3, {getAttributeAbbreviation(atb2)}+2, {getAttributeAbbreviation(atb3)}+1
-                      </div>
-                      <div className="font-medieval text-xl font-bold text-text-dark text-center" style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.2)' }}>
-                        {level >= 0 ? '+' : ''}{level}
-                      </div>
-                    </div>
 
-                    {/* Main Attribute Input */}
-                    <div className="mb-3">
-                      <label className="block text-xs font-bold text-red-theme text-center mb-2 uppercase tracking-wide">
-                        {getAttributeName(atb1).toUpperCase()}
-                      </label>
-                      <input
-                        type="number"
-                        min="-50"
-                        max="50"
-                        value={state.attributes[atb1]}
-                        onChange={(e) => handleAttributeChange(atb1, parseInt(e.target.value) || 0)}
-                        className="w-full px-2 py-2 bg-parchment-aged border-2 border-border-dark rounded text-text-dark font-medieval text-base font-semibold text-center transition-all duration-300 focus:outline-none focus:border-gold-glow focus:bg-parchment-light"
-                        style={{
-                          boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'
-                        }}
-                        onFocus={(e) => {
-                          e.target.style.boxShadow = '0 0 10px #ffebc6, inset 0 2px 4px rgba(0, 0, 0, 0.1)';
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.boxShadow = 'inset 0 2px 4px rgba(0, 0, 0, 0.1)';
-                        }}
-                      />
-                    </div>
-
-                    {/* ATB Values Display */}
-                    <div className="mb-3 text-xs space-y-1 pb-3 border-b border-border-tan">
-                      <div className="flex justify-between">
-                        <span>{getAttributeAbbreviation(atb1)}:</span>
-                        <span>{Math.floor(state.attributes[atb1] * 6 / 10)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>{getAttributeAbbreviation(atb2)}:</span>
-                        <span>{Math.floor(state.attributes[atb2] * 3 / 10)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>{getAttributeAbbreviation(atb3)}:</span>
-                        <span>{Math.floor(state.attributes[atb3] * 1 / 10)}</span>
+                      {/* Right Section: Aptitude */}
+                      <div className="flex-[2] flex flex-col justify-center items-center">
+                        <div className="font-medieval text-xs font-bold text-red-theme mb-1 uppercase tracking-wide text-center">
+                          {getAptitudeName(aptitude)}
+                        </div>
+                        <div className="font-medieval text-2xl font-bold text-text-dark text-center w-full" style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.2)' }}>
+                          {level >= 0 ? '+' : ''}{level}
+                        </div>
                       </div>
                     </div>
 
