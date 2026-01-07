@@ -7,6 +7,7 @@ import { Aptitude, getAptitudeName, getAptitudeAttributes } from '@/game/charact
 import { Action, getActionName, getActionAptitude, getActionLinkedAttribute } from '@/game/character/data/ActionData';
 import { Competence, getCompetenceName, getCompetenceAction } from '@/game/character/data/CompetenceData';
 import { Souffrance, getSouffranceName, getSouffranceAttribute } from '@/game/character/data/SouffranceData';
+import { getMasteries } from '@/game/character/data/MasteryRegistry';
 
 interface CharacterSheetProps {
   isOpen: boolean;
@@ -18,11 +19,27 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
   const [state, setState] = useState(manager.getState());
   const [expandedActions, setExpandedActions] = useState<Set<Action>>(new Set());
   const [expandedCompetences, setExpandedCompetences] = useState<Set<Competence>>(new Set());
+  const [masterySelectionOpen, setMasterySelectionOpen] = useState<Competence | null>(null);
 
   useEffect(() => {
     const currentState = manager.getState();
     setState(currentState);
   }, [manager]);
+
+  // Close mastery selection when clicking outside
+  useEffect(() => {
+    if (!masterySelectionOpen) return;
+    
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.mastery-selection-container')) {
+        setMasterySelectionOpen(null);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [masterySelectionOpen]);
 
   if (!isOpen) return null;
 
@@ -233,7 +250,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                   const totalMarks = manager.getTotalMarks(comp);
                                   
                                   return (
-                                    <div key={comp} className="bg-gray-600 p-1 rounded text-xs">
+                                    <div key={comp} className="bg-gray-600 p-1 rounded text-xs relative">
                                       {!compData.isRevealed ? (
                                         <button
                                           onClick={() => revealCompetence(comp)}
@@ -256,7 +273,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                           </button>
                                           
                                           {isCompExpanded && (
-                                            <div className="ml-2 mt-0.5 space-y-0.5">
+                                            <div className="ml-2 mt-0.5 space-y-0.5 relative">
                                               <div className="flex gap-1 items-center">
                                                 <label className="text-xs">Dés:</label>
                                                 <input
@@ -283,8 +300,129 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                                 </button>
                                               )}
                                               
-                                              <div className="text-xs text-gray-400">
-                                                Maîtrises: {compData.masteries.length}
+                                              {/* Mastery Points Display */}
+                                              <div className="text-xs mb-1">
+                                                <span className="text-yellow-400 font-semibold">
+                                                  Points MT: {manager.getMasteryPoints(comp)}
+                                                </span>
+                                              </div>
+                                              
+                                              {/* Masteries Section */}
+                                              <div className="space-y-1">
+                                                <div className="text-xs font-semibold text-gray-300">
+                                                  Maîtrises:
+                                                </div>
+                                                
+                                                {/* List of unlocked masteries */}
+                                                {compData.masteries.map((mastery, masteryIdx) => {
+                                                  const maxDice = level;
+                                                  const canUpgrade = mastery.diceCount < maxDice && manager.getMasteryPoints(comp) > 0;
+                                                  
+                                                  return (
+                                                    <div key={masteryIdx} className="bg-gray-700 p-1 rounded text-xs flex items-center justify-between">
+                                                      <span className="flex-1">{mastery.name}</span>
+                                                      <div className="flex items-center gap-1">
+                                                        <span className="text-gray-400">{mastery.diceCount}D</span>
+                                                        {canUpgrade && (
+                                                          <button
+                                                            onClick={() => {
+                                                              manager.upgradeMastery(comp, mastery.name);
+                                                              setState(manager.getState());
+                                                            }}
+                                                            className="px-1 py-0.5 bg-blue-600 hover:bg-blue-700 rounded text-xs"
+                                                            title="Upgrade (+1 point)"
+                                                          >
+                                                            +1
+                                                          </button>
+                                                        )}
+                                                      </div>
+                                                    </div>
+                                                  );
+                                                })}
+                                                
+                                                {/* Unlock new mastery button */}
+                                                {manager.getMasteryPoints(comp) > 0 && (
+                                                  <div className="relative mastery-selection-container" style={{ zIndex: masterySelectionOpen === comp ? 1000 : 'auto' }}>
+                                                    <button
+                                                      onClick={() => setMasterySelectionOpen(masterySelectionOpen === comp ? null : comp)}
+                                                      className="w-full px-1 py-0.5 bg-green-600 hover:bg-green-700 rounded text-xs text-center"
+                                                    >
+                                                      + Débloquer Maîtrise (1 point)
+                                                    </button>
+                                                    
+                                                    {/* Mastery selection dropdown */}
+                                                    {masterySelectionOpen === comp && (() => {
+                                                      const availableMasteries = getMasteries(comp);
+                                                      const unlockedMasteryNames = compData.masteries.map(m => m.name);
+                                                      const unselectedMasteries = availableMasteries.filter(
+                                                        masteryName => !unlockedMasteryNames.includes(masteryName)
+                                                      );
+                                                      
+                                                      // Debug logging
+                                                      if (process.env.NODE_ENV === 'development') {
+                                                        console.log('Mastery dropdown for', getCompetenceName(comp), {
+                                                          available: availableMasteries.length,
+                                                          unlocked: unlockedMasteryNames.length,
+                                                          unselected: unselectedMasteries.length,
+                                                          unselectedList: unselectedMasteries
+                                                        });
+                                                      }
+                                                      
+                                                      return (
+                                                        <div 
+                                                          className="absolute mt-1 bg-gray-800 border-2 border-yellow-500 rounded shadow-2xl max-h-40 overflow-y-auto w-full min-w-[200px]" 
+                                                          style={{ 
+                                                            top: '100%', 
+                                                            left: 0,
+                                                            zIndex: 10000,
+                                                            position: 'absolute',
+                                                            backgroundColor: '#1f2937',
+                                                            display: 'block'
+                                                          }}
+                                                        >
+                                                          {unselectedMasteries.length > 0 ? (
+                                                            unselectedMasteries.map((masteryName) => (
+                                                              <button
+                                                                key={masteryName}
+                                                                onClick={(e) => {
+                                                                  e.stopPropagation();
+                                                                  e.preventDefault();
+                                                                  const success = manager.unlockMastery(comp, masteryName);
+                                                                  if (process.env.NODE_ENV === 'development') {
+                                                                    console.log('Unlock mastery:', {
+                                                                      competence: getCompetenceName(comp),
+                                                                      mastery: masteryName,
+                                                                      success,
+                                                                      pointsBefore: manager.getMasteryPoints(comp) + 1,
+                                                                      pointsAfter: manager.getMasteryPoints(comp)
+                                                                    });
+                                                                  }
+                                                                  setState(manager.getState());
+                                                                  setMasterySelectionOpen(null);
+                                                                }}
+                                                                className="w-full px-2 py-1 text-xs text-left hover:bg-gray-700 text-white block whitespace-nowrap"
+                                                              >
+                                                                {masteryName}
+                                                              </button>
+                                                            ))
+                                                          ) : (
+                                                            <div className="px-2 py-1 text-xs text-gray-400 italic">
+                                                              {availableMasteries.length === 0 
+                                                                ? 'Aucune maîtrise disponible' 
+                                                                : 'Toutes les maîtrises sont débloquées'}
+                                                            </div>
+                                                          )}
+                                                        </div>
+                                                      );
+                                                    })()}
+                                                  </div>
+                                                )}
+                                                
+                                                {compData.masteries.length === 0 && manager.getMasteryPoints(comp) === 0 && (
+                                                  <div className="text-xs text-gray-500 italic">
+                                                    Aucune maîtrise
+                                                  </div>
+                                                )}
                                               </div>
                                             </div>
                                           )}

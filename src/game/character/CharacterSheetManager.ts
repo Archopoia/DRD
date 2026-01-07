@@ -2,6 +2,7 @@ import { Attribute } from './data/AttributeData';
 import { Aptitude, getAptitudeAttributes } from './data/AptitudeData';
 import { Competence } from './data/CompetenceData';
 import { Souffrance } from './data/SouffranceData';
+import { getMasteries } from './data/MasteryRegistry';
 
 /**
  * Character Sheet State Manager
@@ -32,6 +33,7 @@ export interface CompetenceData {
   eternalMarks: number;
   eternalMarkIndices: number[];
   masteries: MasteryData[];
+  masteryPoints: number; // MT points - earned when gaining non-Niv dice (aside from first)
 }
 
 export interface MasteryData {
@@ -88,6 +90,7 @@ export class CharacterSheetManager {
         eternalMarks: 0,
         eternalMarkIndices: [],
         masteries: [],
+        masteryPoints: 0, // Start with 0 mastery points
       };
     });
 
@@ -112,7 +115,35 @@ export class CharacterSheetManager {
   }
 
   getState(): CharacterSheetState {
-    return { ...this.state };
+    // Create new objects for nested structures to ensure React detects changes
+    const competences: Record<Competence, CompetenceData> = {} as Record<Competence, CompetenceData>;
+    Object.keys(this.state.competences).forEach((key) => {
+      const comp = this.state.competences[key as Competence];
+      competences[key as Competence] = {
+        ...comp,
+        masteries: [...comp.masteries],
+        marks: [...comp.marks],
+        eternalMarkIndices: [...comp.eternalMarkIndices],
+      };
+    });
+    
+    const souffrances: Record<Souffrance, SouffranceData> = {} as Record<Souffrance, SouffranceData>;
+    Object.keys(this.state.souffrances).forEach((key) => {
+      const souf = this.state.souffrances[key as Souffrance];
+      souffrances[key as Souffrance] = {
+        ...souf,
+        marks: [...souf.marks],
+        eternalMarkIndices: [...souf.eternalMarkIndices],
+      };
+    });
+    
+    return {
+      ...this.state,
+      competences,
+      souffrances,
+      aptitudeLevels: { ...this.state.aptitudeLevels },
+      attributes: { ...this.state.attributes },
+    };
   }
 
   setAttribute(attribute: Attribute, value: number): void {
@@ -151,7 +182,24 @@ export class CharacterSheetManager {
   }
 
   setCompetenceDice(competence: Competence, diceCount: number): void {
-    this.state.competences[competence].diceCount = Math.max(0, diceCount);
+    const comp = this.state.competences[competence];
+    const oldDiceCount = comp.diceCount;
+    const oldLevel = this.getCompetenceLevel(competence);
+    
+    comp.diceCount = Math.max(0, diceCount);
+    
+    // Check if we should earn a mastery point
+    // Mastery points (MT) are earned at every non-Niv dice gained, aside from the first one
+    if (diceCount > oldDiceCount) {
+      const newLevel = this.getCompetenceLevel(competence);
+      
+      // Earn mastery point if:
+      // 1. Level didn't change (non-Niv dice)
+      // 2. It's not the first dice (oldDiceCount > 0)
+      if (newLevel === oldLevel && oldDiceCount > 0) {
+        comp.masteryPoints += 1;
+      }
+    }
   }
 
   revealCompetence(competence: Competence): void {
@@ -194,7 +242,17 @@ export class CharacterSheetManager {
     if (!this.isCompetenceEprouvee(competence)) return;
     
     const comp = this.state.competences[competence];
+    const oldDiceCount = comp.diceCount;
+    const oldLevel = this.getCompetenceLevel(competence);
+    
     comp.diceCount += 1;
+    
+    // Check if we should earn a mastery point
+    // Mastery points (MT) are earned at every non-Niv dice gained, aside from the first one
+    const newLevel = this.getCompetenceLevel(competence);
+    if (newLevel === oldLevel && oldDiceCount > 0) {
+      comp.masteryPoints += 1;
+    }
     
     // Clear non-eternal marks
     for (let i = 0; i < 10; i++) {
@@ -226,6 +284,137 @@ export class CharacterSheetManager {
 
   setSouffranceDice(souffrance: Souffrance, diceCount: number): void {
     this.state.souffrances[souffrance].diceCount = Math.max(0, diceCount);
+  }
+
+  /**
+   * Get mastery points (MT) for a competence
+   */
+  getMasteryPoints(competence: Competence): number {
+    return this.state.competences[competence].masteryPoints;
+  }
+
+  /**
+   * Unlock a mastery by spending a mastery point
+   * Unlocks with +1 dice automatically
+   * @param competence The competence
+   * @param masteryName The name of the mastery to unlock
+   * @returns true if successful, false if insufficient points or invalid mastery
+   */
+  unlockMastery(competence: Competence, masteryName: string): boolean {
+    const comp = this.state.competences[competence];
+    
+    // Check if we have mastery points available
+    if (comp.masteryPoints <= 0) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Cannot unlock mastery: No mastery points available', {
+          competence,
+          masteryName,
+          points: comp.masteryPoints
+        });
+      }
+      return false;
+    }
+    
+    // Verify the mastery is valid for this competence
+    const availableMasteries = getMasteries(competence);
+    if (!availableMasteries.includes(masteryName)) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Cannot unlock mastery: Invalid mastery for competence', {
+          competence,
+          masteryName,
+          available: availableMasteries
+        });
+      }
+      return false;
+    }
+    
+    // Check if this mastery is already unlocked
+    if (comp.masteries.some(m => m.name === masteryName)) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Cannot unlock mastery: Already unlocked', {
+          competence,
+          masteryName,
+          unlocked: comp.masteries.map(m => m.name)
+        });
+      }
+      return false;
+    }
+    
+    // Create a new competence object with updated masteries and points
+    // This ensures React detects the change
+    this.state.competences[competence] = {
+      ...comp,
+      masteryPoints: comp.masteryPoints - 1,
+      masteries: [...comp.masteries, {
+        name: masteryName,
+        diceCount: 1, // Start with +1 dice when unlocked
+      }]
+    };
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Mastery unlocked successfully', {
+        competence,
+        masteryName,
+        remainingPoints: this.state.competences[competence].masteryPoints,
+        totalMasteries: this.state.competences[competence].masteries.length
+      });
+    }
+    
+    return true;
+  }
+
+  /**
+   * Upgrade an existing mastery by spending a mastery point
+   * Increases the mastery's dice count by 1 (up to competence level)
+   * @param competence The competence
+   * @param masteryName The name of the mastery to upgrade
+   * @returns true if successful, false if insufficient points or invalid mastery
+   */
+  upgradeMastery(competence: Competence, masteryName: string): boolean {
+    const comp = this.state.competences[competence];
+    
+    // Check if we have mastery points available
+    if (comp.masteryPoints <= 0) {
+      return false;
+    }
+    
+    // Find the mastery
+    const mastery = comp.masteries.find(m => m.name === masteryName);
+    if (!mastery) {
+      return false;
+    }
+    
+    // Check if we can upgrade (dice count must be less than competence level)
+    const maxDice = this.getCompetenceLevel(competence);
+    if (mastery.diceCount >= maxDice) {
+      return false;
+    }
+    
+    // Spend a mastery point and increase dice count
+    comp.masteryPoints -= 1;
+    mastery.diceCount += 1;
+    
+    return true;
+  }
+
+  /**
+   * Remove a mastery (refund the mastery point)
+   * @param competence The competence
+   * @param masteryName The name of the mastery to remove
+   */
+  removeMastery(competence: Competence, masteryName: string): boolean {
+    const comp = this.state.competences[competence];
+    const index = comp.masteries.findIndex(m => m.name === masteryName);
+    
+    if (index === -1) {
+      return false;
+    }
+    
+    // Remove the mastery and refund the point
+    comp.masteries.splice(index, 1);
+    comp.masteryPoints += 1;
+    
+    return true;
   }
 }
 
