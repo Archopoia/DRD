@@ -270,6 +270,10 @@ export class CharacterSheetManager {
     return this.state.freeMarks;
   }
 
+  addFreeMarks(amount: number): void {
+    this.state.freeMarks += amount;
+  }
+
   spendFreeMarks(amount: number): boolean {
     if (this.state.freeMarks >= amount) {
       this.state.freeMarks -= amount;

@@ -181,6 +181,22 @@ export class Game {
   }
 
   /**
+   * Disable all game controls (for UI overlays like console)
+   */
+  disableControls(): void {
+    this.camera.disableControls();
+    Debug.log('Game', 'All controls disabled');
+  }
+
+  /**
+   * Enable all game controls
+   */
+  enableControls(): void {
+    this.camera.enableControls();
+    Debug.log('Game', 'All controls enabled');
+  }
+
+  /**
    * Handle window resize
    */
   private handleResize = (): void => {

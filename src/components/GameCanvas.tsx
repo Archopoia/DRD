@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Debug } from '@/game/utils/debug';
 import CharacterSheet from './CharacterSheet';
 import EventLog from './ui/EventLog';
+import Console from './ui/Console';
 
 /**
  * React component that wraps the Three.js game canvas
@@ -14,7 +15,45 @@ export default function GameCanvas() {
   const [error, setError] = useState<string | null>(null);
   const [fps, setFps] = useState<number>(0);
   const [showCharacterSheet, setShowCharacterSheet] = useState<boolean>(false);
+  const [showConsole, setShowConsole] = useState<boolean>(false);
   const [characterSheetManager, setCharacterSheetManager] = useState<any>(null);
+
+  // Handle console open/close - disable controls when console is open
+  useEffect(() => {
+    if (gameRef.current) {
+      if (showConsole) {
+        gameRef.current.disableControls();
+      } else {
+        gameRef.current.enableControls();
+      }
+    }
+  }, [showConsole]);
+
+  // Ensure cursor is visible when console is open
+  useEffect(() => {
+    if (showConsole) {
+      // Force cursor to be visible on body
+      document.body.style.cursor = 'auto';
+      // Also ensure canvas shows cursor
+      if (canvasRef.current) {
+        canvasRef.current.style.cursor = 'auto';
+      }
+    } else {
+      // Restore default cursor behavior
+      document.body.style.cursor = '';
+      if (canvasRef.current) {
+        canvasRef.current.style.cursor = '';
+      }
+    }
+
+    return () => {
+      // Cleanup on unmount
+      document.body.style.cursor = '';
+      if (canvasRef.current) {
+        canvasRef.current.style.cursor = '';
+      }
+    };
+  }, [showConsole]);
 
   useEffect(() => {
     // Initialize Debug system to capture all console logs
@@ -119,8 +158,29 @@ export default function GameCanvas() {
   // Handle keyboard shortcuts (separate effect to avoid re-initializing game)
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Tab key for console (only if not in an input field)
+      if (event.code === 'Tab' && !event.repeat) {
+        const target = event.target as HTMLElement;
+        const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+        
+        if (!isInput) {
+          event.preventDefault();
+          
+          // Exit pointer lock immediately when opening console
+          if (document.pointerLockElement && !showConsole) {
+            document.exitPointerLock();
+          }
+          
+          setShowConsole((prev) => {
+            const newState = !prev;
+            Debug.log('GameCanvas', `Console ${newState ? 'opened' : 'closed'}`);
+            return newState;
+          });
+        }
+      }
+      
       // 'C' key for character sheet
-      if (event.code === 'KeyC' && !event.repeat) {
+      if (event.code === 'KeyC' && !event.repeat && !showConsole) {
         // Exit pointer lock to free the mouse cursor
         if (document.pointerLockElement) {
           document.exitPointerLock();
@@ -146,7 +206,7 @@ export default function GameCanvas() {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [showConsole]);
 
   if (error) {
     return (
@@ -166,7 +226,7 @@ export default function GameCanvas() {
     <>
       <canvas
         ref={canvasRef}
-        className="w-full h-full block cursor-none"
+        className={`w-full h-full block ${showConsole ? 'cursor-auto' : 'cursor-none'}`}
         style={{ display: 'block' }}
       />
       {process.env.NODE_ENV === 'development' && (
@@ -182,6 +242,11 @@ export default function GameCanvas() {
         manager={characterSheetManager}
       />
       <EventLog maxVisible={10} />
+      <Console
+        isOpen={showConsole}
+        onClose={() => setShowConsole(false)}
+        manager={characterSheetManager}
+      />
     </>
   );
 }

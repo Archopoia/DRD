@@ -24,6 +24,7 @@ export class FPSCamera {
   };
   private euler: THREE.Euler;
   private direction: THREE.Vector3;
+  private controlsEnabled: boolean = true;
 
   constructor(canvas: HTMLCanvasElement, characterController: CharacterController) {
     Debug.log('FPSCamera', 'Initializing camera...');
@@ -55,6 +56,8 @@ export class FPSCamera {
   private setupEventListeners(canvas: HTMLCanvasElement): void {
     // Keyboard controls
     const onKeyDown = (event: KeyboardEvent): void => {
+      if (!this.controlsEnabled) return;
+      
       switch (event.code) {
         case 'KeyW':
         case 'ArrowUp':
@@ -110,6 +113,7 @@ export class FPSCamera {
 
     // Mouse movement
     const onMouseMove = (event: MouseEvent): void => {
+      if (!this.controlsEnabled) return;
       if (this.mouseState.locked) {
         this.mouseState.deltaX = event.movementX;
         this.mouseState.deltaY = event.movementY;
@@ -134,6 +138,7 @@ export class FPSCamera {
 
     // Click to lock pointer
     const onClick = (): void => {
+      if (!this.controlsEnabled) return;
       if (!this.mouseState.locked) {
         Debug.log('FPSCamera', 'Requesting pointer lock...');
         canvas.requestPointerLock();
@@ -187,6 +192,16 @@ export class FPSCamera {
    * Update camera position based on movement controls
    */
   updatePosition(deltaTime: number): void {
+    if (!this.controlsEnabled) {
+      // Clear all movement when controls are disabled
+      this.controls.moveForward = false;
+      this.controls.moveBackward = false;
+      this.controls.moveLeft = false;
+      this.controls.moveRight = false;
+      this.controls.run = false;
+      return;
+    }
+    
     this.direction.set(0, 0, 0);
 
     if (this.controls.moveForward) this.direction.z -= 1;
@@ -233,6 +248,39 @@ export class FPSCamera {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     Debug.log('FPSCamera', `Camera resized to aspect ${this.camera.aspect.toFixed(2)}`);
+  }
+
+  /**
+   * Disable all controls (for UI overlays like console)
+   */
+  disableControls(): void {
+    this.controlsEnabled = false;
+    // Clear all active controls
+    this.controls.moveForward = false;
+    this.controls.moveBackward = false;
+    this.controls.moveLeft = false;
+    this.controls.moveRight = false;
+    this.controls.run = false;
+    // Exit pointer lock to free mouse cursor
+    if (document.pointerLockElement) {
+      document.exitPointerLock();
+    }
+    Debug.log('FPSCamera', 'Controls disabled');
+  }
+
+  /**
+   * Enable all controls
+   */
+  enableControls(): void {
+    this.controlsEnabled = true;
+    Debug.log('FPSCamera', 'Controls enabled');
+  }
+
+  /**
+   * Check if controls are enabled
+   */
+  areControlsEnabled(): boolean {
+    return this.controlsEnabled;
   }
 
   /**

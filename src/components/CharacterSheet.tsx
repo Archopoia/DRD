@@ -584,7 +584,14 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                             headerFooter={
                                               <div className="grid grid-cols-[1rem_1fr] items-center gap-1">
                                                 <span className="text-xs font-medieval font-semibold text-text-dark whitespace-nowrap">N{level}</span>
-                                                <ProgressBar value={totalMarks} max={100} height="sm" label={getLevelName(level)} level={level} />
+                                                <ProgressBar 
+                                                  value={totalMarks} 
+                                                  max={100} 
+                                                  height="sm" 
+                                                  label={getLevelName(level)} 
+                                                  level={level}
+                                                  isFull={manager.isCompetenceEprouvee(comp)}
+                                                />
                                               </div>
                                             }
                                             headerClassName="mb-1"

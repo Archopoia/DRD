@@ -94,13 +94,23 @@
     appearance: textfield;
   }
 
-  /* Pulse glow animation for full progress bars (marks at 100%) */
+  /* Pulse glow animation for full progress bars (marks at 100%) - Solar white to turquoise */
   @keyframes pulse-glow {
     0%, 100% {
-      box-shadow: 0 0 8px #517c78, 0 0 12px #517c7880, 0 0 16px #517c7860;
+      box-shadow: 
+        0 0 10px #ffffff,
+        0 0 15px #ffffff99,
+        0 0 20px #517c78,
+        0 0 25px #517c78cc,
+        0 0 30px #517c7866;
     }
     50% {
-      box-shadow: 0 0 12px #517c78, 0 0 18px #517c78cc, 0 0 24px #517c7899;
+      box-shadow: 
+        0 0 15px #ffffff,
+        0 0 25px #ffffffdd,
+        0 0 30px #517c78,
+        0 0 40px #517c78ff,
+        0 0 50px #517c78bb;
     }
   }
 
