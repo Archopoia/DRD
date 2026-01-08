@@ -450,7 +450,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                             )}
                                             
                                             {/* Masteries Section */}
-                                            <div className="space-y-1 mt-0 pt-0">
+                                            <div className="space-y-1 mt-2">
                                               <div className="text-xs font-bold text-text-dark mb-2 flex items-center justify-between">
                                                 <span>Maîtrises:</span>
                                                 {manager.getMasteryPoints(comp) > 0 && (
