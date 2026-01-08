@@ -232,27 +232,30 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                     className="relative"
                     style={{
                       perspective: '1000px',
-                      flex: isFlipped ? `0 0 calc(100% / 16)` : '1 1 0',
-                      transition: 'flex 0.6s ease-in-out',
+                      flex: isFlipped ? '0 0 6.25%' : '1 1 12.5%',
+                      minWidth: '0',
+                      transition: 'flex 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                     }}
                   >
                     <div
-                      className="relative w-full"
+                      className="relative w-full h-full"
                       style={{
                         transformStyle: 'preserve-3d',
-                        transition: 'transform 0.6s',
+                        transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                         transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
                         minHeight: '100%',
                       }}
                     >
                       {/* Front Face */}
                       <div 
-                        className="bg-hover-bg border-2 border-border-tan rounded-lg p-3 transition-all duration-300 hover:bg-parchment-light hover:border-gold-glow relative w-full"
+                        className="bg-hover-bg border-2 border-border-tan rounded-lg p-3 transition-all duration-300 hover:bg-parchment-light hover:border-gold-glow relative"
                         style={{
                           boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1), inset 0 0 0 1px #ceb68d',
                           backfaceVisibility: 'hidden',
                           WebkitBackfaceVisibility: 'hidden',
                           transform: 'rotateY(0deg)',
+                          width: '100%',
+                          minWidth: 0,
                         }}
                       >
                         {/* Aptitude Name with Modifier - Name on left, Modifier on right */}
@@ -429,7 +432,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                               <ProgressBar value={totalMarks} max={100} height="sm" label={getLevelName(level)} />
                                             }
                                             headerClassName="mb-1"
-                                            contentClassName="mt-1 space-y-1 pt-1 border-t border-border-tan"
+                                            contentClassName="space-y-1"
                                           >
                                             {manager.isCompetenceEprouvee(comp) && (
                                               <button
@@ -447,51 +450,41 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                             )}
                                             
                                             {/* Masteries Section */}
-                                            <div className="space-y-1 mt-2 pt-2 border-t border-border-tan">
+                                            <div className="space-y-1 mt-0 pt-0">
                                               <div className="text-xs font-bold text-text-dark mb-2 flex items-center justify-between">
                                                 <span>Maîtrises:</span>
                                                 {manager.getMasteryPoints(comp) > 0 && (
-                                                  <div className="flex items-center gap-2">
-                                                    <button
-                                                      ref={(el) => {
-                                                        if (el) masteryButtonRefs.current.set(comp, el);
-                                                        else masteryButtonRefs.current.delete(comp);
-                                                      }}
-                                                      onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        const wasOpen = masterySelectionOpen === comp;
-                                                        setMasterySelectionOpen(wasOpen ? null : comp);
-                                                        
-                                                        if (!wasOpen) {
-                                                          const buttonEl = masteryButtonRefs.current.get(comp);
-                                                          if (buttonEl) {
-                                                            const rect = buttonEl.getBoundingClientRect();
-                                                            setMasteryDropdownPosition({
-                                                              top: rect.bottom + 4,
-                                                              left: rect.left,
-                                                              width: rect.width
-                                                            });
-                                                          }
-                                                        } else {
-                                                          setMasteryDropdownPosition(null);
+                                                  <button
+                                                    ref={(el) => {
+                                                      if (el) masteryButtonRefs.current.set(comp, el);
+                                                      else masteryButtonRefs.current.delete(comp);
+                                                    }}
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      const wasOpen = masterySelectionOpen === comp;
+                                                      setMasterySelectionOpen(wasOpen ? null : comp);
+                                                      
+                                                      if (!wasOpen) {
+                                                        const buttonEl = masteryButtonRefs.current.get(comp);
+                                                        if (buttonEl) {
+                                                          const rect = buttonEl.getBoundingClientRect();
+                                                          setMasteryDropdownPosition({
+                                                            top: rect.bottom + 4,
+                                                            left: rect.left,
+                                                            width: rect.width
+                                                          });
                                                         }
-                                                      }}
-                                                      className="px-2 py-1 bg-green-theme text-text-cream border border-border-dark rounded font-medieval font-semibold text-xs transition-all duration-300 hover:bg-hover-bg hover:text-text-dark"
-                                                      style={{
-                                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
-                                                      }}
-                                                    >
-                                                      Apprendre
-                                                    </button>
-                                                    <span 
-                                                      className="px-2 py-1 bg-green-theme text-text-cream border border-border-dark rounded font-medieval font-semibold text-xs"
-                                                      style={{
-                                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
-                                                      }}
-                                                    >
-                                                      {manager.getMasteryPoints(comp)}
-                                                    </span>
-                                                  </div>
+                                                      } else {
+                                                        setMasteryDropdownPosition(null);
+                                                      }
+                                                    }}
+                                                    className="px-2 py-1 bg-green-theme text-text-cream border border-border-dark rounded font-medieval font-semibold text-xs transition-all duration-300 hover:bg-hover-bg hover:text-text-dark cursor-pointer"
+                                                    style={{
+                                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                                                    }}
+                                                  >
+                                                    {manager.getMasteryPoints(comp)}
+                                                  </button>
                                                 )}
                                               </div>
                                               
@@ -607,6 +600,8 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                                 </div>
                                               )}
                                             </div>
+                                            {/* Bottom border after all masteries */}
+                                            <div className="border-t border-border-tan mt-2 pt-2"></div>
                                           </ExpandableSection>
                                         </div>
                                       </>
