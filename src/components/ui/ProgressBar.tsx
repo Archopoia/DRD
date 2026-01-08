@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface ProgressBarProps {
   value: number;
@@ -30,7 +30,15 @@ export default function ProgressBar({
   showRealizeLabel = false, // Show "RÉALISER" instead of level name when full
 }: ProgressBarProps) {
   const [isRealizing, setIsRealizing] = useState(false);
+  const [charPositions, setCharPositions] = useState<number[]>([]);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const charRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const percentage = Math.min((value / max) * 100, 100);
+  
+  // Determine the label to show
+  const displayLabel = showRealizeLabel && isFull ? 'RÉALISER' : (label || '');
+  const isClickable = isFull && onClick;
   
   // Reset realizing state when value changes (after realization clears marks)
   useEffect(() => {
@@ -38,10 +46,103 @@ export default function ProgressBar({
       setIsRealizing(false);
     }
   }, [value, isFull, isRealizing]);
-  
-  // Determine the label to show
-  const displayLabel = showRealizeLabel && isFull ? 'RÉALISER' : (label || '');
-  const isClickable = isFull && onClick;
+
+  // Measure actual character positions after render
+  useEffect(() => {
+    if (!displayLabel) {
+      setCharPositions([]);
+      charRefs.current = [];
+      return;
+    }
+    
+    // Reset char refs array when label changes
+    charRefs.current = new Array(displayLabel.length).fill(null);
+    
+    let measurementAttempts = 0;
+    const maxAttempts = 10;
+    
+    const measurePositions = () => {
+      measurementAttempts++;
+      
+      if (containerRef.current && charRefs.current.length === displayLabel.length) {
+        // Check if we have all refs ready
+        const validRefs = charRefs.current.filter(ref => ref !== null);
+        
+        if (validRefs.length === displayLabel.length) {
+          const containerRect = containerRef.current.getBoundingClientRect();
+          const containerLeft = containerRect.left;
+          
+          const positions: number[] = [];
+          let allValid = true;
+          
+          charRefs.current.forEach((charRef) => {
+            if (charRef) {
+              const charRect = charRef.getBoundingClientRect();
+              // Position relative to container (0 = left edge of container)
+              const relativePosition = charRect.left - containerLeft;
+              positions.push(relativePosition);
+              if (relativePosition < 0 || relativePosition > containerRect.width) {
+                allValid = false;
+              }
+            } else {
+              allValid = false;
+            }
+          });
+          
+          if (allValid && positions.length === displayLabel.length) {
+            setCharPositions(positions);
+            setContainerWidth(containerRect.width);
+            return; // Success, stop trying
+          }
+        }
+      }
+      
+      // If measurement failed and we haven't exceeded max attempts, try again
+      if (measurementAttempts < maxAttempts) {
+        requestAnimationFrame(() => {
+          setTimeout(measurePositions, 50);
+        });
+      }
+    };
+    
+    // Start measurement after a delay to ensure DOM is ready
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setTimeout(measurePositions, 50);
+      });
+    });
+  }, [displayLabel]); // Re-measure when label changes
+
+  // Re-measure on resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (containerRef.current && displayLabel && charRefs.current.length === displayLabel.length) {
+        const allRefsReady = charRefs.current.every(ref => ref !== null);
+        
+        if (allRefsReady) {
+          const containerRect = containerRef.current.getBoundingClientRect();
+          const containerLeft = containerRect.left;
+          
+          const positions: number[] = [];
+          charRefs.current.forEach((charRef) => {
+            if (charRef) {
+              const charRect = charRef.getBoundingClientRect();
+              const relativePosition = charRect.left - containerLeft;
+              positions.push(relativePosition);
+            }
+          });
+          
+          if (positions.length === displayLabel.length) {
+            setCharPositions(positions);
+            setContainerWidth(containerRect.width);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [displayLabel]);
 
   const heightConfig = {
     sm: 'h-[0.8rem]', // 0.75rem * 1.1 (10% increase)
@@ -73,6 +174,7 @@ export default function ProgressBar({
 
   return (
     <div 
+      ref={containerRef}
       className={`w-full ${heightConfig[height]} bg-parchment-dark border border-border-dark rounded relative ${className} ${
         isFull ? 'progress-bar-container-pulse' : 'overflow-hidden'
       } ${isClickable ? 'cursor-pointer' : ''}`}
@@ -87,32 +189,60 @@ export default function ProgressBar({
           width: `${percentage}%`,
           boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.3)',
         }}
-      >
-        {displayLabel && percentage >= 30 && (
-          <span 
-            className="absolute inset-0 flex items-center justify-center text-[0.55rem] font-medieval font-semibold text-text-cream whitespace-nowrap pointer-events-none"
-            style={{ 
-              fontVariant: 'small-caps',
-              textShadow: '1px 1px 2px rgba(0, 0, 0, 0.8)',
-              textTransform: 'uppercase',
-            }}
-          >
-            {displayLabel}
-          </span>
-        )}
-      </div>
+      />
       {displayLabel && (
         <span 
-          className={`absolute inset-0 flex items-center justify-center text-[0.55rem] font-medieval font-semibold whitespace-nowrap pointer-events-none ${
-            percentage >= 30 ? 'opacity-0' : 'text-text-dark'
-          }`}
+          className="absolute inset-0 flex items-center justify-center text-[0.55rem] font-medieval font-semibold whitespace-nowrap pointer-events-none"
           style={{ 
             fontVariant: 'small-caps',
-            textShadow: percentage >= 30 ? 'none' : '1px 1px 2px rgba(255, 255, 255, 0.5)',
             textTransform: 'uppercase',
           }}
         >
-          {displayLabel}
+          {displayLabel.split('').map((char, index) => {
+            // Calculate if fill has reached this character
+            // Fill width in pixels
+            const fillWidth = (containerWidth * percentage) / 100;
+            
+            // Get this character's position (if measured)
+            const charPosition = charPositions[index];
+            
+            // Check if fill has reached this character's position
+            // We need valid measurements and check if fill has reached the character
+            const hasValidMeasurements = charPositions.length === displayLabel.length && 
+                                       containerWidth > 0 && 
+                                       charPositions.every(p => p !== undefined && p >= 0 && p <= containerWidth);
+            
+            let isCovered = false;
+            if (hasValidMeasurements && charPosition !== undefined) {
+              // Check if fill has reached this character's position
+              // Fill starts from left (0), so we check if fillWidth has reached or passed the character's left edge
+              // Use a small threshold (1px) to account for sub-pixel rendering
+              isCovered = fillWidth >= (charPosition - 1);
+            } else if (containerWidth > 0) {
+              // Fallback: use percentage-based estimation if measurements aren't ready
+              // This ensures it works even before measurements complete
+              const charPositionPercent = (index + 0.5) / displayLabel.length;
+              isCovered = (percentage / 100) >= charPositionPercent;
+            }
+            
+            return (
+              <span
+                key={index}
+                ref={(el) => {
+                  charRefs.current[index] = el;
+                }}
+                style={{
+                  color: isCovered ? '#ffebc6' : '#4d3000', // Lighter (cream) when covered, darker when not
+                  textShadow: isCovered 
+                    ? '1px 1px 2px rgba(0, 0, 0, 0.8)' 
+                    : '1px 1px 2px rgba(255, 255, 255, 0.5)',
+                  transition: 'color 0.2s ease, text-shadow 0.2s ease',
+                }}
+              >
+                {char === ' ' ? '\u00A0' : char}
+              </span>
+            );
+          })}
         </span>
       )}
     </div>
