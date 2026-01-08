@@ -287,14 +287,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                   size="sm"
                                 />
                               </div>
-                              <div className="grid grid-cols-3 gap-2 items-center">
-                                <div className="col-span-1">
-                                  <span className="text-[0.65rem] text-text-cream whitespace-nowrap" style={{ fontVariant: 'small-caps' }}>{getLevelName(level)}</span>
-                                </div>
-                                <div className="col-span-2">
-                                  <ProgressBar value={totalMarks} max={100} height="md" />
-                                </div>
-                              </div>
+                              <ProgressBar value={totalMarks} max={100} height="sm" label={getLevelName(level)} />
                             </div>
                           );
                         }
@@ -367,14 +360,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                               </div>
                                             }
                                             headerFooter={
-                                              <div className="grid grid-cols-3 gap-2 items-center">
-                                                <div className="col-span-1">
-                                                  <span className="text-[0.65rem] text-text-secondary whitespace-nowrap" style={{ fontVariant: 'small-caps' }}>{getLevelName(level)}</span>
-                                                </div>
-                                                <div className="col-span-2">
-                                                  <ProgressBar value={totalMarks} max={100} height="sm" />
-                                                </div>
-                                              </div>
+                                              <ProgressBar value={totalMarks} max={100} height="sm" label={getLevelName(level)} />
                                             }
                                             headerClassName="mb-1"
                                             contentClassName="mt-1 space-y-1 pt-1 border-t border-border-tan"
