@@ -47,7 +47,14 @@ export class Game {
 
       // Initialize character controller
       Debug.log('Game', 'Initializing character controller...');
-      const initialPosition = { x: 0, y: GAME_CONFIG.CHARACTER_CONTROLLER.HEIGHT / 2, z: 0 };
+      // Start character at a safe height above the ground
+      // HEIGHT/2 is the capsule center, but we need to account for the capsule bottom
+      // Capsule bottom = center - (halfHeight + radius)
+      // We want the bottom to be slightly above the floor (y=0)
+      const capsuleHalfHeight = (GAME_CONFIG.CHARACTER_CONTROLLER.HEIGHT - 2 * GAME_CONFIG.CHARACTER_CONTROLLER.RADIUS) / 2;
+      const capsuleBottomOffset = capsuleHalfHeight + GAME_CONFIG.CHARACTER_CONTROLLER.RADIUS;
+      const initialY = capsuleBottomOffset + 0.5; // Add 0.5 units above the floor for safety
+      const initialPosition = { x: 0, y: initialY, z: 0 };
       this.characterController = new CharacterController(this.physicsWorld, initialPosition);
       Debug.log('Game', 'Character controller initialized');
 

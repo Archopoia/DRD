@@ -82,157 +82,105 @@ export class CharacterController {
       // Apply vertical velocity (from jumping/gravity)
       const moveY = this.verticalVelocity * deltaTime;
 
-      // Create movement vector
-      const movement = new RAPIER.Vector3(moveX, moveY, moveZ);
+      // Start with current position
+      const targetPos = new RAPIER.Vector3(currentPos.x, currentPos.y, currentPos.z);
       
-      // Calculate target position
-      const targetPos = new RAPIER.Vector3(
-        currentPos.x + movement.x,
-        currentPos.y + movement.y,
-        currentPos.z + movement.z
-      );
-
-      // Check for collisions at target position using intersection query
+      // Check for collisions using intersection query
       const shape = new RAPIER.Capsule(this.halfHeight, this.capsuleRadius);
       const shapeRot = this.rigidBody.rotation();
       
-      // Use intersection query to check if we would collide at the target position
-      // Exclude our own collider from the query
-      const intersections: RAPIER.Collider[] = [];
-      world.intersectionsWithShape(
-        targetPos,
-        shapeRot,
-        shape,
-        (collider) => {
-          // Exclude our own collider by checking if it belongs to our rigid body
-          const colliderBody = collider.parent();
-          if (colliderBody && colliderBody.handle !== this.rigidBody.handle) {
-            intersections.push(collider);
-            return true; // Continue query
-          }
-          return true; // Continue query
-        },
-        undefined, // filter
-        undefined // groups
-      );
-
-      // If we have collisions, try to slide along the collision
-      if (intersections.length > 0) {
-        // Try to move only horizontally (slide along walls)
-        const horizontalMovement = new RAPIER.Vector3(moveX, 0, moveZ);
-        const horizontalTarget = new RAPIER.Vector3(
-          currentPos.x + horizontalMovement.x,
-          currentPos.y,
-          currentPos.z + horizontalMovement.z
-        );
-
-        // Check horizontal movement
-        const horizontalIntersections: RAPIER.Collider[] = [];
+      // Helper function to check for collisions at a position
+      // Returns true if there's a blocking collision (static bodies), false otherwise
+      // Dynamic bodies are allowed (can be pushed)
+      const checkCollisions = (pos: RAPIER.Vector3): boolean => {
+        let hasBlockingCollision = false;
         world.intersectionsWithShape(
-          horizontalTarget,
+          pos,
           shapeRot,
           shape,
           (collider) => {
+            // Exclude our own collider by checking if it belongs to our rigid body
             const colliderBody = collider.parent();
             if (colliderBody && colliderBody.handle !== this.rigidBody.handle) {
-              horizontalIntersections.push(collider);
-              return true;
+              // Check if it's a static body (wall) - these block movement
+              // Dynamic bodies (blocks) can be pushed, so we allow movement through them
+              const bodyType = colliderBody.bodyType();
+              if (bodyType === RAPIER.RigidBodyType.Fixed) {
+                // Static body (wall) - blocks movement
+                hasBlockingCollision = true;
+                return false; // Stop on first blocking collision
+              }
+              // Dynamic body - allow movement (can push it)
+              // Kinematic bodies are also allowed (we're already excluding our own)
             }
-            return true;
+            return true; // Continue query
           },
-          undefined,
-          undefined
+          undefined, // filter
+          undefined // groups
+        );
+        return hasBlockingCollision;
+      };
+
+      // First, try horizontal movement (X and Z together)
+      if (moveX !== 0 || moveZ !== 0) {
+        const horizontalTarget = new RAPIER.Vector3(
+          currentPos.x + moveX,
+          currentPos.y,
+          currentPos.z + moveZ
         );
 
-        if (horizontalIntersections.length === 0) {
-          // Can move horizontally, keep vertical movement separate
+        if (!checkCollisions(horizontalTarget)) {
+          // Can move horizontally
           targetPos.x = horizontalTarget.x;
           targetPos.z = horizontalTarget.z;
         } else {
-          // Can't move horizontally either, try X and Z separately
+          // Can't move horizontally, try X and Z separately for sliding
           // Try X only
-          const xOnlyTarget = new RAPIER.Vector3(
-            currentPos.x + moveX,
-            currentPos.y,
-            currentPos.z
-          );
-          const xIntersections: RAPIER.Collider[] = [];
-          world.intersectionsWithShape(
-            xOnlyTarget,
-            shapeRot,
-            shape,
-            (collider) => {
-              const colliderBody = collider.parent();
-              if (colliderBody && colliderBody.handle !== this.rigidBody.handle) {
-                xIntersections.push(collider);
-                return true;
-              }
-              return true;
-            },
-            undefined,
-            undefined
-          );
-
-          if (xIntersections.length === 0) {
-            targetPos.x = xOnlyTarget.x;
+          if (moveX !== 0) {
+            const xOnlyTarget = new RAPIER.Vector3(
+              currentPos.x + moveX,
+              currentPos.y,
+              currentPos.z
+            );
+            if (!checkCollisions(xOnlyTarget)) {
+              targetPos.x = xOnlyTarget.x;
+            }
           }
 
           // Try Z only
-          const zOnlyTarget = new RAPIER.Vector3(
-            currentPos.x,
-            currentPos.y,
-            currentPos.z + moveZ
-          );
-          const zIntersections: RAPIER.Collider[] = [];
-          world.intersectionsWithShape(
-            zOnlyTarget,
-            shapeRot,
-            shape,
-            (collider) => {
-              const colliderBody = collider.parent();
-              if (colliderBody && colliderBody.handle !== this.rigidBody.handle) {
-                zIntersections.push(collider);
-                return true;
-              }
-              return true;
-            },
-            undefined,
-            undefined
-          );
-
-          if (zIntersections.length === 0) {
-            targetPos.z = zOnlyTarget.z;
+          if (moveZ !== 0) {
+            const zOnlyTarget = new RAPIER.Vector3(
+              currentPos.x,
+              currentPos.y,
+              currentPos.z + moveZ
+            );
+            if (!checkCollisions(zOnlyTarget)) {
+              targetPos.z = zOnlyTarget.z;
+            }
           }
         }
+      }
 
-        // Always allow vertical movement (gravity/jumping) unless blocked
+      // Then handle vertical movement (gravity/jumping) separately
+      if (moveY !== 0) {
         const verticalTarget = new RAPIER.Vector3(
           targetPos.x,
           currentPos.y + moveY,
           targetPos.z
         );
-        const verticalIntersections: RAPIER.Collider[] = [];
-        world.intersectionsWithShape(
-          verticalTarget,
-          shapeRot,
-          shape,
-          (collider) => {
-            const colliderBody = collider.parent();
-            if (colliderBody && colliderBody.handle !== this.rigidBody.handle) {
-              verticalIntersections.push(collider);
-              return true;
-            }
-            return true;
-          },
-          undefined,
-          undefined
-        );
 
-        if (verticalIntersections.length === 0) {
+        if (!checkCollisions(verticalTarget)) {
+          // Can move vertically
           targetPos.y = verticalTarget.y;
-        } else if (moveY < 0) {
-          // Hitting something below - we're on ground
-          targetPos.y = currentPos.y;
+        } else {
+          // Blocked vertically
+          if (moveY < 0) {
+            // Hitting something below - stay at current Y (we're on ground)
+            targetPos.y = currentPos.y;
+          } else {
+            // Hitting something above - stay at current Y (can't jump through ceiling)
+            targetPos.y = currentPos.y;
+          }
         }
       }
 
