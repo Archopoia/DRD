@@ -119,94 +119,6 @@ export default function Tooltip({
     };
   }, []);
 
-  const getArrowStyles = () => {
-    const arrowSize = 8;
-    const borderWidth = 2;
-    
-    switch (position) {
-      case 'top':
-        return {
-          bottom: `-${arrowSize}px`,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          borderLeft: `${arrowSize}px solid transparent`,
-          borderRight: `${arrowSize}px solid transparent`,
-          borderTop: `${arrowSize}px solid #643030`,
-        };
-      case 'bottom':
-        return {
-          top: `-${arrowSize}px`,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          borderLeft: `${arrowSize}px solid transparent`,
-          borderRight: `${arrowSize}px solid transparent`,
-          borderBottom: `${arrowSize}px solid #643030`,
-        };
-      case 'left':
-        return {
-          right: `-${arrowSize}px`,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          borderTop: `${arrowSize}px solid transparent`,
-          borderBottom: `${arrowSize}px solid transparent`,
-          borderLeft: `${arrowSize}px solid #643030`,
-        };
-      case 'right':
-        return {
-          left: `-${arrowSize}px`,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          borderTop: `${arrowSize}px solid transparent`,
-          borderBottom: `${arrowSize}px solid transparent`,
-          borderRight: `${arrowSize}px solid #643030`,
-        };
-    }
-  };
-
-  const getArrowBorderStyles = () => {
-    const arrowSize = 8;
-    const borderWidth = 1;
-    
-    switch (position) {
-      case 'top':
-        return {
-          bottom: `-${arrowSize + borderWidth}px`,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          borderLeft: `${arrowSize + borderWidth}px solid transparent`,
-          borderRight: `${arrowSize + borderWidth}px solid transparent`,
-          borderTop: `${arrowSize + borderWidth}px solid #674B1B`,
-        };
-      case 'bottom':
-        return {
-          top: `-${arrowSize + borderWidth}px`,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          borderLeft: `${arrowSize + borderWidth}px solid transparent`,
-          borderRight: `${arrowSize + borderWidth}px solid transparent`,
-          borderBottom: `${arrowSize + borderWidth}px solid #674B1B`,
-        };
-      case 'left':
-        return {
-          right: `-${arrowSize + borderWidth}px`,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          borderTop: `${arrowSize + borderWidth}px solid transparent`,
-          borderBottom: `${arrowSize + borderWidth}px solid transparent`,
-          borderLeft: `${arrowSize + borderWidth}px solid #674B1B`,
-        };
-      case 'right':
-        return {
-          left: `-${arrowSize + borderWidth}px`,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          borderTop: `${arrowSize + borderWidth}px solid transparent`,
-          borderBottom: `${arrowSize + borderWidth}px solid transparent`,
-          borderRight: `${arrowSize + borderWidth}px solid #674B1B`,
-        };
-    }
-  };
-
   return (
     <>
       <div
@@ -230,12 +142,6 @@ export default function Tooltip({
             maxWidth,
           }}
         >
-          {/* Arrow border (outer) */}
-          <div
-            className="absolute w-0 h-0"
-            style={getArrowBorderStyles()}
-          />
-          
           {/* Main tooltip */}
           <div
             className="bg-red-theme text-text-cream border-2 border-border-dark rounded px-3 py-2 font-medieval text-sm shadow-2xl relative"
@@ -266,12 +172,6 @@ export default function Tooltip({
                 content
               )}
             </div>
-            
-            {/* Arrow (inner) */}
-            <div
-              className="absolute w-0 h-0"
-              style={getArrowStyles()}
-            />
           </div>
         </div>
       )}
