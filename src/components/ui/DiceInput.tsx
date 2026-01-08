@@ -150,17 +150,17 @@ export default function DiceInput({
       {/* Invisible hover area that extends backwards for easier access */}
       {showButtons && (
         <div 
-          className="absolute left-full top-0 h-full w-1"
-          style={{ marginLeft: '-4px', zIndex: 1 }}
+          className="absolute right-full top-0 h-full w-1"
+          style={{ marginRight: '-4px', zIndex: 1 }}
         />
       )}
       <div 
-        className={`absolute left-full top-0 flex flex-col ${config.height} transition-opacity duration-200 ${
+        className={`absolute right-full top-[-2px] flex flex-col ${config.height} transition-opacity duration-200 ${
           showButtons ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         style={{ 
-          marginLeft: '-2px',
-          padding: '2px 2px 2px 0',
+          marginRight: '-2px',
+          padding: '2px 0 2px 2px',
           zIndex: 2,
         }}
       >

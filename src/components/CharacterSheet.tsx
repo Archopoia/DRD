@@ -533,18 +533,43 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                 isExpanded={isExpanded}
                                 onToggle={() => toggleAction(action)}
                                 title={
-                                  <div className="flex justify-between items-center w-full">
-                                    <span>{getActionName(action).toUpperCase()}</span>
-                                    <span 
-                                      className="text-text-secondary"
-                                      style={{
-                                        opacity: hoveredAction === action ? 1 : 0,
-                                        transition: 'opacity 0.3s ease-in-out',
-                                        pointerEvents: hoveredAction === action ? 'auto' : 'none'
-                                      }}
-                                    >
-                                      [{getAttributeAbbreviation(linkedAttr)}]
-                                    </span>
+                                  <div className="flex items-center w-full" style={{ padding: 0, margin: 0 }}>
+                                    <span className="flex-1" style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getActionName(action).toUpperCase()}</span>
+                                    <div style={{ position: 'relative', flexShrink: 0, width: 'auto', height: 'auto', minWidth: '60px', minHeight: '32px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                                      {/* DiceInput showing total competence levels - always in layout to maintain size */}
+                                      <div
+                                        style={{
+                                          opacity: hoveredAction === action ? 0 : 1,
+                                          transition: 'opacity 0.3s ease-in-out',
+                                          pointerEvents: hoveredAction === action ? 'none' : 'auto',
+                                          position: 'relative',
+                                        }}
+                                      >
+                                        <DiceInput
+                                          value={competences.reduce((sum, comp) => sum + manager.getCompetenceLevel(comp), 0)}
+                                          onChange={() => {}}
+                                          min={0}
+                                          size="sm"
+                                          disabled={true}
+                                        />
+                                      </div>
+                                      {/* [ATB] text that appears on hover */}
+                                      <span 
+                                        className="text-text-secondary"
+                                        style={{
+                                          opacity: hoveredAction === action ? 1 : 0,
+                                          transition: 'opacity 0.3s ease-in-out',
+                                          pointerEvents: hoveredAction === action ? 'auto' : 'none',
+                                          position: 'absolute',
+                                          right: 0,
+                                          top: '50%',
+                                          transform: 'translateY(-50%)',
+                                          whiteSpace: 'nowrap',
+                                        }}
+                                      >
+                                        [{getAttributeAbbreviation(linkedAttr)}]
+                                      </span>
+                                    </div>
                                   </div>
                                 }
                                 contentClassName="mt-1 space-y-0.5 pl-2 border-l-2 border-border-tan"
