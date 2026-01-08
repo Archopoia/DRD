@@ -87,7 +87,10 @@ export default function ExpandableSection({
             {arrowPosition === 'left' && (
               <span 
                 className="inline-block transition-transform duration-300"
-                style={{ transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)' }}
+                style={{ 
+                  transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)',
+                  marginLeft: '-0.5rem'
+                }}
               >
                 ▼
               </span>
