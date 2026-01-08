@@ -12,6 +12,7 @@ import { getLevelName, getLevelFromDiceCount } from '@/lib/utils';
 import DiceInput from './ui/DiceInput';
 import ProgressBar from './ui/ProgressBar';
 import ExpandableSection from './ui/ExpandableSection';
+import Tooltip from './ui/Tooltip';
 
 interface CharacterSheetProps {
   isOpen: boolean;
@@ -183,7 +184,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                 )
               ))}
             </div>
-            <div className="flex gap-2 flex-1 items-start" style={{ minWidth: 0 }}>
+            <div className="flex gap-0 flex-1 items-start" style={{ minWidth: 0 }}>
                 {Object.values(Aptitude).map((aptitude) => {
                 const [atb1, atb2, atb3] = getAptitudeAttributes(aptitude);
                 const level = state.aptitudeLevels[aptitude];
@@ -219,9 +220,15 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                       {/* Right Column: Attributes */}
                       <div className="flex-1 flex flex-col">
                         <div className="flex items-center gap-2 mb-2">
-                          <label className="font-medieval text-xs font-bold text-red-theme uppercase tracking-wide whitespace-nowrap" title={`${getAttributeName(atb1)}: ${Math.floor(state.attributes[atb1] * 6 / 10)} (6/10)`}>
-                            {getAttributeAbbreviation(atb1)}
-                          </label>
+                          <Tooltip
+                            content={`${getAttributeName(atb1)}: ${Math.floor(state.attributes[atb1] * 6 / 10)} (6/10)`}
+                            position="top"
+                            delay={200}
+                          >
+                            <label className="font-medieval text-xs font-bold text-red-theme uppercase tracking-wide whitespace-nowrap cursor-help">
+                              {getAttributeAbbreviation(atb1)}
+                            </label>
+                          </Tooltip>
                           <DiceInput
                             value={state.attributes[atb1]}
                             onChange={(value) => handleAttributeChange(atb1, value)}
@@ -231,20 +238,26 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                           />
                         </div>
                         <div className="space-y-1 text-xs">
-                          <div 
-                            className="flex justify-between items-center cursor-help"
-                            title={getAttributeName(atb2)}
+                          <Tooltip
+                            content={getAttributeName(atb2)}
+                            position="top"
+                            delay={200}
                           >
-                            <span>{getAttributeAbbreviation(atb2).charAt(0) + getAttributeAbbreviation(atb2).slice(1).toLowerCase()}:</span>
-                            <span className="font-semibold">{Math.floor(state.attributes[atb2] * 3 / 10)}</span>
-                          </div>
-                          <div 
-                            className="flex justify-between items-center cursor-help"
-                            title={getAttributeName(atb3)}
+                            <div className="flex justify-between items-center cursor-help">
+                              <span>{getAttributeAbbreviation(atb2).charAt(0) + getAttributeAbbreviation(atb2).slice(1).toLowerCase()}:</span>
+                              <span className="font-semibold">{Math.floor(state.attributes[atb2] * 3 / 10)}</span>
+                            </div>
+                          </Tooltip>
+                          <Tooltip
+                            content={getAttributeName(atb3)}
+                            position="top"
+                            delay={200}
                           >
-                            <span>{getAttributeAbbreviation(atb3).toLowerCase()}:</span>
-                            <span className="font-semibold">{Math.floor(state.attributes[atb3] * 1 / 10)}</span>
-                          </div>
+                            <div className="flex justify-between items-center cursor-help">
+                              <span>{getAttributeAbbreviation(atb3).toLowerCase()}:</span>
+                              <span className="font-semibold">{Math.floor(state.attributes[atb3] * 1 / 10)}</span>
+                            </div>
+                          </Tooltip>
                         </div>
                       </div>
                     </div>
@@ -264,20 +277,24 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                             }}>
                               <div className="font-bold text-text-cream mb-1 flex justify-between items-center">
                                 <span>{getSouffranceName(souf)}</span>
-                                <div className="flex items-center gap-0">
-                                  <DiceInput
-                                    value={soufData.diceCount}
-                                    onChange={(value) => {
-                                      manager.setSouffranceDice(souf, value);
-                                      updateState();
-                                    }}
-                                    min={0}
-                                    size="sm"
-                                  />
-                                  <span className="text-[0.7rem] font-normal ml-1">{getLevelName(level)}</span>
+                                <DiceInput
+                                  value={soufData.diceCount}
+                                  onChange={(value) => {
+                                    manager.setSouffranceDice(souf, value);
+                                    updateState();
+                                  }}
+                                  min={0}
+                                  size="sm"
+                                />
+                              </div>
+                              <div className="grid grid-cols-3 gap-2 items-center">
+                                <div className="col-span-1">
+                                  <span className="text-[0.65rem] text-text-cream whitespace-nowrap" style={{ fontVariant: 'small-caps' }}>{getLevelName(level)}</span>
+                                </div>
+                                <div className="col-span-2">
+                                  <ProgressBar value={totalMarks} max={100} height="md" />
                                 </div>
                               </div>
-                              <ProgressBar value={totalMarks} max={100} height="md" className="mb-2" />
                             </div>
                           );
                         }
@@ -286,25 +303,29 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                     </div>
 
                     {/* Actions (3 per Aptitude) */}
-                    <div className="space-y-1">
-                      {actions.map((action) => {
+                    <div className="space-y-0">
+                      {actions.map((action, actionIdx) => {
                         const competences = getCompetencesForAction(action);
                         const isExpanded = expandedActions.has(action);
                         const linkedAttr = getActionLinkedAttribute(action);
                         
                         return (
-                          <div key={action} className="bg-parchment-aged border border-border-tan rounded p-2 text-xs">
-                            <ExpandableSection
-                              isExpanded={isExpanded}
-                              onToggle={() => toggleAction(action)}
-                              title={
-                                <>
-                                  {getActionName(action)}
-                                  <span className="text-text-secondary ml-1">({getAttributeAbbreviation(linkedAttr)})</span>
-                                </>
-                              }
-                              contentClassName="mt-1 space-y-0.5 pl-2 border-l-2 border-border-tan"
-                            >
+                          <div key={action}>
+                            {actionIdx > 0 && (
+                              <div className="border-t border-border-tan my-1"></div>
+                            )}
+                            <div className="text-xs">
+                              <ExpandableSection
+                                isExpanded={isExpanded}
+                                onToggle={() => toggleAction(action)}
+                                title={
+                                  <div className="flex justify-between items-center w-full">
+                                    <span>{getActionName(action)}</span>
+                                    <span className="text-text-secondary">({getAttributeAbbreviation(linkedAttr)})</span>
+                                  </div>
+                                }
+                                contentClassName="mt-1 space-y-0.5 pl-2 border-l-2 border-border-tan"
+                              >
                               {competences.map((comp) => {
                                 const compData = state.competences[comp];
                                 const isCompExpanded = expandedCompetences.has(comp);
@@ -312,7 +333,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                 const totalMarks = manager.getTotalMarks(comp);
                                 
                                 return (
-                                  <div key={comp} className="bg-hover-bg border border-border-tan rounded p-2 text-xs relative">
+                                  <div key={comp} className="text-xs relative">
                                     {!compData.isRevealed ? (
                                       <button
                                         onClick={() => revealCompetence(comp)}
@@ -329,23 +350,31 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                           <ExpandableSection
                                             isExpanded={isCompExpanded}
                                             onToggle={() => toggleCompetence(comp)}
-                                            title={<span className="text-xs">{getCompetenceName(comp)}</span>}
-                                            headerActions={
-                                              <div className="flex items-center gap-0">
-                                                <DiceInput
-                                                  value={compData.diceCount}
-                                                  onChange={(value) => {
-                                                    manager.setCompetenceDice(comp, value);
-                                                    updateState();
-                                                  }}
-                                                  min={0}
-                                                  size="sm"
-                                                />
-                                                <span className="text-xs text-text-secondary ml-1">| {getLevelName(level)}</span>
+                                            title={
+                                              <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                                <div onClick={(e) => e.stopPropagation()}>
+                                                  <DiceInput
+                                                    value={compData.diceCount}
+                                                    onChange={(value) => {
+                                                      manager.setCompetenceDice(comp, value);
+                                                      updateState();
+                                                    }}
+                                                    min={0}
+                                                    size="sm"
+                                                  />
+                                                </div>
+                                                <span className="text-xs">{getCompetenceName(comp)}</span>
                                               </div>
                                             }
                                             headerFooter={
-                                              <ProgressBar value={totalMarks} max={100} height="sm" />
+                                              <div className="grid grid-cols-3 gap-2 items-center">
+                                                <div className="col-span-1">
+                                                  <span className="text-[0.65rem] text-text-secondary whitespace-nowrap" style={{ fontVariant: 'small-caps' }}>{getLevelName(level)}</span>
+                                                </div>
+                                                <div className="col-span-2">
+                                                  <ProgressBar value={totalMarks} max={100} height="sm" />
+                                                </div>
+                                              </div>
                                             }
                                             headerClassName="mb-1"
                                             contentClassName="mt-1 space-y-1 pt-1 border-t border-border-tan"
@@ -385,21 +414,26 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                                   const canUpgrade = mastery.diceCount < maxDice && manager.getMasteryPoints(comp) > 0;
                                                   
                                                   return (
-                                                    <div key={masteryIdx} className="bg-parchment-aged border border-border-tan rounded p-2 text-xs flex items-center justify-between">
-                                                      <span className="flex-1">{mastery.name}</span>
+                                                    <div key={masteryIdx} className="text-xs flex items-center justify-between">
+                                                      <span className="flex-1"><span className="mr-1">•</span>{mastery.name}</span>
                                                       <div className="flex items-center gap-1">
                                                         <span className="text-text-secondary text-xs">{mastery.diceCount}D</span>
                                                         {canUpgrade && (
-                                                          <button
-                                                            onClick={() => {
-                                                              manager.upgradeMastery(comp, mastery.name);
-                                                              updateState();
-                                                            }}
-                                                            className="px-2 py-1 bg-blue-600 text-white border border-border-dark rounded font-medieval font-semibold text-xs transition-all duration-300 hover:bg-hover-bg hover:text-text-dark"
-                                                            title="Upgrade (+1 point)"
+                                                          <Tooltip
+                                                            content="Upgrade (+1 point)"
+                                                            position="top"
+                                                            delay={200}
                                                           >
-                                                            +1
-                                                          </button>
+                                                            <button
+                                                              onClick={() => {
+                                                                manager.upgradeMastery(comp, mastery.name);
+                                                                updateState();
+                                                              }}
+                                                              className="px-2 py-1 bg-blue-600 text-white border border-border-dark rounded font-medieval font-semibold text-xs transition-all duration-300 hover:bg-hover-bg hover:text-text-dark"
+                                                            >
+                                                              +1
+                                                            </button>
+                                                          </Tooltip>
                                                         )}
                                                       </div>
                                                     </div>
@@ -495,7 +529,8 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                   </div>
                                 );
                               })}
-                            </ExpandableSection>
+                              </ExpandableSection>
+                            </div>
                           </div>
                         );
                       })}

@@ -20,9 +20,9 @@ export default function ProgressBar({
   const percentage = Math.min((value / max) * 100, 100);
 
   const heightConfig = {
-    sm: 'h-1',
-    md: 'h-1.5',
-    lg: 'h-2',
+    sm: 'h-2',
+    md: 'h-3',
+    lg: 'h-4',
   };
 
   return (
