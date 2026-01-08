@@ -378,11 +378,43 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                         const linkedAttr = getActionLinkedAttribute(action);
                         
                         return (
-                          <div key={action}>
+                          <div key={action} className="relative">
                             {actionIdx > 0 && (
                               <div className="border-t border-border-tan my-1"></div>
                             )}
-                            <div className="text-xs">
+                            <div 
+                              className="text-xs relative rounded-md px-2 py-1 my-1 overflow-hidden"
+                              style={{
+                                position: 'relative',
+                              }}
+                            >
+                              {/* Main background with fade to transparent at edges */}
+                              <div 
+                                style={{
+                                  position: 'absolute',
+                                  top: 0,
+                                  left: 0,
+                                  right: 0,
+                                  bottom: 0,
+                                  background: 'linear-gradient(to right, transparent 0%, rgba(221, 202, 146, 0.1) 15%, rgba(221, 202, 146, 0.15) 25%, rgba(221, 202, 146, 0.15) 75%, rgba(221, 202, 146, 0.1) 85%, transparent 100%)',
+                                  pointerEvents: 'none',
+                                  borderRadius: 'inherit',
+                                }}
+                              />
+                              {/* Vertical fade overlay */}
+                              <div 
+                                style={{
+                                  position: 'absolute',
+                                  top: 0,
+                                  left: 0,
+                                  right: 0,
+                                  bottom: 0,
+                                  background: 'linear-gradient(to bottom, transparent 0%, rgba(221, 202, 146, 0.1) 20%, rgba(221, 202, 146, 0.15) 40%, rgba(221, 202, 146, 0.15) 60%, rgba(221, 202, 146, 0.1) 80%, transparent 100%)',
+                                  pointerEvents: 'none',
+                                  borderRadius: 'inherit',
+                                }}
+                              />
+                              <div style={{ position: 'relative', zIndex: 1 }}>
                               <ExpandableSection
                                 isExpanded={isExpanded}
                                 onToggle={() => toggleAction(action)}
@@ -730,6 +762,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                 );
                               })}
                               </ExpandableSection>
+                              </div>
                             </div>
                           </div>
                         );
