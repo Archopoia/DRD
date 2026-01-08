@@ -97,24 +97,28 @@
   /* Pulse glow animation for full progress bars (marks at 100%) - Solar white to turquoise */
   @keyframes pulse-glow {
     0%, 100% {
-      box-shadow: 
-        0 0 10px #ffffff,
-        0 0 15px #ffffff99,
-        0 0 20px #517c78,
-        0 0 25px #517c78cc,
-        0 0 30px #517c7866;
+      filter: 
+        drop-shadow(0 0 2px #ffffff)
+        drop-shadow(0 0 4px #ffffff99)
+        drop-shadow(0 0 6px #517c78)
+        drop-shadow(0 0 8px #517c78cc);
     }
     50% {
-      box-shadow: 
-        0 0 15px #ffffff,
-        0 0 25px #ffffffdd,
-        0 0 30px #517c78,
-        0 0 40px #517c78ff,
-        0 0 50px #517c78bb;
+      filter: 
+        drop-shadow(0 0 4px #ffffff)
+        drop-shadow(0 0 6px #ffffffdd)
+        drop-shadow(0 0 8px #517c78)
+        drop-shadow(0 0 12px #517c78ff);
     }
   }
 
   .progress-bar-container-pulse {
+    position: relative;
+    overflow: visible !important;
+    z-index: 1;
+  }
+
+  .progress-bar-fill-pulse {
     animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 }

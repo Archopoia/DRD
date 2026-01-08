@@ -57,6 +57,7 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
   const [flippedAptitudes, setFlippedAptitudes] = useState<Set<Aptitude>>(new Set());
   const [masteryDropdownPosition, setMasteryDropdownPosition] = useState<{ top: number; left: number; width: number } | null>(null);
   const [hoveredAttribute, setHoveredAttribute] = useState<{ aptitude: Aptitude; attributeIndex: number } | null>(null);
+  const [hoveredAction, setHoveredAction] = useState<Action | null>(null);
   const masteryButtonRefs = useRef<Map<Competence, HTMLButtonElement>>(new Map());
 
   // Update dropdown position on scroll/resize and close on outside click
@@ -437,8 +438,9 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                           const isEprouvee = manager.isSouffranceEprouvee(souf); // 100% marks (10 marks)
                           
                           return (
-                            <div key={souf} className="text-xs bg-red-theme-alpha border-2 border-border-dark rounded p-2" style={{
-                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                            <div key={souf} className={`text-xs bg-red-theme-alpha border-2 border-border-dark rounded p-2 ${isEprouvee ? 'overflow-visible' : ''}`} style={{
+                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                              ...(isEprouvee ? { overflow: 'visible', position: 'relative', zIndex: 1 } : {})
                             }}>
                               <div className="font-bold text-text-cream mb-1 flex items-center gap-1">
                                 <DiceInput
@@ -461,7 +463,7 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                 />
                                 <span>{getResistanceCompetenceName(souf)}</span>
                               </div>
-                              <div className="grid grid-cols-[1rem_1fr] items-center gap-1">
+                              <div className={`grid grid-cols-[1rem_1fr] items-center gap-1 ${isEprouvee ? 'overflow-visible' : ''}`} style={isEprouvee ? { overflow: 'visible' } : {}}>
                                 <span className="text-xs font-medieval font-semibold text-text-cream whitespace-nowrap">N{resistanceLevel}</span>
                                 <ProgressBar 
                                   value={totalMarks} 
@@ -496,6 +498,8 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                               style={{
                                 position: 'relative',
                               }}
+                              onMouseEnter={() => setHoveredAction(action)}
+                              onMouseLeave={() => setHoveredAction(null)}
                             >
                               {/* Main background with fade to transparent at edges */}
                               <div 
@@ -530,7 +534,16 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                 title={
                                   <div className="flex justify-between items-center w-full">
                                     <span>{getActionName(action).toUpperCase()}</span>
-                                    <span className="text-text-secondary">({getAttributeAbbreviation(linkedAttr)})</span>
+                                    <span 
+                                      className="text-text-secondary"
+                                      style={{
+                                        opacity: hoveredAction === action ? 1 : 0,
+                                        transition: 'opacity 0.3s ease-in-out',
+                                        pointerEvents: hoveredAction === action ? 'auto' : 'none'
+                                      }}
+                                    >
+                                      [{getAttributeAbbreviation(linkedAttr)}]
+                                    </span>
                                   </div>
                                 }
                                 contentClassName="mt-1 space-y-0.5 pl-2 border-l-2 border-border-tan"
@@ -540,6 +553,8 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                 const isCompExpanded = expandedCompetences.has(comp);
                                 const level = manager.getCompetenceLevel(comp);
                                 const totalMarks = manager.getTotalMarks(comp);
+                                const isEprouvee = manager.isCompetenceEprouvee(comp);
+                                const hasDice = compData.diceCount > 0; // Has been realized at least once
                                 
                                 return (
                                   <div key={comp} className="text-xs relative">
@@ -577,7 +592,7 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                               </div>
                                             }
                                             headerFooter={
-                                              <div className="grid grid-cols-[1rem_1fr] items-center gap-1">
+                                              <div className={`grid grid-cols-[1rem_1fr] items-center gap-1 ${manager.isCompetenceEprouvee(comp) ? 'overflow-visible' : ''}`} style={manager.isCompetenceEprouvee(comp) ? { overflow: 'visible' } : {}}>
                                                 <span className="text-xs font-medieval font-semibold text-text-dark whitespace-nowrap">N{level}</span>
                                                 <ProgressBar 
                                                   value={totalMarks} 
@@ -585,28 +600,20 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                                   height="sm" 
                                                   label={getLevelName(level)} 
                                                   level={level}
-                                                  isFull={manager.isCompetenceEprouvee(comp)}
+                                                  isFull={isEprouvee}
+                                                  showRealizeLabel={isEprouvee}
+                                                  onClick={() => {
+                                                    if (isEprouvee) {
+                                                      manager.realizeCompetence(comp);
+                                                      updateState();
+                                                    }
+                                                  }}
                                                 />
                                               </div>
                                             }
                                             headerClassName="mb-1"
                                             contentClassName="space-y-1"
                                           >
-                                            {manager.isCompetenceEprouvee(comp) && (
-                                              <button
-                                                onClick={() => {
-                                                  manager.realizeCompetence(comp);
-                                                  updateState();
-                                                }}
-                                                className="w-full px-2 py-2 bg-green-theme text-text-cream border border-border-dark rounded font-medieval font-semibold text-xs transition-all duration-300 hover:bg-hover-bg hover:text-text-dark hover:-translate-y-0.5"
-                                                style={{
-                                                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
-                                                }}
-                                              >
-                                                Réaliser (+{level})
-                                              </button>
-                                            )}
-                                            
                                             {/* Masteries Section */}
                                             <div className="space-y-1 mt-2">
                                               {/* Unlock button when there are existing masteries */}
