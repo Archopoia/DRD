@@ -6,6 +6,7 @@ import { Debug } from '../utils/debug';
 
 /**
  * Character controller using a kinematic capsule body for FPS movement
+ * Uses collision queries to properly detect and respond to collisions
  */
 export class CharacterController {
   private rigidBody: RAPIER.RigidBody;
@@ -16,6 +17,7 @@ export class CharacterController {
   private wantsToJump: boolean = false;
   private capsuleHeight: number;
   private capsuleRadius: number;
+  private halfHeight: number;
 
   constructor(physicsWorld: PhysicsWorld, position: { x: number; y: number; z: number }) {
     Debug.startMeasure('CharacterController.constructor');
@@ -33,8 +35,12 @@ export class CharacterController {
       // Capsule: halfHeight is the distance from center to top/bottom of cylinder part
       // Total height = 2 * halfHeight + 2 * radius
       // We want total height = capsuleHeight, so: halfHeight = (capsuleHeight - 2*radius) / 2
-      const halfHeight = (this.capsuleHeight - 2 * this.capsuleRadius) / 2;
-      const colliderDesc = RAPIER.ColliderDesc.capsule(halfHeight, this.capsuleRadius);
+      this.halfHeight = (this.capsuleHeight - 2 * this.capsuleRadius) / 2;
+      const colliderDesc = RAPIER.ColliderDesc.capsule(this.halfHeight, this.capsuleRadius);
+      
+      // Set collision groups to interact with all objects
+      colliderDesc.setCollisionGroups(0x00010001); // Group 1, mask 1 (interacts with everything)
+      colliderDesc.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
 
       // Create kinematic rigid body
       this.rigidBody = physicsWorld.createKinematicBody(
@@ -51,12 +57,12 @@ export class CharacterController {
   }
 
   /**
-   * Move the character in the given direction
+   * Move the character in the given direction with collision detection
    */
   move(direction: THREE.Vector3, deltaTime: number): void {
     try {
-      // Get current position
       const currentPos = this.rigidBody.translation();
+      const world = this.physicsWorld.world;
 
       // Calculate horizontal movement
       let moveX = 0;
@@ -76,15 +82,162 @@ export class CharacterController {
       // Apply vertical velocity (from jumping/gravity)
       const moveY = this.verticalVelocity * deltaTime;
 
-      // Calculate new position (combine horizontal and vertical movement)
-      const newPos = new RAPIER.Vector3(
-        currentPos.x + moveX,
-        currentPos.y + moveY,
-        currentPos.z + moveZ
+      // Create movement vector
+      const movement = new RAPIER.Vector3(moveX, moveY, moveZ);
+      
+      // Calculate target position
+      const targetPos = new RAPIER.Vector3(
+        currentPos.x + movement.x,
+        currentPos.y + movement.y,
+        currentPos.z + movement.z
       );
 
+      // Check for collisions at target position using intersection query
+      const shape = new RAPIER.Capsule(this.halfHeight, this.capsuleRadius);
+      const shapeRot = this.rigidBody.rotation();
+      
+      // Use intersection query to check if we would collide at the target position
+      // Exclude our own collider from the query
+      const intersections: RAPIER.Collider[] = [];
+      world.intersectionsWithShape(
+        targetPos,
+        shapeRot,
+        shape,
+        (collider) => {
+          // Exclude our own collider by checking if it belongs to our rigid body
+          const colliderBody = collider.parent();
+          if (colliderBody && colliderBody.handle !== this.rigidBody.handle) {
+            intersections.push(collider);
+            return true; // Continue query
+          }
+          return true; // Continue query
+        },
+        undefined, // filter
+        undefined // groups
+      );
+
+      // If we have collisions, try to slide along the collision
+      if (intersections.length > 0) {
+        // Try to move only horizontally (slide along walls)
+        const horizontalMovement = new RAPIER.Vector3(moveX, 0, moveZ);
+        const horizontalTarget = new RAPIER.Vector3(
+          currentPos.x + horizontalMovement.x,
+          currentPos.y,
+          currentPos.z + horizontalMovement.z
+        );
+
+        // Check horizontal movement
+        const horizontalIntersections: RAPIER.Collider[] = [];
+        world.intersectionsWithShape(
+          horizontalTarget,
+          shapeRot,
+          shape,
+          (collider) => {
+            const colliderBody = collider.parent();
+            if (colliderBody && colliderBody.handle !== this.rigidBody.handle) {
+              horizontalIntersections.push(collider);
+              return true;
+            }
+            return true;
+          },
+          undefined,
+          undefined
+        );
+
+        if (horizontalIntersections.length === 0) {
+          // Can move horizontally, keep vertical movement separate
+          targetPos.x = horizontalTarget.x;
+          targetPos.z = horizontalTarget.z;
+        } else {
+          // Can't move horizontally either, try X and Z separately
+          // Try X only
+          const xOnlyTarget = new RAPIER.Vector3(
+            currentPos.x + moveX,
+            currentPos.y,
+            currentPos.z
+          );
+          const xIntersections: RAPIER.Collider[] = [];
+          world.intersectionsWithShape(
+            xOnlyTarget,
+            shapeRot,
+            shape,
+            (collider) => {
+              const colliderBody = collider.parent();
+              if (colliderBody && colliderBody.handle !== this.rigidBody.handle) {
+                xIntersections.push(collider);
+                return true;
+              }
+              return true;
+            },
+            undefined,
+            undefined
+          );
+
+          if (xIntersections.length === 0) {
+            targetPos.x = xOnlyTarget.x;
+          }
+
+          // Try Z only
+          const zOnlyTarget = new RAPIER.Vector3(
+            currentPos.x,
+            currentPos.y,
+            currentPos.z + moveZ
+          );
+          const zIntersections: RAPIER.Collider[] = [];
+          world.intersectionsWithShape(
+            zOnlyTarget,
+            shapeRot,
+            shape,
+            (collider) => {
+              const colliderBody = collider.parent();
+              if (colliderBody && colliderBody.handle !== this.rigidBody.handle) {
+                zIntersections.push(collider);
+                return true;
+              }
+              return true;
+            },
+            undefined,
+            undefined
+          );
+
+          if (zIntersections.length === 0) {
+            targetPos.z = zOnlyTarget.z;
+          }
+        }
+
+        // Always allow vertical movement (gravity/jumping) unless blocked
+        const verticalTarget = new RAPIER.Vector3(
+          targetPos.x,
+          currentPos.y + moveY,
+          targetPos.z
+        );
+        const verticalIntersections: RAPIER.Collider[] = [];
+        world.intersectionsWithShape(
+          verticalTarget,
+          shapeRot,
+          shape,
+          (collider) => {
+            const colliderBody = collider.parent();
+            if (colliderBody && colliderBody.handle !== this.rigidBody.handle) {
+              verticalIntersections.push(collider);
+              return true;
+            }
+            return true;
+          },
+          undefined,
+          undefined
+        );
+
+        if (verticalIntersections.length === 0) {
+          targetPos.y = verticalTarget.y;
+        } else if (moveY < 0) {
+          // Hitting something below - we're on ground
+          targetPos.y = currentPos.y;
+        }
+      }
+
       // Set new position (kinematic body)
-      this.rigidBody.setNextKinematicTranslation(newPos);
+      this.rigidBody.setNextKinematicTranslation(targetPos);
     } catch (error) {
       Debug.error('CharacterController', 'Error moving character', error as Error);
     }
@@ -105,7 +258,7 @@ export class CharacterController {
    */
   update(deltaTime: number): void {
     try {
-      // Check if grounded
+      // Check if grounded using proper collision detection
       this.checkGrounded();
 
       // Handle jumping
@@ -125,30 +278,53 @@ export class CharacterController {
           this.verticalVelocity = 0;
         }
       }
-
-      // Store vertical velocity for use in move() method
-      // Don't apply vertical movement here - it will be combined with horizontal movement
-      // in the move() method to avoid conflicts with setNextKinematicTranslation()
     } catch (error) {
       Debug.error('CharacterController', 'Error updating character controller', error as Error);
     }
   }
 
   /**
-   * Check if character is on the ground
-   * Uses a simple height-based check for now (can be improved with proper raycasting later)
+   * Check if character is on the ground using intersection queries
    */
   private checkGrounded(): void {
     try {
       const currentPos = this.rigidBody.translation();
-      const groundLevel = 0.0; // Floor is at y=0
-      const capsuleBottom = currentPos.y - this.capsuleHeight / 2;
-      const detectionDistance = GAME_CONFIG.CHARACTER_CONTROLLER.GROUND_DETECTION_DISTANCE;
+      const world = this.physicsWorld.world;
+
+      // Check for ground by testing a position slightly below the capsule bottom
+      const groundCheckDistance = this.capsuleRadius + GAME_CONFIG.CHARACTER_CONTROLLER.GROUND_DETECTION_DISTANCE;
+      const groundCheckPos = new RAPIER.Vector3(
+        currentPos.x,
+        currentPos.y - this.capsuleHeight / 2 - groundCheckDistance / 2,
+        currentPos.z
+      );
       
-      // Simple check: if capsule bottom is close to ground level, we're grounded
-      // This is a simplified approach - can be improved with proper raycasting later
-      const distanceToGround = Math.abs(capsuleBottom - groundLevel);
-      this.isGrounded = distanceToGround <= detectionDistance + this.capsuleRadius;
+      // Use a small capsule shape for ground detection (slightly smaller than our actual capsule)
+      const checkRadius = this.capsuleRadius * 0.9;
+      const checkHalfHeight = groundCheckDistance / 2;
+      const shape = new RAPIER.Capsule(checkHalfHeight, checkRadius);
+      const shapeRot = this.rigidBody.rotation();
+      
+      // Check for intersections below
+      let foundGround = false;
+      world.intersectionsWithShape(
+        groundCheckPos,
+        shapeRot,
+        shape,
+        (collider) => {
+          // Exclude our own collider by checking if it belongs to our rigid body
+          const colliderBody = collider.parent();
+          if (colliderBody && colliderBody.handle !== this.rigidBody.handle) {
+            foundGround = true;
+            return false; // Stop query on first hit
+          }
+          return true; // Continue query
+        },
+        undefined, // filter
+        undefined // groups
+      );
+
+      this.isGrounded = foundGround;
     } catch (error) {
       Debug.error('CharacterController', 'Error checking ground', error as Error);
       this.isGrounded = false;
