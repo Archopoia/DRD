@@ -39,6 +39,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
   const [expandedActions, setExpandedActions] = useState<Set<Action>>(new Set());
   const [expandedCompetences, setExpandedCompetences] = useState<Set<Competence>>(new Set());
   const [masterySelectionOpen, setMasterySelectionOpen] = useState<Competence | null>(null);
+  const [flippedAptitudes, setFlippedAptitudes] = useState<Set<Aptitude>>(new Set());
 
   // Close mastery selection when clicking outside
   useEffect(() => {
@@ -78,6 +79,10 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
 
   const toggleCompetence = (comp: Competence) => {
     setExpandedCompetences(toggleSet(expandedCompetences, comp));
+  };
+
+  const toggleAptitudeFlip = (aptitude: Aptitude) => {
+    setFlippedAptitudes(toggleSet(flippedAptitudes, aptitude));
   };
 
   const revealCompetence = (comp: Competence) => {
@@ -190,75 +195,107 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                 const level = state.aptitudeLevels[aptitude];
                 const actions = getActionsForAptitude(aptitude);
                 
+                const isFlipped = flippedAptitudes.has(aptitude);
+                
                 return (
                   <div 
-                    key={aptitude} 
-                    className="bg-hover-bg border-2 border-border-tan rounded-lg p-3 transition-all duration-300 hover:bg-parchment-light hover:border-gold-glow relative flex-1"
+                    key={aptitude}
+                    className="relative"
                     style={{
-                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1), inset 0 0 0 1px #ceb68d',
-                      alignSelf: 'flex-start',
-                      height: 'auto',
-                      minWidth: 0
+                      perspective: '1000px',
+                      flex: isFlipped ? `0 0 calc(100% / 16)` : '1 1 0',
+                      transition: 'flex 0.6s ease-in-out',
                     }}
                   >
-                    {/* Aptitude Name - On its own line at the top */}
-                    <div className="mb-2 pb-2 border-b-2 border-border-dark">
-                      <div className="font-medieval text-xs font-bold text-red-theme uppercase tracking-wide text-center">
-                        {getAptitudeName(aptitude)}
-                      </div>
-                    </div>
-
-                    {/* Two Column Layout: Aptitude Modifier (Left) and Attributes (Right) */}
-                    <div className="flex gap-2 mb-3 pb-3 border-b-2 border-border-dark">
-                      {/* Left Column: Aptitude Modifier */}
-                      <div className="flex flex-col justify-center items-center flex-shrink-0">
-                        <div className="font-medieval text-2xl font-bold text-text-dark text-center" style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.2)' }}>
-                          {level >= 0 ? '+' : ''}{level}
+                    <div
+                      className="relative w-full"
+                      style={{
+                        transformStyle: 'preserve-3d',
+                        transition: 'transform 0.6s',
+                        transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                        minHeight: '100%',
+                      }}
+                    >
+                      {/* Front Face */}
+                      <div 
+                        className="bg-hover-bg border-2 border-border-tan rounded-lg p-3 transition-all duration-300 hover:bg-parchment-light hover:border-gold-glow relative w-full"
+                        style={{
+                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1), inset 0 0 0 1px #ceb68d',
+                          backfaceVisibility: 'hidden',
+                          WebkitBackfaceVisibility: 'hidden',
+                          transform: 'rotateY(0deg)',
+                        }}
+                      >
+                        {/* Aptitude Name with Modifier - Name on left, Modifier on right */}
+                        <div 
+                          className="mb-2 pb-2 border-b-2 border-border-dark cursor-pointer"
+                          onClick={() => toggleAptitudeFlip(aptitude)}
+                        >
+                          <div className="flex justify-between items-center">
+                            <div className="font-medieval text-xs font-bold text-red-theme uppercase tracking-wide">
+                              {getAptitudeName(aptitude)}
+                            </div>
+                            <div className="font-medieval text-2xl font-bold text-text-dark" style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.2)' }}>
+                              {level >= 0 ? '+' : ''}{level}
+                            </div>
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Right Column: Attributes */}
-                      <div className="flex-1 flex flex-col">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Tooltip
-                            content={`${getAttributeName(atb1)}: ${Math.floor(state.attributes[atb1] * 6 / 10)} (6/10)`}
-                            position="top"
-                            delay={200}
-                          >
-                            <label className="font-medieval text-xs font-bold text-red-theme uppercase tracking-wide whitespace-nowrap cursor-help">
+                    {/* Attributes Section */}
+                    <div className="flex gap-2 mb-3 pb-3 border-b-2 border-border-dark">
+                      {/* Attributes */}
+                      <div className="flex-1 flex items-center justify-around gap-1">
+                        {/* Attribute 1 - Emp */}
+                        <Tooltip
+                          content={`${getAttributeName(atb1)}: ${Math.floor(state.attributes[atb1] * 6 / 10)} (6/10)`}
+                          position="top"
+                          delay={200}
+                        >
+                          <div className="flex flex-col items-center cursor-help">
+                            <label className="font-medieval text-xs font-bold text-red-theme uppercase tracking-wide">
                               {getAttributeAbbreviation(atb1)}
                             </label>
-                          </Tooltip>
-                          <DiceInput
-                            value={state.attributes[atb1]}
-                            onChange={(value) => handleAttributeChange(atb1, value)}
-                            min={-50}
-                            max={50}
-                            size="md"
-                          />
-                        </div>
-                        <div className="space-y-1 text-xs">
-                          <Tooltip
-                            content={getAttributeName(atb2)}
-                            position="top"
-                            delay={200}
-                          >
-                            <div className="flex justify-between items-center cursor-help">
-                              <span>{getAttributeAbbreviation(atb2).charAt(0) + getAttributeAbbreviation(atb2).slice(1).toLowerCase()}:</span>
-                              <span className="font-semibold">{Math.floor(state.attributes[atb2] * 3 / 10)}</span>
+                            <div className="flex justify-center items-center mt-1">
+                              <DiceInput
+                                value={state.attributes[atb1]}
+                                onChange={(value) => handleAttributeChange(atb1, value)}
+                                min={-50}
+                                max={50}
+                                size="md"
+                              />
                             </div>
-                          </Tooltip>
-                          <Tooltip
-                            content={getAttributeName(atb3)}
-                            position="top"
-                            delay={200}
-                          >
-                            <div className="flex justify-between items-center cursor-help">
-                              <span>{getAttributeAbbreviation(atb3).toLowerCase()}:</span>
-                              <span className="font-semibold">{Math.floor(state.attributes[atb3] * 1 / 10)}</span>
-                            </div>
-                          </Tooltip>
-                        </div>
+                          </div>
+                        </Tooltip>
+                        {/* Plus sign */}
+                        <span className="font-medieval text-lg font-bold text-text-dark self-center">+</span>
+                        {/* Attribute 2 - Vol */}
+                        <Tooltip
+                          content={getAttributeName(atb2)}
+                          position="top"
+                          delay={200}
+                        >
+                          <div className="flex flex-col items-center cursor-help">
+                            <span className="font-medieval text-xs font-bold text-red-theme tracking-wide">
+                              {getAttributeAbbreviation(atb2).charAt(0) + getAttributeAbbreviation(atb2).slice(1).toLowerCase()}
+                            </span>
+                            <span className="font-semibold text-xs text-center mt-1">{Math.floor(state.attributes[atb2] * 3 / 10)}</span>
+                          </div>
+                        </Tooltip>
+                        {/* Plus sign */}
+                        <span className="font-medieval text-lg font-bold text-text-dark self-center">+</span>
+                        {/* Attribute 3 - Per */}
+                        <Tooltip
+                          content={getAttributeName(atb3)}
+                          position="top"
+                          delay={200}
+                        >
+                          <div className="flex flex-col items-center cursor-help">
+                            <span className="font-medieval text-xs font-bold text-red-theme tracking-wide">
+                              {getAttributeAbbreviation(atb3).toLowerCase()}
+                            </span>
+                            <span className="font-semibold text-xs text-center mt-1">{Math.floor(state.attributes[atb3] * 1 / 10)}</span>
+                          </div>
+                        </Tooltip>
                       </div>
                     </div>
 
@@ -520,6 +557,33 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                           </div>
                         );
                       })}
+                    </div>
+                      </div>
+                      
+                      {/* Back Face */}
+                      <div
+                        className="absolute inset-0 bg-red-theme-alpha border-2 border-border-dark rounded-lg p-3"
+                        style={{
+                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                          backfaceVisibility: 'hidden',
+                          WebkitBackfaceVisibility: 'hidden',
+                          transform: 'rotateY(180deg)',
+                        }}
+                      >
+                        {/* Aptitude Name - Same position, gold color */}
+                        <div 
+                          className="mb-2 pb-2 border-b-2 border-border-dark cursor-pointer"
+                          onClick={() => toggleAptitudeFlip(aptitude)}
+                        >
+                          <div className="font-medieval text-xs font-bold uppercase tracking-wide text-center" style={{ color: '#ffebc6' }}>
+                            {getAptitudeName(aptitude)}
+                          </div>
+                        </div>
+                        {/* Back content - you can add anything here */}
+                        <div className="text-text-cream text-xs text-center">
+                          {/* Add back side content here if needed */}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 );
