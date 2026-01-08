@@ -90,10 +90,11 @@ export class CharacterController {
       const shapeRot = this.rigidBody.rotation();
       
       // Helper function to check for collisions at a position
-      // Returns true if there's a blocking collision (static bodies), false otherwise
-      // Dynamic bodies are allowed (can be pushed)
-      const checkCollisions = (pos: RAPIER.Vector3): boolean => {
+      // Returns blocking collision info: { blocked: boolean, dynamicBodies: RigidBody[] }
+      // Blocks block movement but can be pushed
+      const checkCollisions = (pos: RAPIER.Vector3): { blocked: boolean; dynamicBodies: RAPIER.RigidBody[] } => {
         let hasBlockingCollision = false;
+        const dynamicBodies: RAPIER.RigidBody[] = [];
         
         world.intersectionsWithShape(
           pos,
@@ -109,8 +110,11 @@ export class CharacterController {
                 // Static body (wall) - blocks movement
                 hasBlockingCollision = true;
                 return false; // Stop on first blocking collision
+              } else if (bodyType === RAPIER.RigidBodyType.Dynamic) {
+                // Dynamic body (block) - blocks movement but can be pushed
+                dynamicBodies.push(colliderBody);
+                hasBlockingCollision = true; // Block movement through it
               }
-              // Dynamic bodies - allow movement (can push them)
               // Kinematic bodies are also allowed (we're already excluding our own)
             }
             return true; // Continue query
@@ -119,7 +123,7 @@ export class CharacterController {
           undefined // groups
         );
         
-        return hasBlockingCollision;
+        return { blocked: hasBlockingCollision, dynamicBodies };
       };
 
       // First, try horizontal movement (X and Z together)
@@ -130,33 +134,70 @@ export class CharacterController {
           currentPos.z + moveZ
         );
 
-        if (!checkCollisions(horizontalTarget)) {
+        const collision = checkCollisions(horizontalTarget);
+        
+        if (!collision.blocked) {
           // Can move horizontally
           targetPos.x = horizontalTarget.x;
           targetPos.z = horizontalTarget.z;
         } else {
-          // Can't move horizontally, try X and Z separately for sliding
-          // Try X only
-          if (moveX !== 0) {
-            const xOnlyTarget = new RAPIER.Vector3(
-              currentPos.x + moveX,
-              currentPos.y,
-              currentPos.z
-            );
-            if (!checkCollisions(xOnlyTarget)) {
-              targetPos.x = xOnlyTarget.x;
+          // Check if we're blocked by blocks that can be pushed
+          if (collision.dynamicBodies.length > 0) {
+            // We're pushing against blocks - apply force to push them
+            const pushForce = new RAPIER.Vector3(moveX * 100, 0, moveZ * 100); // Scale force appropriately
+            
+            for (const blockBody of collision.dynamicBodies) {
+              // Apply force to push the block in the direction we're moving
+              blockBody.applyImpulse(pushForce, true);
             }
-          }
+            
+            // Don't move the character into the block - stay at current position
+            // The physics engine will handle pushing the block, and next frame we can move closer
+            // This prevents getting stuck inside blocks
+            targetPos.x = currentPos.x;
+            targetPos.z = currentPos.z;
+          } else {
+            // Blocked by static body (wall) - try X and Z separately for sliding
+            // Try X only
+            if (moveX !== 0) {
+              const xOnlyTarget = new RAPIER.Vector3(
+                currentPos.x + moveX,
+                currentPos.y,
+                currentPos.z
+              );
+              const xCollision = checkCollisions(xOnlyTarget);
+              if (!xCollision.blocked) {
+                targetPos.x = xOnlyTarget.x;
+              } else if (xCollision.dynamicBodies.length > 0) {
+                // Pushing block in X direction
+                const pushForce = new RAPIER.Vector3(moveX * 100, 0, 0);
+                for (const blockBody of xCollision.dynamicBodies) {
+                  blockBody.applyImpulse(pushForce, true);
+                }
+                // Don't move into the block - stay at current position
+                // Physics will push the block, next frame we can move closer
+              }
+            }
 
-          // Try Z only
-          if (moveZ !== 0) {
-            const zOnlyTarget = new RAPIER.Vector3(
-              currentPos.x,
-              currentPos.y,
-              currentPos.z + moveZ
-            );
-            if (!checkCollisions(zOnlyTarget)) {
-              targetPos.z = zOnlyTarget.z;
+            // Try Z only
+            if (moveZ !== 0) {
+              const zOnlyTarget = new RAPIER.Vector3(
+                currentPos.x,
+                currentPos.y,
+                currentPos.z + moveZ
+              );
+              const zCollision = checkCollisions(zOnlyTarget);
+              if (!zCollision.blocked) {
+                targetPos.z = zOnlyTarget.z;
+              } else if (zCollision.dynamicBodies.length > 0) {
+                // Pushing block in Z direction
+                const pushForce = new RAPIER.Vector3(0, 0, moveZ * 100);
+                for (const blockBody of zCollision.dynamicBodies) {
+                  blockBody.applyImpulse(pushForce, true);
+                }
+                // Don't move into the block - stay at current position
+                // Physics will push the block, next frame we can move closer
+              }
             }
           }
         }
@@ -170,7 +211,9 @@ export class CharacterController {
           targetPos.z
         );
 
-        if (!checkCollisions(verticalTarget)) {
+        const verticalCollision = checkCollisions(verticalTarget);
+        
+        if (!verticalCollision.blocked) {
           // Can move vertically
           targetPos.y = verticalTarget.y;
         } else {

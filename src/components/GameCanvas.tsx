@@ -47,12 +47,25 @@ export default function GameCanvas() {
           }
         }, 1000);
 
+        // Initial save - create the log file with all current logs
+        Debug.saveLogs(false).catch(() => {
+          // Silently fail on initial save - not critical
+        });
+
+        // Auto-save logs every second (append mode)
+        const logSaveInterval = setInterval(() => {
+          Debug.saveLogs(true).catch(() => {
+            // Silently fail on periodic saves - not critical
+          });
+        }, 1000);
+
         Debug.log('GameCanvas', 'Game initialized successfully');
 
         // Cleanup on unmount
         return () => {
           Debug.log('GameCanvas', 'Cleaning up game...');
           clearInterval(fpsInterval);
+          clearInterval(logSaveInterval);
           if (gameRef.current) {
             gameRef.current.dispose();
             gameRef.current = null;
@@ -67,18 +80,22 @@ export default function GameCanvas() {
 
     initGame();
 
-    // Auto-save logs on page unload
+    // Final save on page unload (append any remaining logs)
     const handleBeforeUnload = () => {
-      // Only save if there are logs
-      const logs = Debug.getLogs();
-      if (logs.length > 0) {
-        // Use fetch with keepalive for reliable delivery during page unload
+      // Save any remaining unsaved logs using append mode
+      // Use fetch with keepalive for reliable delivery during page unload
+      const newLogs = Debug.getNewLogs();
+      if (newLogs.length > 0) {
         fetch('/api/save-logs', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ logs }),
+          body: JSON.stringify({
+            logs: newLogs,
+            append: true,
+            sessionStartTime: Debug.getSessionStartTime(),
+          }),
           keepalive: true, // Ensures request completes even if page unloads
         }).catch(() => {
           // Silently fail - page is unloading anyway

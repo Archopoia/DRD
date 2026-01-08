@@ -16,6 +16,8 @@ export class Debug {
     warn: typeof console.warn;
     info: typeof console.info;
   } | null = null;
+  private static lastSavedIndex = 0; // Track how many logs have been saved
+  private static sessionStartTime = new Date().toISOString().replace(/[:.]/g, '-'); // Session-based filename
 
   /**
    * Initialize console interception to capture all logs
@@ -99,12 +101,28 @@ export class Debug {
     if (!DEBUG_ENABLED) return;
 
     const timestamp = new Date().toISOString();
-    const logMessage = `[${timestamp}] [${category}] ${message}`;
+    
+    // Format all arguments into a string
+    const formattedArgs = args.length > 0 ? ' ' + args.map(arg => {
+      if (arg instanceof Error) {
+        return `${arg.message}\n${arg.stack || ''}`;
+      }
+      if (typeof arg === 'object' && arg !== null) {
+        try {
+          return JSON.stringify(arg, null, 2);
+        } catch {
+          return String(arg);
+        }
+      }
+      return String(arg);
+    }).join(' ') : '';
+    
+    const logMessage = `[${timestamp}] [${category}] ${message}${formattedArgs}`;
     
     if (this.originalConsole) {
-      this.originalConsole.log(logMessage, ...args);
+      this.originalConsole.log(`[${timestamp}] [${category}] ${message}`, ...args);
     } else {
-      console.log(logMessage, ...args);
+      console.log(`[${timestamp}] [${category}] ${message}`, ...args);
     }
     
     this.logs.push(logMessage);
@@ -137,12 +155,28 @@ export class Debug {
    */
   static warn(category: string, message: string, ...args: unknown[]): void {
     const timestamp = new Date().toISOString();
-    const logMessage = `[${timestamp}] [WARN] [${category}] ${message}`;
+    
+    // Format all arguments into a string
+    const formattedArgs = args.length > 0 ? ' ' + args.map(arg => {
+      if (arg instanceof Error) {
+        return `${arg.message}\n${arg.stack || ''}`;
+      }
+      if (typeof arg === 'object' && arg !== null) {
+        try {
+          return JSON.stringify(arg, null, 2);
+        } catch {
+          return String(arg);
+        }
+      }
+      return String(arg);
+    }).join(' ') : '';
+    
+    const logMessage = `[${timestamp}] [WARN] [${category}] ${message}${formattedArgs}`;
     
     if (this.originalConsole) {
-      this.originalConsole.warn(logMessage, ...args);
+      this.originalConsole.warn(`[${timestamp}] [WARN] [${category}] ${message}`, ...args);
     } else {
-      console.warn(logMessage, ...args);
+      console.warn(`[${timestamp}] [WARN] [${category}] ${message}`, ...args);
     }
     
     this.logs.push(logMessage);
@@ -216,20 +250,41 @@ export class Debug {
   static clearLogs(): void {
     this.logs = [];
     this.performanceMetrics.clear();
+    this.lastSavedIndex = 0;
+    this.sessionStartTime = new Date().toISOString().replace(/[:.]/g, '-');
+  }
+
+  /**
+   * Get new logs since last save
+   */
+  static getNewLogs(): string[] {
+    return this.logs.slice(this.lastSavedIndex);
+  }
+
+  /**
+   * Mark logs as saved (used internally after successful save)
+   */
+  static markLogsAsSaved(count: number): void {
+    this.lastSavedIndex = Math.min(this.lastSavedIndex + count, this.logs.length);
+  }
+
+  /**
+   * Get session start time for consistent filename
+   */
+  static getSessionStartTime(): string {
+    return this.sessionStartTime;
   }
 
   /**
    * Save logs to a file in the project folder
    * Sends logs to the API endpoint which writes them to logs/ directory
+   * @param append - If true, only saves new logs and appends to existing file
    */
-  static async saveLogs(): Promise<void> {
-    if (this.logs.length === 0) {
-      if (this.originalConsole) {
-        this.originalConsole.warn('[Debug] No logs to save');
-      } else {
-        console.warn('[Debug] No logs to save');
-      }
-      return;
+  static async saveLogs(append: boolean = false): Promise<void> {
+    const logsToSave = append ? this.getNewLogs() : this.logs;
+    
+    if (logsToSave.length === 0) {
+      return; // Silently return if no new logs
     }
 
     try {
@@ -239,7 +294,9 @@ export class Debug {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          logs: this.logs,
+          logs: logsToSave,
+          append,
+          sessionStartTime: this.sessionStartTime,
         }),
       });
 
@@ -250,7 +307,15 @@ export class Debug {
 
       const result = await response.json();
       
-      if (this.originalConsole) {
+      // Mark logs as saved
+      if (append) {
+        this.markLogsAsSaved(logsToSave.length);
+      } else {
+        this.lastSavedIndex = this.logs.length;
+      }
+      
+      if (this.originalConsole && !append) {
+        // Only log when doing full save (not periodic appends)
         this.originalConsole.log(`[Debug] Saved ${result.logCount} log entries to ${result.filename}`);
         this.originalConsole.log(`[Debug] File location: ${result.path}`);
       }

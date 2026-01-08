@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
+import { writeFile, appendFile, mkdir, access } from 'fs/promises';
 import { join } from 'path';
+import { constants } from 'fs';
 
 /**
  * API route to save game logs to a file in the project folder
  * POST /api/save-logs
+ * Supports appending to existing file for periodic auto-saves
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { logs } = body;
+    const { logs, append = false, sessionStartTime } = body;
 
     if (!logs || !Array.isArray(logs)) {
       return NextResponse.json(
@@ -26,24 +28,37 @@ export async function POST(request: NextRequest) {
       // Directory might already exist, that's fine
     }
 
-    // Create filename with timestamp
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    // Create filename - use sessionStartTime if provided (for append mode), otherwise use current timestamp
+    const timestamp = sessionStartTime || new Date().toISOString().replace(/[:.]/g, '-');
     const filename = `game-logs-${timestamp}.txt`;
     const filepath = join(logsDir, filename);
 
-    // Create log file content with header
-    const header = `=== Game Logs ===\nGenerated: ${new Date().toISOString()}\nTotal Logs: ${logs.length}\n\n`;
-    const content = header + logs.join('\n');
+    let fileExists = false;
+    try {
+      await access(filepath, constants.F_OK);
+      fileExists = true;
+    } catch {
+      // File doesn't exist yet
+    }
 
-    // Write file
-    await writeFile(filepath, content, 'utf-8');
+    if (append && fileExists) {
+      // Append mode: just append new logs
+      const content = logs.join('\n') + '\n';
+      await appendFile(filepath, content, 'utf-8');
+    } else {
+      // Create new file or overwrite with header
+      const header = `=== Game Logs ===\nGenerated: ${new Date().toISOString()}\nSession Start: ${sessionStartTime || new Date().toISOString()}\nTotal Logs: ${logs.length}\n\n`;
+      const content = header + logs.join('\n');
+      await writeFile(filepath, content, 'utf-8');
+    }
 
     return NextResponse.json({
       success: true,
-      message: `Logs saved to ${filename}`,
+      message: append ? `Appended ${logs.length} log entries to ${filename}` : `Logs saved to ${filename}`,
       filename,
       path: filepath,
       logCount: logs.length,
+      appended: append,
     });
   } catch (error) {
     console.error('Error saving logs:', error);
