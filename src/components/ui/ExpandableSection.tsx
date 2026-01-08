@@ -37,14 +37,41 @@ export default function ExpandableSection({
     ? (isExpanded ? '▼' : '▶')
     : (isExpanded ? '▼' : '▶');
 
-  // Measure content height from hidden element
+  // Measure content height from hidden element using ResizeObserver for accuracy
   useEffect(() => {
-    if (contentRef.current) {
-      const height = contentRef.current.scrollHeight;
-      if (height > 0) {
-        setContentHeight(height);
+    if (!contentRef.current) return;
+
+    const updateHeight = () => {
+      if (contentRef.current) {
+        // Add a small buffer to prevent clipping
+        const height = contentRef.current.scrollHeight + 4;
+        if (height > 0) {
+          setContentHeight(height);
+        }
       }
+    };
+
+    // Initial measurement
+    updateHeight();
+
+    // Use ResizeObserver to track size changes
+    const resizeObserver = new ResizeObserver(() => {
+      updateHeight();
+    });
+
+    resizeObserver.observe(contentRef.current);
+
+    // Also update when expanded state changes
+    if (isExpanded) {
+      // Use requestAnimationFrame to ensure DOM is fully rendered
+      requestAnimationFrame(() => {
+        updateHeight();
+      });
     }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
   }, [children, isExpanded]);
 
   return (
@@ -82,7 +109,14 @@ export default function ExpandableSection({
       <div
         ref={contentRef}
         className={`${contentClassName} invisible absolute`}
-        style={{ height: 'auto', visibility: 'hidden', position: 'absolute', top: '-9999px' }}
+        style={{ 
+          height: 'auto', 
+          visibility: 'hidden', 
+          position: 'absolute', 
+          top: '-9999px',
+          width: '100%',
+          paddingBottom: '4px' // Extra buffer for bottom spacing
+        }}
         aria-hidden="true"
       >
         {children}
