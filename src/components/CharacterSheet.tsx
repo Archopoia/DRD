@@ -720,10 +720,10 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                                 );
                                               })()}
                                             </div>
-                                            {/* Bottom border after all masteries */}
-                                            <div className="border-t border-border-tan mt-2 pt-2"></div>
                                           </ExpandableSection>
                                         </div>
+                                        {/* Bottom border after each Compétence */}
+                                        <div className="border-t border-border-tan mt-2 pt-2"></div>
                                       </>
                                     )}
                                   </div>
