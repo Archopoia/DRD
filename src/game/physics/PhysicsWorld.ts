@@ -110,6 +110,13 @@ export class PhysicsWorld {
         );
       }
 
+      // Set collision groups to interact with all objects (group 1, mask 1)
+      colliderDesc.setCollisionGroups(0x00010001);
+      
+      // Set friction for static bodies to prevent objects from sliding through
+      colliderDesc.setFriction(0.7);
+      colliderDesc.setRestitution(0.0);
+
       // Attach collider
       this.world.createCollider(colliderDesc, rigidBody);
 
@@ -152,6 +159,13 @@ export class PhysicsWorld {
       // Density of 1.0 = 1 kg per cubic meter (approximate)
       // We'll use mass directly as density for simplicity
       colliderDesc.setDensity(mass);
+
+      // Set collision groups to interact with all objects (group 1, mask 1)
+      colliderDesc.setCollisionGroups(0x00010001);
+      
+      // Set friction and restitution for better collision response
+      colliderDesc.setFriction(0.7); // Friction to prevent sliding
+      colliderDesc.setRestitution(0.0); // No bounce
 
       // Attach collider
       this.world.createCollider(colliderDesc, rigidBody);
