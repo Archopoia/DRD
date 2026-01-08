@@ -2,12 +2,14 @@ import * as THREE from 'three';
 import { GAME_CONFIG } from '@/lib/constants';
 import type { CameraControls, MouseState } from '../utils/types';
 import { Debug } from '../utils/debug';
+import { CharacterController } from '../physics/CharacterController';
 
 /**
  * First-person camera controller with mouse look and WASD movement
  */
 export class FPSCamera {
   public camera: THREE.PerspectiveCamera;
+  private characterController: CharacterController;
   private controls: CameraControls = {
     moveForward: false,
     moveBackward: false,
@@ -21,13 +23,14 @@ export class FPSCamera {
     locked: false,
   };
   private euler: THREE.Euler;
-  private velocity: THREE.Vector3;
   private direction: THREE.Vector3;
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, characterController: CharacterController) {
     Debug.log('FPSCamera', 'Initializing camera...');
     
     try {
+      this.characterController = characterController;
+      
       this.camera = new THREE.PerspectiveCamera(
         GAME_CONFIG.FOV,
         GAME_CONFIG.RENDER_WIDTH / GAME_CONFIG.RENDER_HEIGHT,
@@ -35,9 +38,10 @@ export class FPSCamera {
         GAME_CONFIG.FAR
       );
 
-      this.camera.position.set(0, 1.6, 0); // Eye height ~1.6m
+      // Set initial camera position from character controller
+      const initialPos = characterController.getPosition();
+      this.camera.position.set(initialPos.x, initialPos.y, initialPos.z);
       this.euler = new THREE.Euler(0, 0, 0, 'YXZ');
-      this.velocity = new THREE.Vector3();
       this.direction = new THREE.Vector3();
 
       this.setupEventListeners(canvas);
@@ -71,6 +75,10 @@ export class FPSCamera {
         case 'ShiftLeft':
         case 'ShiftRight':
           this.controls.run = true;
+          break;
+        case 'Space':
+          // Jump
+          this.characterController.jump();
           break;
       }
     };
@@ -179,7 +187,6 @@ export class FPSCamera {
    * Update camera position based on movement controls
    */
   updatePosition(deltaTime: number): void {
-    this.velocity.set(0, 0, 0);
     this.direction.set(0, 0, 0);
 
     if (this.controls.moveForward) this.direction.z -= 1;
@@ -193,17 +200,22 @@ export class FPSCamera {
     }
 
     // Apply camera rotation to movement direction
-    this.velocity.copy(this.direction);
-    this.velocity.applyQuaternion(this.camera.quaternion);
-    this.velocity.y = 0; // Keep movement on horizontal plane
+    const moveDirection = this.direction.clone();
+    moveDirection.applyQuaternion(this.camera.quaternion);
+    moveDirection.y = 0; // Keep movement on horizontal plane
+    moveDirection.normalize();
 
-    // Apply speed
-    const speed = this.controls.run
-      ? GAME_CONFIG.MOVE_SPEED * GAME_CONFIG.RUN_MULTIPLIER
-      : GAME_CONFIG.MOVE_SPEED;
+    // Apply speed multiplier for running
+    if (this.controls.run && moveDirection.length() > 0) {
+      moveDirection.multiplyScalar(GAME_CONFIG.RUN_MULTIPLIER);
+    }
 
-    this.velocity.multiplyScalar(speed * deltaTime);
-    this.camera.position.add(this.velocity);
+    // Move character controller
+    this.characterController.move(moveDirection, deltaTime);
+
+    // Sync camera position with character controller position
+    const controllerPos = this.characterController.getPosition();
+    this.camera.position.set(controllerPos.x, controllerPos.y, controllerPos.z);
   }
 
   /**

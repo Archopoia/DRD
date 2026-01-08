@@ -3,6 +3,8 @@ import { GameLoop } from './GameLoop';
 import { RetroRenderer } from '../renderer/RetroRenderer';
 import { FPSCamera } from '../camera/FPSCamera';
 import { Scene } from '../world/Scene';
+import { PhysicsWorld } from '../physics/PhysicsWorld';
+import { CharacterController } from '../physics/CharacterController';
 import { GAME_CONFIG } from '@/lib/constants';
 import { Debug } from '../utils/debug';
 
@@ -11,6 +13,8 @@ import { Debug } from '../utils/debug';
  */
 export class Game {
   private renderer: RetroRenderer;
+  private physicsWorld: PhysicsWorld;
+  private characterController: CharacterController;
   private camera: FPSCamera;
   private scene: Scene;
   private gameLoop: GameLoop;
@@ -36,14 +40,25 @@ export class Game {
       this.renderer = new RetroRenderer(canvas);
       Debug.log('Game', 'Renderer initialized');
 
-      // Initialize camera
+      // Initialize physics world
+      Debug.log('Game', 'Initializing physics world...');
+      this.physicsWorld = new PhysicsWorld();
+      Debug.log('Game', 'Physics world initialized');
+
+      // Initialize character controller
+      Debug.log('Game', 'Initializing character controller...');
+      const initialPosition = { x: 0, y: GAME_CONFIG.CHARACTER_CONTROLLER.HEIGHT / 2, z: 0 };
+      this.characterController = new CharacterController(this.physicsWorld, initialPosition);
+      Debug.log('Game', 'Character controller initialized');
+
+      // Initialize camera (requires character controller)
       Debug.log('Game', 'Initializing camera...');
-      this.camera = new FPSCamera(canvas);
+      this.camera = new FPSCamera(canvas, this.characterController);
       Debug.log('Game', 'Camera initialized');
 
-      // Initialize scene
+      // Initialize scene (requires physics world)
       Debug.log('Game', 'Initializing scene...');
-      this.scene = new Scene(this.renderer);
+      this.scene = new Scene(this.renderer, this.physicsWorld);
       Debug.log('Game', 'Scene initialized');
 
       // Setup game loop
@@ -92,7 +107,17 @@ export class Game {
    */
   private update(deltaTime: number): void {
     try {
+      // Step physics simulation
+      this.physicsWorld.step(deltaTime);
+
+      // Update character controller
+      this.characterController.update(deltaTime);
+
+      // Update camera (handles movement input)
       this.camera.update(deltaTime);
+
+      // Sync dynamic objects with physics
+      this.scene.update(deltaTime);
       
       // Calculate FPS every second
       this.frameCount++;
@@ -150,8 +175,10 @@ export class Game {
    */
   dispose(): void {
     this.stop();
+    this.characterController.dispose();
     this.camera.dispose();
     this.scene.dispose();
+    this.physicsWorld.dispose();
     this.renderer.dispose();
   }
 }

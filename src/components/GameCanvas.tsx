@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Game } from '@/game/core/Game';
 import { Debug } from '@/game/utils/debug';
 import CharacterSheet from './CharacterSheet';
 
@@ -10,50 +9,59 @@ import CharacterSheet from './CharacterSheet';
  */
 export default function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const gameRef = useRef<Game | null>(null);
+  const gameRef = useRef<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [fps, setFps] = useState<number>(0);
   const [showCharacterSheet, setShowCharacterSheet] = useState<boolean>(false);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) {
-      Debug.error('GameCanvas', 'Canvas ref is null');
-      setError('Canvas element not found');
-      return;
-    }
+    // Dynamically import Game to ensure it only loads on client side
+    // This prevents Rapier from being loaded during SSR
+    const initGame = async () => {
+      const canvas = canvasRef.current;
+      if (!canvas) {
+        Debug.error('GameCanvas', 'Canvas ref is null');
+        setError('Canvas element not found');
+        return;
+      }
 
-    Debug.log('GameCanvas', 'Initializing game...');
+      Debug.log('GameCanvas', 'Initializing game...');
 
-    try {
-      // Initialize game
-      const game = new Game(canvas);
-      gameRef.current = game;
-      game.start();
+      try {
+        // Dynamic import ensures this only runs on client
+        const { Game } = await import('@/game/core/Game');
+        
+        // Initialize game
+        const game = new Game(canvas);
+        gameRef.current = game;
+        game.start();
 
-      // Update FPS display every second
-      const fpsInterval = setInterval(() => {
-        if (gameRef.current) {
-          setFps(gameRef.current.getFPS());
-        }
-      }, 1000);
+        // Update FPS display every second
+        const fpsInterval = setInterval(() => {
+          if (gameRef.current) {
+            setFps(gameRef.current.getFPS());
+          }
+        }, 1000);
 
-      Debug.log('GameCanvas', 'Game initialized successfully');
+        Debug.log('GameCanvas', 'Game initialized successfully');
 
-      // Cleanup on unmount
-      return () => {
-        Debug.log('GameCanvas', 'Cleaning up game...');
-        clearInterval(fpsInterval);
-        if (gameRef.current) {
-          gameRef.current.dispose();
-          gameRef.current = null;
-        }
-      };
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      Debug.error('GameCanvas', 'Failed to initialize game', err as Error);
-      setError(errorMessage);
-    }
+        // Cleanup on unmount
+        return () => {
+          Debug.log('GameCanvas', 'Cleaning up game...');
+          clearInterval(fpsInterval);
+          if (gameRef.current) {
+            gameRef.current.dispose();
+            gameRef.current = null;
+          }
+        };
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        Debug.error('GameCanvas', 'Failed to initialize game', err as Error);
+        setError(errorMessage);
+      }
+    };
+
+    initGame();
   }, []);
 
   // Handle 'C' key for character sheet (separate effect to avoid re-initializing game)
