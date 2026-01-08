@@ -533,9 +533,9 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                 isExpanded={isExpanded}
                                 onToggle={() => toggleAction(action)}
                                 title={
-                                  <div className="flex items-center w-full" style={{ gap: 0, margin: 0, padding: 0 }}>
-                                    <span className="flex-1" style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getActionName(action).toUpperCase()}</span>
-                                    <div style={{ position: 'relative', flexShrink: 0, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginLeft: 'auto' }}>
+                                  <div className="flex items-center justify-between w-full" style={{ gap: 0, margin: 0, padding: 0, width: '100%' }}>
+                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: '1 1 auto', minWidth: 0 }}>{getActionName(action).toUpperCase()}</span>
+                                    <div style={{ position: 'relative', flexShrink: 0 }}>
                                       {/* DiceInput showing total competence levels - always in layout to maintain height */}
                                       <div
                                         style={{
