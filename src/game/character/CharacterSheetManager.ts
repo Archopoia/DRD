@@ -42,8 +42,9 @@ export interface MasteryData {
 }
 
 export interface SouffranceData {
-  diceCount: number;
-  marks: boolean[]; // 100 marks
+  diceCount: number; // Dés de Souffrance (DS) - accumulates when damage is taken
+  resistanceDiceCount: number; // Dés de Résistance - only increases when realized (clicked when full)
+  marks: boolean[]; // 100 marks (for resistance competence)
   eternalMarks: number;
   eternalMarkIndices: number[];
 }
@@ -98,7 +99,8 @@ export class CharacterSheetManager {
     const souffrances: Record<Souffrance, SouffranceData> = {} as Record<Souffrance, SouffranceData>;
     Object.values(Souffrance).forEach((souf) => {
       souffrances[souf] = {
-        diceCount: 0,
+        diceCount: 0, // Souffrance dice (DS) - accumulates from damage
+        resistanceDiceCount: 0, // Resistance competence dice - only increases on realization
         marks: new Array(100).fill(false),
         eternalMarks: 0,
         eternalMarkIndices: [],
@@ -329,6 +331,28 @@ export class CharacterSheetManager {
   }
 
   /**
+   * Get resistance competence dice count
+   * This is separate from souffrance dice count - only increases on realization
+   */
+  getResistanceDiceCount(souffrance: Souffrance): number {
+    return this.state.souffrances[souffrance].resistanceDiceCount;
+  }
+
+  /**
+   * Get resistance competence level (Niv 0-5) based on resistance dice count
+   * This is separate from souffrance dice count - only increases on realization
+   */
+  getResistanceLevel(souffrance: Souffrance): number {
+    const diceCount = this.state.souffrances[souffrance].resistanceDiceCount;
+    if (diceCount === 0) return 0;
+    if (diceCount <= 2) return 1;
+    if (diceCount <= 5) return 2;
+    if (diceCount <= 9) return 3;
+    if (diceCount <= 14) return 4;
+    return 5;
+  }
+
+  /**
    * Check if souffrance is éprouvée (10 marks total, minus eternal marks)
    */
   isSouffranceEprouvee(souffrance: Souffrance): boolean {
@@ -339,16 +363,18 @@ export class CharacterSheetManager {
   }
 
   /**
-   * Realize a souffrance (gain +1 dice when 10 marks reached, like competences)
+   * Realize a souffrance resistance competence (gain +1 resistance dice when 10 marks reached, like competences)
+   * This increases the resistance competence dice, NOT the souffrance dice
    */
   realizeSouffrance(souffrance: Souffrance): void {
     if (!this.isSouffranceEprouvee(souffrance)) return;
     
     const souf = this.state.souffrances[souffrance];
-    const oldDiceCount = souf.diceCount;
+    const oldResistanceDiceCount = souf.resistanceDiceCount;
+    const oldLevel = this.getResistanceLevel(souffrance);
     
-    // +1 dice to souffrance
-    souf.diceCount += 1;
+    // +1 dice to resistance competence (NOT souffrance dice)
+    souf.resistanceDiceCount += 1;
     
     // Clear non-eternal marks
     for (let i = 0; i < 100; i++) {
@@ -357,8 +383,8 @@ export class CharacterSheetManager {
       }
     }
     
-    // Gain free marks = current level (same as competence realization)
-    const level = this.getSouffranceLevel(souffrance);
+    // Gain free marks = current resistance level (same as competence realization)
+    const level = this.getResistanceLevel(souffrance);
     this.state.freeMarks += level;
   }
 

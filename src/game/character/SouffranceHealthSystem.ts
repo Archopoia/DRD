@@ -148,9 +148,9 @@ export class SouffranceHealthSystem {
     Debug.log('SouffranceHealthSystem', `Applying ${diceAmount} DS of ${getSouffranceName(souffrance)} (resisted by ${getResistanceCompetenceName(souffrance)}) from failure using ${usedCompetence}`);
 
     // Calculate resistance
-    // The souffrance itself is its own resistance competence
-    // Resistance level = souffrance level (Niv from dice count)
-    const resistanceLevel = this.getSouffranceLevel(souffrance);
+    // The souffrance has a separate resistance competence
+    // Resistance level = resistance competence level (Niv from resistance dice count, not souffrance dice)
+    const resistanceLevel = this.characterSheetManager.getResistanceLevel(souffrance);
     
     // Resistance is much weaker - only absorbs a small fraction per level
     // At Niv 1: absorbs 0.1 DS (10%), Niv 2: 0.2 DS (20%), etc.
@@ -188,22 +188,23 @@ export class SouffranceHealthSystem {
     );
     Debug.log('SouffranceHealthSystem', `Gained 1 mark on used competence: ${usedCompetence}`);
 
-    // Mark 2: Souffrance resistance (marks = amount absorbed, rounded up)
+    // Mark 2: Souffrance resistance (marks = actual damage taken, minimum 1)
     // According to rules: "Chaque Échec déterminé comme une Souffrance ET outrepassant votre Résistance liée, s'accumule en Dé NÉGATIFS liés à cette Souffrance ET en Marque d'expérience dans la CT y ayant résisté"
-    // The souffrance itself gains marks when it resists (absorbs damage)
-    if (absorbedAmount > 0) {
-      // Gain marks on the souffrance (round up absorbed amount to get marks)
-      const marksToAdd = Math.ceil(absorbedAmount);
+    // The resistance competence gains marks based on the actual damage taken (the suffering experienced)
+    // Always gain at least 1 mark when suffering occurs (even if all damage is resisted)
+    if (actualDamage > 0 || diceAmount > 0) {
+      // Gain marks based on actual damage taken, minimum 1 mark
+      const marksToAdd = Math.max(1, Math.ceil(actualDamage > 0 ? actualDamage : diceAmount * 0.1));
       for (let i = 0; i < marksToAdd; i++) {
         this.characterSheetManager.addSouffranceMark(souffrance, false);
       }
       eventLog.addEvent(
         EventType.EXPERIENCE_GAIN,
-        `Gained ${marksToAdd} marks on ${resistanceName} (resisted ${absorbedAmount.toFixed(1)} DS)`,
+        `Gained ${marksToAdd} mark${marksToAdd > 1 ? 's' : ''} on ${resistanceName} (suffered ${actualDamage > 0 ? actualDamage.toFixed(1) : 'resisted'} DS)`,
         {
           resistanceCompetence: resistanceName,
           marks: marksToAdd,
-          absorbed: absorbedAmount,
+          actualDamage: actualDamage,
         }
       );
       Debug.log('SouffranceHealthSystem', `Gained ${marksToAdd} marks on ${resistanceName}`);

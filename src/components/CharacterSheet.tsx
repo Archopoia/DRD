@@ -433,7 +433,8 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                       {Object.values(Souffrance).map((souf) => {
                         const soufAttr = getSouffranceAttribute(souf);
                         if (soufAttr === atb1) {
-                          const resistanceLevel = manager.getSouffranceLevel(souf); // Resistance competence level = souffrance level (Niv from dice count)
+                          const resistanceDiceCount = manager.getResistanceDiceCount(souf); // Resistance competence dice count
+                          const resistanceLevel = manager.getResistanceLevel(souf); // Resistance competence level (separate from souffrance dice)
                           const totalMarks = manager.getTotalSouffranceMarks(souf);
                           const isEprouvee = manager.isSouffranceEprouvee(souf); // 100% marks (10 marks)
                           
@@ -444,22 +445,14 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                             }}>
                               <div className="font-bold text-text-cream mb-1 flex items-center gap-1">
                                 <DiceInput
-                                  value={resistanceLevel}
+                                  value={resistanceDiceCount}
                                   onChange={() => {
                                     // Disabled - can't edit directly
-                                    // Realization happens via click when marks are full
-                                  }}
-                                  onClick={() => {
-                                    // When marks are at 100%, clicking increases the dice by +1 (realization)
-                                    if (isEprouvee) {
-                                      manager.realizeSouffrance(souf);
-                                      updateState();
-                                    }
+                                    // Realization happens via progress bar click when marks are full
                                   }}
                                   min={0}
                                   size="sm"
                                   disabled={true}
-                                  className={isEprouvee ? 'cursor-pointer hover:opacity-80' : ''}
                                 />
                                 <span>{getResistanceCompetenceName(souf)}</span>
                               </div>
@@ -472,6 +465,13 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                   label={getLevelName(resistanceLevel)} 
                                   level={resistanceLevel}
                                   isFull={isEprouvee}
+                                  showRealizeLabel={isEprouvee}
+                                  onClick={() => {
+                                    if (isEprouvee) {
+                                      manager.realizeSouffrance(souf);
+                                      updateState();
+                                    }
+                                  }}
                                 />
                               </div>
                             </div>
@@ -580,12 +580,13 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                                 <div onClick={(e) => e.stopPropagation()}>
                                                   <DiceInput
                                                     value={compData.diceCount}
-                                                    onChange={(value) => {
-                                                      manager.setCompetenceDice(comp, value);
-                                                      updateState();
+                                                    onChange={() => {
+                                                      // Disabled - can't edit directly
+                                                      // Realization happens via progress bar click when marks are full
                                                     }}
                                                     min={0}
                                                     size="sm"
+                                                    disabled={true}
                                                   />
                                                 </div>
                                                 <span className="text-xs">{getCompetenceName(comp)}</span>
