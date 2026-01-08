@@ -167,6 +167,23 @@
   .progress-bar-realizing {
     animation: realization-blink 0.4s ease-in-out, realization-pulse 1s ease-in-out infinite;
   }
+
+  /* Pulse animation for reveal competence button */
+  @keyframes reveal-pulse {
+    0%, 100% {
+      text-shadow: 
+        0 0 8px #ffebc6,
+        0 0 12px #f5e6d3,
+        0 0 16px #e8d5b7;
+    }
+    50% {
+      text-shadow: 
+        0 0 16px #fff8e7,
+        0 0 24px #ffebc6,
+        0 0 32px #f5e6d3,
+        0 0 40px #e8d5b7;
+    }
+  }
 }
 
 

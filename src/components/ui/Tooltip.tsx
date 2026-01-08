@@ -57,9 +57,10 @@ export default function Tooltip({
       {children}
       {isVisible && (
         <div
-          className={`absolute z-50 px-3 py-2 bg-red-theme border-2 border-border-dark rounded font-medieval text-sm text-text-cream whitespace-nowrap pointer-events-none ${positionClasses[position]}`}
+          className={`absolute z-50 px-3 py-2 bg-red-theme-alpha border-2 border-border-dark rounded font-medieval text-sm whitespace-nowrap pointer-events-none ${positionClasses[position]}`}
           style={{
-            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.4), inset 0 0 0 1px #ceb68d',
+            color: '#ffebc6',
+            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
             textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
           }}
         >

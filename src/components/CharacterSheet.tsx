@@ -58,6 +58,7 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
   const [masteryDropdownPosition, setMasteryDropdownPosition] = useState<{ top: number; left: number; width: number } | null>(null);
   const [hoveredAttribute, setHoveredAttribute] = useState<{ aptitude: Aptitude; attributeIndex: number } | null>(null);
   const [hoveredAction, setHoveredAction] = useState<Action | null>(null);
+  const [hoveredRevealCompetence, setHoveredRevealCompetence] = useState<Competence | null>(null);
   const masteryButtonRefs = useRef<Map<Competence, HTMLButtonElement>>(new Map());
 
   // Update dropdown position on scroll/resize and close on outside click
@@ -561,12 +562,24 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                     {!compData.isRevealed ? (
                                       <button
                                         onClick={() => revealCompetence(comp)}
-                                        className="w-full px-2 py-2 bg-teal-theme text-text-cream border border-border-dark rounded font-medieval font-semibold text-center transition-all duration-300 hover:bg-hover-bg hover:text-text-dark hover:-translate-y-0.5"
+                                        onMouseEnter={() => setHoveredRevealCompetence(comp)}
+                                        onMouseLeave={() => setHoveredRevealCompetence(null)}
+                                        className="font-medieval text-xs font-semibold transition-all duration-300 cursor-pointer relative bg-transparent border-none p-0 m-0 w-full flex items-center"
                                         style={{
-                                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                                          opacity: hoveredRevealCompetence === comp ? 1 : 0.5,
+                                          color: hoveredRevealCompetence === comp ? '#4d3000' : 'inherit',
+                                          transform: hoveredRevealCompetence === comp ? 'translateY(-2px)' : 'translateY(0)',
+                                          zIndex: hoveredRevealCompetence === comp ? 10 : 'auto',
+                                          textShadow: hoveredRevealCompetence === comp ? '0 0 8px #ffebc6, 0 0 12px #f5e6d3, 0 0 16px #e8d5b7' : 'none',
+                                          animation: hoveredRevealCompetence === comp ? 'reveal-pulse 1.5s ease-in-out infinite' : 'none',
                                         }}
                                       >
-                                        Révéler {getCompetenceName(comp)}?
+                                        <span className="transition-all duration-300" style={{
+                                          marginLeft: 'auto',
+                                          marginRight: hoveredRevealCompetence === comp ? 'auto' : '0',
+                                        }}>
+                                          {hoveredRevealCompetence === comp ? `Révéler ${getCompetenceName(comp)} ?` : getCompetenceName(comp)}
+                                        </span>
                                       </button>
                                     ) : (
                                       <>
@@ -902,14 +915,17 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                           backfaceVisibility: 'hidden',
                           WebkitBackfaceVisibility: 'hidden',
                           transform: 'rotateY(180deg)',
+                          width: '100%',
+                          minWidth: 0,
                         }}
                       >
                         {/* Aptitude Name - Same position, gold color */}
                         <div 
                           className="mb-2 pb-2 border-b-2 border-border-dark cursor-pointer"
                           onClick={() => toggleAptitudeFlip(aptitude)}
+                          style={{ width: '100%', minWidth: 0 }}
                         >
-                          <div className="font-medieval text-xs font-bold uppercase tracking-wide text-center" style={{ color: '#ffebc6' }}>
+                          <div className="font-medieval text-xs font-bold uppercase tracking-wide text-center" style={{ color: '#ffebc6', width: '100%', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {getAptitudeName(aptitude)}
                           </div>
                         </div>
