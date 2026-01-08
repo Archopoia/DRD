@@ -287,7 +287,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                             <label className="font-medieval text-xs font-bold text-red-theme uppercase tracking-wide">
                               {getAttributeAbbreviation(atb1)}
                             </label>
-                            <div className="flex justify-center items-center mt-1">
+                            <div className="flex justify-center items-center gap-1 mt-1">
                               <DiceInput
                                 value={state.attributes[atb1]}
                                 onChange={(value) => handleAttributeChange(atb1, value)}
@@ -295,6 +295,9 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                 max={50}
                                 size="md"
                               />
+                              <span className="font-medieval text-xs text-text-dark">
+                                {Math.floor(state.attributes[atb1] * 6 / 10)}
+                              </span>
                             </div>
                           </div>
                         </Tooltip>
@@ -332,7 +335,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                     </div>
 
                     {/* Souffrance - Right under aptitude, above actions */}
-                    <div className="mb-3 pb-3 border-b-2 border-border-dark">
+                    <div className="mb-3 -mx-3">
                       {Object.values(Souffrance).map((souf) => {
                         const soufAttr = getSouffranceAttribute(souf);
                         if (soufAttr === atb1) {
