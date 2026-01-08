@@ -264,16 +264,17 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                           const diceCount = Math.round(diceCountRaw * 10) / 10; // Round to 1 decimal to avoid floating point errors
                           const maxDS = 26; // Max DS before death
                           
-                          // Colors matching the platform colors (converted to hex)
+                          // Colors toned down to match the muted, earthy theme
+                          // Muted, desaturated colors that fit the parchment/brown aesthetic
                           const souffranceColors: Record<Souffrance, string> = {
-                            [Souffrance.BLESSURES]: '#ff0000',    // Red - physical wounds
-                            [Souffrance.FATIGUES]: '#ff8800',     // Orange - exhaustion
-                            [Souffrance.ENTRAVES]: '#ffff00',     // Yellow - impediments
-                            [Souffrance.DISETTES]: '#00ff00',     // Green - hunger/thirst
-                            [Souffrance.ADDICTIONS]: '#00ffff',   // Cyan - dependencies
-                            [Souffrance.MALADIES]: '#0088ff',     // Light Blue - diseases
-                            [Souffrance.FOLIES]: '#8800ff',       // Purple - mental disorders
-                            [Souffrance.RANCOEURS]: '#ff00ff',    // Magenta - resentments
+                            [Souffrance.BLESSURES]: '#8b5a5a',    // Muted red-brown - physical wounds
+                            [Souffrance.FATIGUES]: '#a67c52',     // Muted orange-brown - exhaustion
+                            [Souffrance.ENTRAVES]: '#9a8a5f',     // Muted yellow-brown - impediments
+                            [Souffrance.DISETTES]: '#6b8a6b',     // Muted green-brown - hunger/thirst
+                            [Souffrance.ADDICTIONS]: '#6b8a8a',   // Muted teal-brown - dependencies
+                            [Souffrance.MALADIES]: '#6b7a8a',     // Muted blue-gray - diseases
+                            [Souffrance.FOLIES]: '#8a7a8a',       // Muted purple-gray - mental disorders
+                            [Souffrance.RANCOEURS]: '#8a6a7a',    // Muted mauve-brown - resentments
                           };
                           
                           const barColor = souffranceColors[linkedSouffrance];
@@ -290,8 +291,8 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                             <div
                               className="relative w-full overflow-hidden"
                               style={{
-                                height: '60px', // Increased height for better visibility
-                                minHeight: '60px',
+                                height: '120px', // Increased height for better visibility
+                                minHeight: '120px',
                                 backgroundColor: 'transparent',
                                 marginBottom: '0', // No space between bar and aptitude card
                               }}

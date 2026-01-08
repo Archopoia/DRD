@@ -212,16 +212,17 @@ export class Scene {
     const platformHeight = 0.1;
     const platformSpacing = 3.0;
     
-    // Colors for each souffrance type (distinct colors)
+    // Colors for each souffrance type - toned down to match muted, earthy theme
+    // Muted, desaturated colors that fit the parchment/brown aesthetic
     const souffranceColors: Record<Souffrance, number> = {
-      [Souffrance.BLESSURES]: 0xff0000,    // Red - physical wounds
-      [Souffrance.FATIGUES]: 0xff8800,     // Orange - exhaustion
-      [Souffrance.ENTRAVES]: 0xffff00,    // Yellow - impediments
-      [Souffrance.DISETTES]: 0x00ff00,     // Green - hunger/thirst
-      [Souffrance.ADDICTIONS]: 0x00ffff,   // Cyan - dependencies
-      [Souffrance.MALADIES]: 0x0088ff,    // Light Blue - diseases
-      [Souffrance.FOLIES]: 0x8800ff,      // Purple - mental disorders
-      [Souffrance.RANCOEURS]: 0xff00ff,    // Magenta - resentments
+      [Souffrance.BLESSURES]: 0x8b5a5a,    // Muted red-brown - physical wounds
+      [Souffrance.FATIGUES]: 0xa67c52,     // Muted orange-brown - exhaustion
+      [Souffrance.ENTRAVES]: 0x9a8a5f,     // Muted yellow-brown - impediments
+      [Souffrance.DISETTES]: 0x6b8a6b,     // Muted green-brown - hunger/thirst
+      [Souffrance.ADDICTIONS]: 0x6b8a8a,   // Muted teal-brown - dependencies
+      [Souffrance.MALADIES]: 0x6b7a8a,     // Muted blue-gray - diseases
+      [Souffrance.FOLIES]: 0x8a7a8a,       // Muted purple-gray - mental disorders
+      [Souffrance.RANCOEURS]: 0x8a6a7a,    // Muted mauve-brown - resentments
     };
 
     // Arrange platforms in a circle or grid pattern

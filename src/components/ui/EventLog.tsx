@@ -10,8 +10,9 @@ interface EventLogProps {
 /**
  * Event Log Component
  * Displays recent game world events in the bottom left corner
+ * Newest events at the bottom (most visible)
  */
-export default function EventLog({ maxVisible = 5 }: EventLogProps) {
+export default function EventLog({ maxVisible = 10 }: EventLogProps) {
   const [events, setEvents] = useState<GameEvent[]>([]);
   const eventLog = getEventLog();
 
@@ -92,44 +93,54 @@ export default function EventLog({ maxVisible = 5 }: EventLogProps) {
       className="fixed bottom-4 left-4 max-w-md pointer-events-none"
       style={{ 
         position: 'fixed',
-        zIndex: 1000,
+        zIndex: 40, // Behind character sheet (z-50)
       }}
     >
-      <div className="space-y-2">
+      <div className="space-y-0.5">
         {events.length === 0 ? (
           <div
-            className="px-3 py-2 rounded border text-sm bg-gray-900/70 border-gray-700/70 text-gray-300 pointer-events-auto"
+            className="px-2 py-1 text-xs text-gray-300 pointer-events-auto"
             style={{
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(4px)',
+              textShadow: '1px 1px 2px rgba(0, 0, 0, 0.9)',
             }}
           >
-            <p className="leading-relaxed text-xs italic" style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.9)' }}>
-              Event log ready... (step on colored platforms to see events)
+            <p className="leading-tight italic opacity-60">
+              Event log ready...
             </p>
           </div>
         ) : (
-          events.map((event) => (
-            <div
-              key={event.id}
-              className={`px-3 py-2 rounded border text-sm transition-all duration-300 ${getEventBgColor(event.type)} ${getEventColor(event.type)} pointer-events-auto`}
-              style={{
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(4px)',
-              }}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1">
-                  <p className="leading-relaxed" style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.9)' }}>
-                    {event.message}
-                  </p>
+          [...events].reverse().map((event, index) => {
+            // Calculate opacity: after reverse, index 0 renders at TOP (oldest), index max renders at BOTTOM (newest)
+            // Top event (index 0, oldest): most faded (0.2)
+            // Bottom event (index max, newest): most visible (1.0)
+            const maxIndex = events.length - 1;
+            // Fade: top (index 0) = most faded, bottom (index max) = most visible
+            const opacity = maxIndex > 0 
+              ? 0.2 + (index / maxIndex) * 0.8 // Fade from 0.2 (top, oldest, index 0) to 1.0 (bottom, newest, index max)
+              : 1.0;
+            
+            return (
+              <div
+                key={event.id}
+                className={`px-2 py-0.5 text-base transition-all duration-300 ${getEventColor(event.type)} pointer-events-auto`}
+                style={{
+                  opacity: opacity,
+                  textShadow: '1px 1px 2px rgba(0, 0, 0, 0.9)',
+                }}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1">
+                    <p className="leading-tight text-sm">
+                      {event.message}
+                    </p>
+                  </div>
+                  <span className="text-xs opacity-50 whitespace-nowrap">
+                    {getTimeAgo(event.timestamp)}
+                  </span>
                 </div>
-                <span className="text-xs opacity-60 whitespace-nowrap" style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.9)' }}>
-                  {getTimeAgo(event.timestamp)}
-                </span>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

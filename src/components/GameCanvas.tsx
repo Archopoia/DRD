@@ -181,7 +181,7 @@ export default function GameCanvas() {
         onClose={() => setShowCharacterSheet(false)}
         manager={characterSheetManager}
       />
-      <EventLog maxVisible={5} />
+      <EventLog maxVisible={10} />
     </>
   );
 }
