@@ -90,11 +90,11 @@ export class CharacterController {
       const shapeRot = this.rigidBody.rotation();
       
       // Helper function to check for collisions at a position
-      // Returns blocking collision info: { blocked: boolean, dynamicBodies: RigidBody[] }
+      // Returns blocking collision info: { blocked: boolean, dynamicBodies: Array<{body: RigidBody, contactPoint: Vector3}> }
       // Blocks block movement but can be pushed
-      const checkCollisions = (pos: RAPIER.Vector3): { blocked: boolean; dynamicBodies: RAPIER.RigidBody[] } => {
+      const checkCollisions = (pos: RAPIER.Vector3): { blocked: boolean; dynamicBodies: Array<{body: RAPIER.RigidBody; contactPoint: RAPIER.Vector3}> } => {
         let hasBlockingCollision = false;
-        const dynamicBodies: RAPIER.RigidBody[] = [];
+        const dynamicBodies: Array<{body: RAPIER.RigidBody; contactPoint: RAPIER.Vector3}> = [];
         
         world.intersectionsWithShape(
           pos,
@@ -112,7 +112,86 @@ export class CharacterController {
                 return false; // Stop on first blocking collision
               } else if (bodyType === RAPIER.RigidBodyType.Dynamic) {
                 // Dynamic body (block) - blocks movement but can be pushed
-                dynamicBodies.push(colliderBody);
+                // Calculate contact point: find where character touches the block
+                const blockPos = colliderBody.translation();
+                const blockCollider = colliderBody.collider(0);
+                
+                // Get block's shape to determine half-extents
+                // For cuboid blocks, we can calculate the contact point on the surface
+                const shapeType = blockCollider.shapeType();
+                let contactPoint: RAPIER.Vector3;
+                
+                if (shapeType === RAPIER.ShapeType.Cuboid) {
+                  // Get half-extents from the cuboid shape
+                  const cuboidShape = blockCollider.shape as RAPIER.Cuboid;
+                  const halfExtents = cuboidShape.halfExtents;
+                  
+                  // Calculate direction from block center to character (in block's local space)
+                  const toCharacter = new RAPIER.Vector3(
+                    currentPos.x - blockPos.x,
+                    currentPos.y - blockPos.y,
+                    currentPos.z - blockPos.z
+                  );
+                  
+                  // Normalize the direction
+                  const length = Math.sqrt(
+                    toCharacter.x * toCharacter.x +
+                    toCharacter.y * toCharacter.y +
+                    toCharacter.z * toCharacter.z
+                  );
+                  
+                  if (length > 0.001) {
+                    // Find the closest point on the block's surface
+                    // Clamp to the block's bounds, then project to surface
+                    const clampedX = Math.max(-halfExtents.x, Math.min(halfExtents.x, toCharacter.x));
+                    const clampedY = Math.max(-halfExtents.y, Math.min(halfExtents.y, toCharacter.y));
+                    const clampedZ = Math.max(-halfExtents.z, Math.min(halfExtents.z, toCharacter.z));
+                    
+                    // Find which face is closest (largest distance from center)
+                    const distX = Math.abs(toCharacter.x);
+                    const distY = Math.abs(toCharacter.y);
+                    const distZ = Math.abs(toCharacter.z);
+                    
+                    let surfaceX = clampedX;
+                    let surfaceY = clampedY;
+                    let surfaceZ = clampedZ;
+                    
+                    // Project to the closest face
+                    if (distX >= distY && distX >= distZ) {
+                      // X face is closest
+                      surfaceX = toCharacter.x > 0 ? halfExtents.x : -halfExtents.x;
+                    } else if (distY >= distX && distY >= distZ) {
+                      // Y face is closest
+                      surfaceY = toCharacter.y > 0 ? halfExtents.y : -halfExtents.y;
+                    } else {
+                      // Z face is closest
+                      surfaceZ = toCharacter.z > 0 ? halfExtents.z : -halfExtents.z;
+                    }
+                    
+                    // Convert back to world space
+                    contactPoint = new RAPIER.Vector3(
+                      blockPos.x + surfaceX,
+                      blockPos.y + surfaceY,
+                      blockPos.z + surfaceZ
+                    );
+                  } else {
+                    // Character is at block center, use character position
+                    contactPoint = new RAPIER.Vector3(
+                      currentPos.x,
+                      currentPos.y,
+                      currentPos.z
+                    );
+                  }
+                } else {
+                  // For non-cuboid shapes, use character position as fallback
+                  contactPoint = new RAPIER.Vector3(
+                    currentPos.x,
+                    currentPos.y,
+                    currentPos.z
+                  );
+                }
+                
+                dynamicBodies.push({ body: colliderBody, contactPoint });
                 hasBlockingCollision = true; // Block movement through it
               }
               // Kinematic bodies are also allowed (we're already excluding our own)
@@ -143,12 +222,37 @@ export class CharacterController {
         } else {
           // Check if we're blocked by blocks that can be pushed
           if (collision.dynamicBodies.length > 0) {
-            // We're pushing against blocks - apply force to push them
-            const pushForce = new RAPIER.Vector3(moveX * 100, 0, moveZ * 100); // Scale force appropriately
-            
-            for (const blockBody of collision.dynamicBodies) {
-              // Apply force to push the block in the direction we're moving
-              blockBody.applyImpulse(pushForce, true);
+            // Calculate push direction and force
+            const moveLength = Math.sqrt(moveX * moveX + moveZ * moveZ);
+            if (moveLength > 0.01) {
+              const normalizedX = moveX / moveLength;
+              const normalizedZ = moveZ / moveLength;
+              // Reduced force - more realistic pushing
+              const forceMagnitude = 1.0; // Much lower force for more realistic pushing
+              const pushForce = new RAPIER.Vector3(normalizedX * forceMagnitude, 0, normalizedZ * forceMagnitude);
+              
+              for (const blockInfo of collision.dynamicBodies) {
+                const blockPos = blockInfo.body.translation();
+                const blockCenter = new RAPIER.Vector3(blockPos.x, blockPos.y, blockPos.z);
+                
+                // Calculate distance from block center to contact point to verify it's at edge
+                const contactToCenter = new RAPIER.Vector3(
+                  blockInfo.contactPoint.x - blockCenter.x,
+                  blockInfo.contactPoint.y - blockCenter.y,
+                  blockInfo.contactPoint.z - blockCenter.z
+                );
+                const distanceFromCenter = Math.sqrt(
+                  contactToCenter.x * contactToCenter.x +
+                  contactToCenter.y * contactToCenter.y +
+                  contactToCenter.z * contactToCenter.z
+                );
+                
+                Debug.log('CharacterController', `Pushing block: force=${forceMagnitude.toFixed(2)}, contact at (${blockInfo.contactPoint.x.toFixed(2)}, ${blockInfo.contactPoint.y.toFixed(2)}, ${blockInfo.contactPoint.z.toFixed(2)}), block center (${blockCenter.x.toFixed(2)}, ${blockCenter.y.toFixed(2)}, ${blockCenter.z.toFixed(2)}), distance from center=${distanceFromCenter.toFixed(2)}`);
+                
+                // Apply impulse at the contact point (where character touches block)
+                // This creates realistic rotation when pushing on edges
+                blockInfo.body.applyImpulseAtPoint(pushForce, blockInfo.contactPoint, true);
+              }
             }
             
             // Don't move the character into the block - stay at current position
@@ -170,9 +274,19 @@ export class CharacterController {
                 targetPos.x = xOnlyTarget.x;
               } else if (xCollision.dynamicBodies.length > 0) {
                 // Pushing block in X direction
-                const pushForce = new RAPIER.Vector3(moveX * 100, 0, 0);
-                for (const blockBody of xCollision.dynamicBodies) {
-                  blockBody.applyImpulse(pushForce, true);
+                const moveLength = Math.abs(moveX);
+                if (moveLength > 0.01) {
+                  const pushDirection = moveX > 0 ? 1 : -1;
+                  const forceMagnitude = 1.0; // Reduced force
+                  const pushForce = new RAPIER.Vector3(pushDirection * forceMagnitude, 0, 0);
+                  
+                  for (const blockInfo of xCollision.dynamicBodies) {
+                    const blockPos = blockInfo.body.translation();
+                    Debug.log('CharacterController', `Pushing block X: force=${forceMagnitude.toFixed(2)}, contact (${blockInfo.contactPoint.x.toFixed(2)}, ${blockInfo.contactPoint.y.toFixed(2)}, ${blockInfo.contactPoint.z.toFixed(2)}), block center (${blockPos.x.toFixed(2)}, ${blockPos.y.toFixed(2)}, ${blockPos.z.toFixed(2)})`);
+                    
+                    // Apply force at contact point for realistic rotation
+                    blockInfo.body.applyImpulseAtPoint(pushForce, blockInfo.contactPoint, true);
+                  }
                 }
                 // Don't move into the block - stay at current position
                 // Physics will push the block, next frame we can move closer
@@ -191,9 +305,19 @@ export class CharacterController {
                 targetPos.z = zOnlyTarget.z;
               } else if (zCollision.dynamicBodies.length > 0) {
                 // Pushing block in Z direction
-                const pushForce = new RAPIER.Vector3(0, 0, moveZ * 100);
-                for (const blockBody of zCollision.dynamicBodies) {
-                  blockBody.applyImpulse(pushForce, true);
+                const moveLength = Math.abs(moveZ);
+                if (moveLength > 0.01) {
+                  const pushDirection = moveZ > 0 ? 1 : -1;
+                  const forceMagnitude = 1.0; // Reduced force
+                  const pushForce = new RAPIER.Vector3(0, 0, pushDirection * forceMagnitude);
+                  
+                  for (const blockInfo of zCollision.dynamicBodies) {
+                    const blockPos = blockInfo.body.translation();
+                    Debug.log('CharacterController', `Pushing block Z: force=${forceMagnitude.toFixed(2)}, contact (${blockInfo.contactPoint.x.toFixed(2)}, ${blockInfo.contactPoint.y.toFixed(2)}, ${blockInfo.contactPoint.z.toFixed(2)}), block center (${blockPos.x.toFixed(2)}, ${blockPos.y.toFixed(2)}, ${blockPos.z.toFixed(2)})`);
+                    
+                    // Apply force at contact point for realistic rotation
+                    blockInfo.body.applyImpulseAtPoint(pushForce, blockInfo.contactPoint, true);
+                  }
                 }
                 // Don't move into the block - stay at current position
                 // Physics will push the block, next frame we can move closer
@@ -217,6 +341,22 @@ export class CharacterController {
           // Can move vertically
           targetPos.y = verticalTarget.y;
         } else {
+          // Check if we're standing on a block (moving down)
+          if (moveY < 0 && verticalCollision.dynamicBodies.length > 0) {
+            // Standing on a block - apply downward force at contact point
+            // This allows pushing blocks down or making them rotate when standing on edges
+            const forceMagnitude = 1.0; // Reduced force
+            const pushForce = new RAPIER.Vector3(0, moveY * forceMagnitude, 0);
+            
+            for (const blockInfo of verticalCollision.dynamicBodies) {
+              const blockPos = blockInfo.body.translation();
+              Debug.log('CharacterController', `Standing on block: force=${forceMagnitude.toFixed(2)}, contact (${blockInfo.contactPoint.x.toFixed(2)}, ${blockInfo.contactPoint.y.toFixed(2)}, ${blockInfo.contactPoint.z.toFixed(2)}), block center (${blockPos.x.toFixed(2)}, ${blockPos.y.toFixed(2)}, ${blockPos.z.toFixed(2)})`);
+              
+              // Apply force at contact point (where we're standing)
+              blockInfo.body.applyImpulseAtPoint(pushForce, blockInfo.contactPoint, true);
+            }
+          }
+          
           // Blocked vertically
           if (moveY < 0) {
             // Hitting something below - stay at current Y (we're on ground)
