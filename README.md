@@ -103,19 +103,52 @@ The game uses a centralized `Debug` utility (`src/game/utils/debug.ts`) for all 
 
 All debug output is automatically disabled in production builds.
 
+## Game Design Philosophy
+
+This is an **immersive sim** (like Deus Ex, System Shock, Prey) combined with **action-RPG** mechanics (like Daggerfall/Morrowind/Oblivion), not a TTRPG simulator. The character stats from "Des Récits Discordants" are translated into **direct gameplay modifiers** that affect gameplay variables in real-time:
+
+- **No dice rolling** - Stats directly modify gameplay mechanics
+- **Environmental systems** - 8 environmental condition axes (pressure, wind, radiation, temperature, moisture, terrain, light, respiration) create dynamic, systemic challenges
+- **Physics-based interactions** - Using Rapier physics engine for realistic environmental responses
+- **Immersive minigames** - Each gameplay aspect (combat, social, stealth, exploration, etc.) is an integrated "minigame" that feels natural
+- **Direct stat impact** - Attributes, aptitudes, and competences affect:
+  - Movement speed and agility (affected by terrain, pressure, etc.)
+  - Weapon sway and accuracy (affected by wind, temperature, etc.)
+  - Social interaction success rates
+  - Stealth detection and visibility (affected by light conditions)
+  - Exploration and discovery mechanics (affected by environmental conditions)
+  - Knowledge and investigation systems
+  - Environmental resistance and habituation
+  - And more...
+- **Systemic design** - Tools, equipment, and player actions interact with environmental conditions in meaningful, emergent ways
+
 ## Future Expansion
 
 Planned features for future development:
 
-- Physics integration (Cannon.js or Rapier)
-- Sprite billboards for enemies
+### Core Systems (Priority)
+- **Physics integration (Rapier)** - Required for movement, combat, environmental interactions
+- **Stat-to-Gameplay Modifier System** - Translate character stats into gameplay variables
+- **Environmental Conditions System** - 8 condition axes (FLU/MOI/TER/TEM/RES/RAD/LUM/PRE) affecting gameplay
+- **Tool/Equipment System** - Tools that resist environmental conditions, require maintenance
+- **Combat system** - Action-based combat with stat-driven modifiers (weapon sway, attack speed, damage)
+- **Movement system** - Stat-driven movement speed, jump height, stamina, affected by environmental conditions
+
+### Gameplay Systems (Integrated Minigames)
+- **Social system** - Dialogue and persuasion with stat-driven success windows
+- **Stealth system** - Visibility, detection, and hiding mechanics
+- **Exploration system** - Discovery, investigation, and knowledge mechanics
+- **Crafting system** - Item creation with skill-based difficulty
+
+### World & Content
+- Sprite billboards for enemies and NPCs
 - Procedural dungeon generation
-- UI components (inventory, menus, dialogue)
-- Save system (localStorage/IndexedDB)
 - Texture loading system
 - Audio system
-- Character stats and progression
-- Combat system
+
+### Technical
+- UI components (inventory, menus, dialogue)
+- Save system (localStorage/IndexedDB)
 
 ## License
 

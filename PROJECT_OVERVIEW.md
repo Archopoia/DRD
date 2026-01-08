@@ -2,13 +2,21 @@
 
 ## Executive Summary
 
-This project is a **browser-based first-person RPG** that implements the "Des Récits Discordants" (DRD) tabletop RPG system. It combines:
+This project is a **browser-based action-RPG** (inspired by Daggerfall/Morrowind/Oblivion) that adapts the "Des Récits Discordants" (DRD) tabletop RPG system into direct gameplay mechanics. It combines:
 - **Three.js** for 3D rendering (Daggerfall-inspired retro aesthetic)
 - **Next.js** with TypeScript for the web framework
 - **React** for UI components
 - A complete character sheet system ported from a **Godot template**
 
-The game is being built iteratively using **Cursor.ai/ChatGPT** to translate the complex TTRPG rules into a digital format.
+**Key Design Philosophy**: This is an **immersive sim** (like Deus Ex, System Shock, Prey) combined with action-RPG mechanics. This is NOT a TTRPG simulator with dice rolling. Instead:
+
+- **Character stats** (attributes, aptitudes, competences) are translated into **direct gameplay modifiers** that affect real-time gameplay variables
+- **Environmental conditions** (pressure, wind, radiation, temperature, etc.) create dynamic, systemic gameplay challenges
+- Each gameplay aspect (combat, social, stealth, exploration, etc.) becomes an immersive "minigame" integrated seamlessly into the action-RPG experience
+- **Physics-based interactions** using Rapier physics engine for realistic environmental responses
+- **Systemic design** where tools, equipment, and player actions interact with environmental conditions in meaningful ways
+
+The game is being built iteratively using **Cursor.ai/ChatGPT** to translate the complex TTRPG stat system into action-RPG gameplay mechanics.
 
 ---
 
@@ -220,9 +228,12 @@ The Godot implementation was used as a **reference** for:
 
 ### 🚧 In Progress / Planned
 
-1. **Game World**
+1. **Game World & Environmental Systems**
    - Basic 3D scene (test geometry only)
-   - Physics integration
+   - **Physics integration (Rapier)** - Required for environmental interactions
+   - **Environmental Conditions System** - 8 condition axes (FLU, MOI, TER, TEM, RES, RAD, LUM, PRE)
+   - **Tool/Equipment System** - Tools that resist environmental conditions
+   - **Habituation System** - Character adaptation to environmental conditions over time
    - Procedural dungeon generation
 
 2. **Character System**
@@ -231,11 +242,24 @@ The Godot implementation was used as a **reference** for:
    - Découvertes (Discoveries) system
    - Complete progression tracking
 
-3. **Gameplay Systems**
-   - Dice rolling system (dD implementation)
-   - Combat system
-   - Skill checks and épreuves
-   - Souffrance application and healing
+3. **Gameplay Systems** (Immersive Sim + Action-RPG Mechanics)
+   - **Stat-to-Gameplay Modifier System** - Translate character stats into gameplay variables
+   - **Environmental Conditions System** - 8 axes affecting gameplay:
+     - **FLU (Flow)**: Mud/bog vs being carried by currents
+     - **MOI (Moisture)**: Humidity vs aridity
+     - **TER (Terrain)**: Slippery surfaces vs steep cliffs
+     - **TEM (Temperature)**: Cold vs heat
+     - **RES (Respiration)**: Suffocation vs strong winds
+     - **RAD (Radiation)**: Disorientation vs irradiation
+     - **LUM (Luminance)**: Darkness vs brightness
+     - **PRE (Pressure)**: Zero gravity vs crushing pressure
+   - **Combat system** - Action-based with stat-driven modifiers (weapon sway, attack speed, damage)
+   - **Movement system** - Stat-driven movement speed, jump height, stamina, affected by environmental conditions
+   - **Social system** - Dialogue and persuasion with stat-driven success windows
+   - **Stealth system** - Visibility, detection, and hiding mechanics (affected by LUM conditions)
+   - **Exploration system** - Discovery, investigation, and knowledge mechanics
+   - **Tool/Equipment System** - Tools that resist environmental conditions, require maintenance
+   - **Souffrance application** - Injuries affect gameplay variables (movement, accuracy, etc.), can be caused by environmental failures
 
 4. **UI/UX**
    - Inventory system
@@ -377,10 +401,14 @@ From `CharacterSheetManager.ts`:
 
 ### Immediate Priorities
 
-1. **Dice System**: Implement dD (3-sided dice) rolling
-2. **Skill Checks**: Épreuves with difficulty levels
-3. **Character Creation**: Full creation flow from TTRPG rules
-4. **Combat System**: Basic combat mechanics
+1. **Physics Integration (Rapier)**: Add Rapier physics engine for movement, collision, environmental interactions, and combat
+2. **Stat-to-Gameplay Modifier System**: Create a system that translates character stats (attributes, aptitudes, competences) into gameplay variables (movement speed, weapon sway, etc.)
+3. **Environmental Conditions System**: Implement the 8 environmental condition axes that dynamically affect gameplay:
+   - Conditions affect movement, visibility, stamina drain, etc.
+   - Tools/equipment provide resistance to conditions
+   - Habituation system for long-term adaptation
+4. **Enhanced Movement System**: Implement stat-driven movement (speed, jump, stamina) that responds to character stats AND environmental conditions
+5. **Combat System**: Action-based combat with stat-driven modifiers (weapon sway, attack speed, damage, accuracy), affected by environmental conditions
 
 ### Future Features
 
@@ -421,5 +449,6 @@ The combination of:
 - **AI-assisted development** (Cursor.ai/ChatGPT)
 
 ...creates a powerful development environment for building a complex RPG system.
+
 
 
