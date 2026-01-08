@@ -93,6 +93,20 @@
     -moz-appearance: textfield;
     appearance: textfield;
   }
+
+  /* Pulse glow animation for full progress bars (marks at 100%) */
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 8px #517c78, 0 0 12px #517c7880, 0 0 16px #517c7860;
+    }
+    50% {
+      box-shadow: 0 0 12px #517c78, 0 0 18px #517c78cc, 0 0 24px #517c7899;
+    }
+  }
+
+  .progress-bar-container-pulse {
+    animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
 }
 
 

@@ -7,6 +7,7 @@ interface ProgressBarProps {
   className?: string;
   label?: string;
   level?: number;
+  isFull?: boolean; // When marks reach 100% (10 marks), show pulsing/shining effect
 }
 
 /**
@@ -20,6 +21,7 @@ export default function ProgressBar({
   className = '',
   label,
   level,
+  isFull = false, // When marks reach 100% (10 marks), show pulsing/shining effect
 }: ProgressBarProps) {
   const percentage = Math.min((value / max) * 100, 100);
 
@@ -29,10 +31,17 @@ export default function ProgressBar({
     lg: 'h-6', // 6 (1.5 * 4)
   };
 
+  // Turquoise-blue color from theme for pulsing when full (#517c78)
+  const tealTheme = '#517c78';
+
   return (
-    <div className={`w-full ${heightConfig[height]} bg-parchment-dark border border-border-dark rounded overflow-hidden relative ${className}`}>
+    <div 
+      className={`w-full ${heightConfig[height]} bg-parchment-dark border border-border-dark rounded overflow-hidden relative ${className} ${
+        isFull ? 'progress-bar-container-pulse' : ''
+      }`}
+    >
       <div
-        className={`h-full bg-gradient-to-r from-red-theme to-yellow-theme transition-all duration-300 relative`}
+        className={`h-full transition-all duration-300 relative bg-gradient-to-r from-red-theme to-yellow-theme`}
         style={{
           width: `${percentage}%`,
           boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.3)',

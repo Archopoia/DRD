@@ -432,14 +432,14 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                       </div>
                     </div>
 
-                    {/* Souffrance - Right under aptitude, above actions */}
+                    {/* Resistance Competence (R[Souffrance]) - Right under aptitude, above actions */}
                     <div className="mb-3 -mx-3">
                       {Object.values(Souffrance).map((souf) => {
                         const soufAttr = getSouffranceAttribute(souf);
                         if (soufAttr === atb1) {
-                          const soufData = state.souffrances[souf];
-                          const level = getLevelFromDiceCount(soufData.diceCount);
-                          const totalMarks = soufData.marks.filter(m => m).length;
+                          const resistanceLevel = manager.getSouffranceLevel(souf); // Resistance competence level = souffrance level (Niv from dice count)
+                          const totalMarks = manager.getTotalSouffranceMarks(souf);
+                          const isEprouvee = manager.isSouffranceEprouvee(souf); // 100% marks (10 marks)
                           
                           return (
                             <div key={souf} className="text-xs bg-red-theme-alpha border-2 border-border-dark rounded p-2" style={{
@@ -447,19 +447,35 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                             }}>
                               <div className="font-bold text-text-cream mb-1 flex items-center gap-1">
                                 <DiceInput
-                                  value={soufData.diceCount}
-                                  onChange={(value) => {
-                                    manager.setSouffranceDice(souf, value);
-                                    updateState();
+                                  value={resistanceLevel}
+                                  onChange={() => {
+                                    // Disabled - can't edit directly
+                                    // Realization happens via click when marks are full
+                                  }}
+                                  onClick={() => {
+                                    // When marks are at 100%, clicking increases the dice by +1 (realization)
+                                    if (isEprouvee) {
+                                      manager.realizeSouffrance(souf);
+                                      updateState();
+                                    }
                                   }}
                                   min={0}
                                   size="sm"
+                                  disabled={true}
+                                  className={isEprouvee ? 'cursor-pointer hover:opacity-80' : ''}
                                 />
                                 <span>{getResistanceCompetenceName(souf)}</span>
                               </div>
                               <div className="grid grid-cols-[1rem_1fr] items-center gap-1">
-                                <span className="text-xs font-medieval font-semibold text-text-cream whitespace-nowrap">N{level}</span>
-                                <ProgressBar value={totalMarks} max={100} height="sm" label={getLevelName(level)} level={level} />
+                                <span className="text-xs font-medieval font-semibold text-text-cream whitespace-nowrap">N{resistanceLevel}</span>
+                                <ProgressBar 
+                                  value={totalMarks} 
+                                  max={10} 
+                                  height="sm" 
+                                  label={getLevelName(resistanceLevel)} 
+                                  level={resistanceLevel}
+                                  isFull={isEprouvee}
+                                />
                               </div>
                             </div>
                           );

@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 interface DiceInputProps {
   value: number;
   onChange: (value: number) => void;
+  onClick?: () => void; // Optional click handler for realization
   min?: number;
   max?: number;
   size?: 'sm' | 'md' | 'lg';
@@ -21,6 +22,7 @@ interface DiceInputProps {
 export default function DiceInput({
   value,
   onChange,
+  onClick,
   min = -50,
   max = 50,
   size = 'md',
@@ -123,18 +125,26 @@ export default function DiceInput({
         min={min}
         max={max}
         value={localValue}
-        onChange={handleInputChange}
+        onChange={disabled ? undefined : handleInputChange}
+        onClick={disabled && onClick ? onClick : undefined}
         disabled={disabled}
-        className={`${config.input} bg-parchment-aged border border-border-dark rounded text-text-dark font-medieval font-semibold text-center transition-all duration-300 focus:outline-none focus:border-gold-glow focus:bg-parchment-light ${inputClassName}`}
+        readOnly={disabled && !onClick}
+        className={`${config.input} bg-parchment-aged border border-border-dark rounded text-text-dark font-medieval font-semibold text-center transition-all duration-300 focus:outline-none focus:border-gold-glow focus:bg-parchment-light ${
+          disabled && onClick ? 'cursor-pointer hover:opacity-80' : disabled ? 'cursor-not-allowed opacity-60' : ''
+        } ${inputClassName}`}
         style={{
           boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)',
         }}
         onFocus={(e) => {
-          e.target.style.boxShadow = '0 0 10px #ffebc6, inset 0 2px 4px rgba(0, 0, 0, 0.1)';
+          if (!disabled) {
+            e.target.style.boxShadow = '0 0 10px #ffebc6, inset 0 2px 4px rgba(0, 0, 0, 0.1)';
+          }
         }}
         onBlur={(e) => {
           e.target.style.boxShadow = 'inset 0 2px 4px rgba(0, 0, 0, 0.1)';
-          handleInputBlur();
+          if (!disabled) {
+            handleInputBlur();
+          }
         }}
       />
       {/* Invisible hover area that extends backwards for easier access */}
