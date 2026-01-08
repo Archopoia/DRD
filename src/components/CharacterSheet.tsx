@@ -260,7 +260,8 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                         
                         if (linkedSouffrance) {
                           const soufData = state.souffrances[linkedSouffrance];
-                          const diceCount = soufData?.diceCount || 0;
+                          const diceCountRaw = soufData?.diceCount || 0;
+                          const diceCount = Math.round(diceCountRaw * 10) / 10; // Round to 1 decimal to avoid floating point errors
                           const maxDS = 26; // Max DS before death
                           
                           // Colors matching the platform colors (converted to hex)
@@ -289,10 +290,10 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                             <div
                               className="relative w-full overflow-hidden"
                               style={{
-                                height: '40px', // Fixed height for the bar container
-                                minHeight: '40px',
+                                height: '60px', // Increased height for better visibility
+                                minHeight: '60px',
                                 backgroundColor: 'transparent',
-                                marginBottom: '0.5rem',
+                                marginBottom: '0', // No space between bar and aptitude card
                               }}
                             >
                               {/* Bar that grows from bottom upward */}
@@ -314,7 +315,7 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                     className="absolute inset-0 flex items-center justify-center"
                                     style={{
                                       color: '#ffffff',
-                                      textShadow: '2px 2px 4px rgba(0, 0, 0, 1), -1px -1px 2px rgba(0, 0, 0, 0.8), 0 0 4px rgba(0, 0, 0, 0.8)',
+                                      textShadow: '1px 1px 1px rgba(0, 0, 0, 1), -1px -1px 1px rgba(0, 0, 0, 0.9)',
                                       fontWeight: 'bold',
                                       fontSize: diceCount >= 10 ? '0.7rem' : '0.75rem',
                                       fontFamily: 'monospace',
@@ -322,7 +323,7 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                       pointerEvents: 'none',
                                     }}
                                   >
-                                    {diceCount}
+                                    {diceCount.toFixed(1)}
                                   </div>
                                 )}
                               </div>

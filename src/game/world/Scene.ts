@@ -406,14 +406,15 @@ export class Scene {
             1, // +1 DS
             Competence.PAS // Dummy competence for testing
           );
-          const afterDice = this.healthSystem['characterSheetManager'].getSouffrance(platform.souffrance).diceCount;
+          const afterDiceRaw = this.healthSystem['characterSheetManager'].getSouffrance(platform.souffrance).diceCount;
+          const afterDice = Math.round(afterDiceRaw * 10) / 10; // Round to 1 decimal
           
           platform.lastDamageTime = currentTime;
           
           // Note: Events are now logged in SouffranceHealthSystem.applySouffranceFromFailure
           // No need to duplicate them here
           const souffranceName = getSouffranceName(platform.souffrance);
-          Debug.log('Scene', `Character on ${souffranceName} platform - applied ${applied.toFixed(2)} DS (total: ${afterDice} DS)`);
+          Debug.log('Scene', `Character on ${souffranceName} platform - applied ${applied.toFixed(1)} DS (total: ${afterDice.toFixed(1)} DS)`);
         }
         } else if (horizontalDistance < 3.0) {
           // Debug log occasionally to help troubleshoot when very close

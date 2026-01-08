@@ -67,7 +67,7 @@ export class SouffranceHealthSystem {
       const souffranceData = this.characterSheetManager.getSouffrance(souffrance);
       total += souffranceData.diceCount;
     });
-    return total;
+    return Math.round(total * 10) / 10; // Round to 1 decimal to avoid floating point errors
   }
 
   /**
@@ -155,15 +155,18 @@ export class SouffranceHealthSystem {
     // Resistance is much weaker - only absorbs a small fraction per level
     // At Niv 1: absorbs 0.1 DS (10%), Niv 2: 0.2 DS (20%), etc.
     // Resistance becomes more effective at higher levels, but never fully negates damage
-    const absorbedAmount = Math.min(diceAmount * 0.1 * resistanceLevel, diceAmount * 0.5); // Max 50% absorption even at high levels
-    const actualDamage = Math.max(0, diceAmount - absorbedAmount);
+    const absorbedAmountRaw = Math.min(diceAmount * 0.1 * resistanceLevel, diceAmount * 0.5); // Max 50% absorption even at high levels
+    const absorbedAmount = Math.round(absorbedAmountRaw * 10) / 10; // Round to 1 decimal
+    const actualDamageRaw = Math.max(0, diceAmount - absorbedAmount);
+    const actualDamage = Math.round(actualDamageRaw * 10) / 10; // Round to 1 decimal
 
-    Debug.log('SouffranceHealthSystem', `Applying ${diceAmount} DS of ${getSouffranceName(souffrance)}, ${getResistanceCompetenceName(souffrance)} Niv ${resistanceLevel} absorbed ${absorbedAmount.toFixed(2)}, actual damage ${actualDamage.toFixed(2)}`);
+    Debug.log('SouffranceHealthSystem', `Applying ${diceAmount.toFixed(1)} DS of ${getSouffranceName(souffrance)}, ${getResistanceCompetenceName(souffrance)} Niv ${resistanceLevel} absorbed ${absorbedAmount.toFixed(1)}, actual damage ${actualDamage.toFixed(1)}`);
 
     // Apply the actual damage (after resistance)
     if (actualDamage > 0) {
       const currentDice = this.characterSheetManager.getSouffrance(souffrance).diceCount;
-      this.characterSheetManager.setSouffranceDice(souffrance, currentDice + actualDamage);
+      const newDiceCount = Math.round((currentDice + actualDamage) * 10) / 10; // Round to 1 decimal
+      this.characterSheetManager.setSouffranceDice(souffrance, newDiceCount);
       
       // Check for health state changes
       this.checkHealthStateChange();
@@ -196,7 +199,7 @@ export class SouffranceHealthSystem {
       }
       eventLog.addEvent(
         EventType.EXPERIENCE_GAIN,
-        `Gained ${marksToAdd} marks on ${resistanceName} (resisted ${absorbedAmount.toFixed(2)} DS)`,
+        `Gained ${marksToAdd} marks on ${resistanceName} (resisted ${absorbedAmount.toFixed(1)} DS)`,
         {
           resistanceCompetence: resistanceName,
           marks: marksToAdd,
@@ -210,7 +213,7 @@ export class SouffranceHealthSystem {
     if (actualDamage > 0) {
       eventLog.addEvent(
         EventType.SOUFFRANCE_DAMAGE,
-        `+${actualDamage.toFixed(2)} DS ${souffranceName} (${currentDiceAfter} DS total)${usedCompetence === Competence.PAS ? ' - Stepping on platform' : ''}`,
+        `+${actualDamage.toFixed(1)} DS ${souffranceName} (${currentDiceAfter.toFixed(1)} DS total)${usedCompetence === Competence.PAS ? ' - Stepping on platform' : ''}`,
         {
           souffrance: souffrance,
           damage: actualDamage,
@@ -221,7 +224,7 @@ export class SouffranceHealthSystem {
       // Only log resistance if most damage was resisted (90%+)
       eventLog.addEvent(
         EventType.SOUFFRANCE_RESISTED,
-        `${resistanceName} resisted ${souffranceName} damage (${absorbedAmount.toFixed(2)}/${diceAmount} DS absorbed)`,
+        `${resistanceName} resisted ${souffranceName} damage (${absorbedAmount.toFixed(1)}/${diceAmount.toFixed(1)} DS absorbed)`,
         {
           souffrance: souffrance,
           resisted: true,
@@ -267,7 +270,8 @@ export class SouffranceHealthSystem {
   getAllSouffranceDice(): Record<Souffrance, number> {
     const result: Record<Souffrance, number> = {} as Record<Souffrance, number>;
     Object.values(Souffrance).forEach((souffrance) => {
-      result[souffrance] = this.characterSheetManager.getSouffrance(souffrance).diceCount;
+      const diceCount = this.characterSheetManager.getSouffrance(souffrance).diceCount;
+      result[souffrance] = Math.round(diceCount * 10) / 10; // Round to 1 decimal
     });
     return result;
   }
@@ -282,22 +286,23 @@ export class SouffranceHealthSystem {
       const totalDS = this.getTotalSouffrance();
       
       let message = '';
+      const totalDSRounded = Math.round(totalDS * 10) / 10; // Round to 1 decimal
       switch (currentState) {
         case HealthState.RAGE:
-          message = `Entered RAGE state (${totalDS} DS total) - Must roll to act against instinct`;
+          message = `Entered RAGE state (${totalDSRounded.toFixed(1)} DS total) - Must roll to act against instinct`;
           break;
         case HealthState.UNCONSCIOUS:
-          message = `Entered UNCONSCIOUS/DEMENTIA state (${totalDS} DS total) - Must roll to act`;
+          message = `Entered UNCONSCIOUS/DEMENTIA state (${totalDSRounded.toFixed(1)} DS total) - Must roll to act`;
           break;
         case HealthState.DEFEATED:
-          message = `DEFEATED (${totalDS} DS total) - Coma or Madness`;
+          message = `DEFEATED (${totalDSRounded.toFixed(1)} DS total) - Coma or Madness`;
           break;
         case HealthState.DEATH:
-          message = `DEATH or LOST (${totalDS} DS total)`;
+          message = `DEATH or LOST (${totalDSRounded.toFixed(1)} DS total)`;
           break;
         case HealthState.NORMAL:
           if (this.lastHealthState !== HealthState.NORMAL) {
-            message = `Returned to NORMAL state (${totalDS} DS total)`;
+            message = `Returned to NORMAL state (${totalDSRounded.toFixed(1)} DS total)`;
           }
           break;
       }
