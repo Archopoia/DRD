@@ -56,6 +56,7 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
   const [masterySelectionOpen, setMasterySelectionOpen] = useState<Competence | null>(null);
   const [flippedAptitudes, setFlippedAptitudes] = useState<Set<Aptitude>>(new Set());
   const [masteryDropdownPosition, setMasteryDropdownPosition] = useState<{ top: number; left: number; width: number } | null>(null);
+  const [hoveredAttribute, setHoveredAttribute] = useState<{ aptitude: Aptitude; attributeIndex: number } | null>(null);
   const masteryButtonRefs = useRef<Map<Competence, HTMLButtonElement>>(new Map());
 
   // Update dropdown position on scroll/resize and close on outside click
@@ -371,64 +372,58 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                           </div>
                         </div>
 
-                    {/* Attributes Section */}
-                    <div className="flex gap-2 mb-3 pb-3 border-b-2 border-border-dark relative z-10" style={{ backgroundColor: 'transparent' }}>
-                      {/* Attributes */}
-                      <div className="flex-1 flex items-center justify-around gap-1">
-                        {/* Attribute 1 - Emp */}
-                        <Tooltip
-                          content={`${getAttributeName(atb1)}: ${Math.floor(state.attributes[atb1] * 6 / 10)} (6/10)`}
-                          position="top"
-                          delay={200}
+                    {/* Attributes Section - Two Column Layout */}
+                    <div className="flex gap-4 mb-3 pb-3 border-b-2 border-border-dark relative z-10" style={{ backgroundColor: 'transparent' }}>
+                      {/* Left Column - Main Attribute with Input */}
+                      <div className="flex flex-col items-start gap-2">
+                        {/* Input box above the name */}
+                        <DiceInput
+                          value={state.attributes[atb1]}
+                          onChange={(value) => handleAttributeChange(atb1, value)}
+                          min={-50}
+                          max={50}
+                          size="md"
+                        />
+                        {/* Attribute name in full caps */}
+                        <label className="font-medieval text-xs font-bold text-red-theme uppercase tracking-wide">
+                          {getAttributeName(atb1).toUpperCase()}
+                        </label>
+                      </div>
+
+                      {/* Right Column - Three Attributes Stacked */}
+                      <div className="flex-1 flex flex-col items-end justify-start gap-1">
+                        {/* Attribute 1 - AAA format (all caps) */}
+                        <div
+                          className="font-medieval text-xs font-bold text-red-theme tracking-wide cursor-help"
+                          onMouseEnter={() => setHoveredAttribute({ aptitude, attributeIndex: 0 })}
+                          onMouseLeave={() => setHoveredAttribute(null)}
                         >
-                          <div className="flex flex-col items-center cursor-help">
-                            <label className="font-medieval text-xs font-bold text-red-theme uppercase tracking-wide">
-                              {getAttributeAbbreviation(atb1)}
-                            </label>
-                            <div className="flex justify-center items-center gap-1 mt-1">
-                              <DiceInput
-                                value={state.attributes[atb1]}
-                                onChange={(value) => handleAttributeChange(atb1, value)}
-                                min={-50}
-                                max={50}
-                                size="md"
-                              />
-                              <span className="font-medieval text-xs text-text-dark">
-                                {Math.floor(state.attributes[atb1] * 6 / 10)}
-                              </span>
-                            </div>
-                          </div>
-                        </Tooltip>
-                        {/* Plus sign */}
-                        <span className="font-medieval text-lg font-bold text-text-dark self-center">+</span>
-                        {/* Attribute 2 - Vol */}
-                        <Tooltip
-                          content={getAttributeName(atb2)}
-                          position="top"
-                          delay={200}
+                          {hoveredAttribute?.aptitude === aptitude && hoveredAttribute?.attributeIndex === 0
+                            ? `[6/10] ${Math.floor(state.attributes[atb1] * 6 / 10)}`
+                            : getAttributeAbbreviation(atb1).toUpperCase()}
+                        </div>
+                        
+                        {/* Attribute 2 - Aaa format (title case) */}
+                        <div
+                          className="font-medieval text-xs font-bold text-red-theme tracking-wide cursor-help"
+                          onMouseEnter={() => setHoveredAttribute({ aptitude, attributeIndex: 1 })}
+                          onMouseLeave={() => setHoveredAttribute(null)}
                         >
-                          <div className="flex flex-col items-center cursor-help">
-                            <span className="font-medieval text-xs font-bold text-red-theme tracking-wide">
-                              {getAttributeAbbreviation(atb2).charAt(0) + getAttributeAbbreviation(atb2).slice(1).toLowerCase()}
-                            </span>
-                            <span className="font-semibold text-xs text-center mt-1">{Math.floor(state.attributes[atb2] * 3 / 10)}</span>
-                          </div>
-                        </Tooltip>
-                        {/* Plus sign */}
-                        <span className="font-medieval text-lg font-bold text-text-dark self-center">+</span>
-                        {/* Attribute 3 - Per */}
-                        <Tooltip
-                          content={getAttributeName(atb3)}
-                          position="top"
-                          delay={200}
+                          {hoveredAttribute?.aptitude === aptitude && hoveredAttribute?.attributeIndex === 1
+                            ? `[3/10] ${Math.floor(state.attributes[atb2] * 3 / 10)}`
+                            : getAttributeAbbreviation(atb2).charAt(0).toUpperCase() + getAttributeAbbreviation(atb2).slice(1).toLowerCase()}
+                        </div>
+                        
+                        {/* Attribute 3 - aaa format (lowercase) */}
+                        <div
+                          className="font-medieval text-xs font-bold text-red-theme tracking-wide cursor-help"
+                          onMouseEnter={() => setHoveredAttribute({ aptitude, attributeIndex: 2 })}
+                          onMouseLeave={() => setHoveredAttribute(null)}
                         >
-                          <div className="flex flex-col items-center cursor-help">
-                            <span className="font-medieval text-xs font-bold text-red-theme tracking-wide">
-                              {getAttributeAbbreviation(atb3).toLowerCase()}
-                            </span>
-                            <span className="font-semibold text-xs text-center mt-1">{Math.floor(state.attributes[atb3] * 1 / 10)}</span>
-                          </div>
-                        </Tooltip>
+                          {hoveredAttribute?.aptitude === aptitude && hoveredAttribute?.attributeIndex === 2
+                            ? `[1/10] ${Math.floor(state.attributes[atb3] * 1 / 10)}`
+                            : getAttributeAbbreviation(atb3).toLowerCase()}
+                        </div>
                       </div>
                     </div>
 
