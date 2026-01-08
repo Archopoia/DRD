@@ -533,16 +533,17 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                 isExpanded={isExpanded}
                                 onToggle={() => toggleAction(action)}
                                 title={
-                                  <div className="flex items-center w-full" style={{ padding: 0, margin: 0 }}>
+                                  <div className="flex items-center w-full" style={{ gap: 0, margin: 0, padding: 0 }}>
                                     <span className="flex-1" style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getActionName(action).toUpperCase()}</span>
-                                    <div style={{ position: 'relative', flexShrink: 0, width: 'auto', height: 'auto', minWidth: '60px', minHeight: '32px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                                      {/* DiceInput showing total competence levels - always in layout to maintain size */}
+                                    <div style={{ position: 'relative', flexShrink: 0, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginLeft: 'auto' }}>
+                                      {/* DiceInput showing total competence levels - always in layout to maintain height */}
                                       <div
                                         style={{
                                           opacity: hoveredAction === action ? 0 : 1,
                                           transition: 'opacity 0.3s ease-in-out',
                                           pointerEvents: hoveredAction === action ? 'none' : 'auto',
                                           position: 'relative',
+                                          visibility: hoveredAction === action ? 'hidden' : 'visible',
                                         }}
                                       >
                                         <DiceInput
@@ -562,9 +563,9 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                           pointerEvents: hoveredAction === action ? 'auto' : 'none',
                                           position: 'absolute',
                                           right: 0,
+                                          whiteSpace: 'nowrap',
                                           top: '50%',
                                           transform: 'translateY(-50%)',
-                                          whiteSpace: 'nowrap',
                                         }}
                                       >
                                         [{getAttributeAbbreviation(linkedAttr)}]
