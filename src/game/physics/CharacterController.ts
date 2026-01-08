@@ -94,6 +94,7 @@ export class CharacterController {
       // Dynamic bodies are allowed (can be pushed)
       const checkCollisions = (pos: RAPIER.Vector3): boolean => {
         let hasBlockingCollision = false;
+        
         world.intersectionsWithShape(
           pos,
           shapeRot,
@@ -102,15 +103,14 @@ export class CharacterController {
             // Exclude our own collider by checking if it belongs to our rigid body
             const colliderBody = collider.parent();
             if (colliderBody && colliderBody.handle !== this.rigidBody.handle) {
-              // Check if it's a static body (wall) - these block movement
-              // Dynamic bodies (blocks) can be pushed, so we allow movement through them
               const bodyType = colliderBody.bodyType();
+              
               if (bodyType === RAPIER.RigidBodyType.Fixed) {
                 // Static body (wall) - blocks movement
                 hasBlockingCollision = true;
                 return false; // Stop on first blocking collision
               }
-              // Dynamic body - allow movement (can push it)
+              // Dynamic bodies - allow movement (can push them)
               // Kinematic bodies are also allowed (we're already excluding our own)
             }
             return true; // Continue query
@@ -118,6 +118,7 @@ export class CharacterController {
           undefined, // filter
           undefined // groups
         );
+        
         return hasBlockingCollision;
       };
 

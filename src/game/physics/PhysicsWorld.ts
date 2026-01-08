@@ -139,6 +139,9 @@ export class PhysicsWorld {
   ): RAPIER.RigidBody {
     try {
       const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic();
+      // Enable continuous collision detection (CCD) on the rigid body to prevent tunneling
+      // This is especially important when objects push each other against walls
+      rigidBodyDesc.setCcdEnabled(true);
       const rigidBody = this.world.createRigidBody(rigidBodyDesc);
 
       // Set position

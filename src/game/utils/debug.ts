@@ -1,13 +1,96 @@
 /**
  * Debug utility for logging and performance monitoring
+ * Captures all console output and provides file download functionality
  */
 
 const DEBUG_ENABLED = process.env.NODE_ENV === 'development';
 
 export class Debug {
   private static logs: string[] = [];
-  private static maxLogs = 100;
+  private static maxLogs = 10000; // Increased to capture more logs
   private static performanceMetrics: Map<string, number[]> = new Map();
+  private static consoleIntercepted = false;
+  private static originalConsole: {
+    log: typeof console.log;
+    error: typeof console.error;
+    warn: typeof console.warn;
+    info: typeof console.info;
+  } | null = null;
+
+  /**
+   * Initialize console interception to capture all logs
+   * Should be called once at application startup
+   */
+  static initialize(): void {
+    // Clear logs on initialization (page refresh/game restart)
+    this.clearLogs();
+    
+    // Intercept console methods to capture all output
+    if (!this.consoleIntercepted && typeof window !== 'undefined') {
+      this.originalConsole = {
+        log: console.log,
+        error: console.error,
+        warn: console.warn,
+        info: console.info,
+      };
+
+      // Intercept console.log
+      console.log = (...args: unknown[]) => {
+        this.originalConsole!.log(...args);
+        this.addLog('LOG', args);
+      };
+
+      // Intercept console.error
+      console.error = (...args: unknown[]) => {
+        this.originalConsole!.error(...args);
+        this.addLog('ERROR', args);
+      };
+
+      // Intercept console.warn
+      console.warn = (...args: unknown[]) => {
+        this.originalConsole!.warn(...args);
+        this.addLog('WARN', args);
+      };
+
+      // Intercept console.info
+      console.info = (...args: unknown[]) => {
+        this.originalConsole!.info(...args);
+        this.addLog('INFO', args);
+      };
+
+      this.consoleIntercepted = true;
+      this.originalConsole.log('[Debug] Console interception initialized - all logs will be captured');
+    }
+  }
+
+  /**
+   * Add a log entry with proper formatting
+   */
+  private static addLog(level: string, args: unknown[]): void {
+    const timestamp = new Date().toISOString();
+    
+    // Format arguments into a string
+    const formattedArgs = args.map(arg => {
+      if (arg instanceof Error) {
+        return `${arg.message}\n${arg.stack || ''}`;
+      }
+      if (typeof arg === 'object' && arg !== null) {
+        try {
+          return JSON.stringify(arg, null, 2);
+        } catch {
+          return String(arg);
+        }
+      }
+      return String(arg);
+    }).join(' ');
+
+    const logMessage = `[${timestamp}] [${level}] ${formattedArgs}`;
+    
+    this.logs.push(logMessage);
+    if (this.logs.length > this.maxLogs) {
+      this.logs.shift();
+    }
+  }
 
   /**
    * Log a debug message
@@ -18,7 +101,11 @@ export class Debug {
     const timestamp = new Date().toISOString();
     const logMessage = `[${timestamp}] [${category}] ${message}`;
     
-    console.log(logMessage, ...args);
+    if (this.originalConsole) {
+      this.originalConsole.log(logMessage, ...args);
+    } else {
+      console.log(logMessage, ...args);
+    }
     
     this.logs.push(logMessage);
     if (this.logs.length > this.maxLogs) {
@@ -31,9 +118,13 @@ export class Debug {
    */
   static error(category: string, message: string, error?: Error): void {
     const timestamp = new Date().toISOString();
-    const logMessage = `[${timestamp}] [ERROR] [${category}] ${message}`;
+    const logMessage = `[${timestamp}] [ERROR] [${category}] ${message}${error ? `\n${error.message}\n${error.stack || ''}` : ''}`;
     
-    console.error(logMessage, error);
+    if (this.originalConsole) {
+      this.originalConsole.error(logMessage, error);
+    } else {
+      console.error(logMessage, error);
+    }
     
     this.logs.push(logMessage);
     if (this.logs.length > this.maxLogs) {
@@ -48,7 +139,11 @@ export class Debug {
     const timestamp = new Date().toISOString();
     const logMessage = `[${timestamp}] [WARN] [${category}] ${message}`;
     
-    console.warn(logMessage, ...args);
+    if (this.originalConsole) {
+      this.originalConsole.warn(logMessage, ...args);
+    } else {
+      console.warn(logMessage, ...args);
+    }
     
     this.logs.push(logMessage);
     if (this.logs.length > this.maxLogs) {
@@ -120,6 +215,59 @@ export class Debug {
    */
   static clearLogs(): void {
     this.logs = [];
+    this.performanceMetrics.clear();
+  }
+
+  /**
+   * Save logs to a file in the project folder
+   * Sends logs to the API endpoint which writes them to logs/ directory
+   */
+  static async saveLogs(): Promise<void> {
+    if (this.logs.length === 0) {
+      if (this.originalConsole) {
+        this.originalConsole.warn('[Debug] No logs to save');
+      } else {
+        console.warn('[Debug] No logs to save');
+      }
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/save-logs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          logs: this.logs,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save logs');
+      }
+
+      const result = await response.json();
+      
+      if (this.originalConsole) {
+        this.originalConsole.log(`[Debug] Saved ${result.logCount} log entries to ${result.filename}`);
+        this.originalConsole.log(`[Debug] File location: ${result.path}`);
+      }
+    } catch (error) {
+      if (this.originalConsole) {
+        this.originalConsole.error('[Debug] Failed to save logs', error);
+      } else {
+        console.error('[Debug] Failed to save logs', error);
+      }
+    }
+  }
+
+  /**
+   * Get logs as a string (for programmatic access)
+   */
+  static getLogsAsString(): string {
+    return this.logs.join('\n');
   }
 
   /**

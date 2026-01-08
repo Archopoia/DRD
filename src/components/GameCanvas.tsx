@@ -15,6 +15,10 @@ export default function GameCanvas() {
   const [showCharacterSheet, setShowCharacterSheet] = useState<boolean>(false);
 
   useEffect(() => {
+    // Initialize Debug system to capture all console logs
+    // This will clear previous logs and start fresh on each page refresh
+    Debug.initialize();
+
     // Dynamically import Game to ensure it only loads on client side
     // This prevents Rapier from being loaded during SSR
     const initGame = async () => {
@@ -62,11 +66,38 @@ export default function GameCanvas() {
     };
 
     initGame();
+
+    // Auto-save logs on page unload
+    const handleBeforeUnload = () => {
+      // Only save if there are logs
+      const logs = Debug.getLogs();
+      if (logs.length > 0) {
+        // Use fetch with keepalive for reliable delivery during page unload
+        fetch('/api/save-logs', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ logs }),
+          keepalive: true, // Ensures request completes even if page unloads
+        }).catch(() => {
+          // Silently fail - page is unloading anyway
+        });
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      // Cleanup
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
   }, []);
 
-  // Handle 'C' key for character sheet (separate effect to avoid re-initializing game)
+  // Handle keyboard shortcuts (separate effect to avoid re-initializing game)
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // 'C' key for character sheet
       if (event.code === 'KeyC' && !event.repeat) {
         // Exit pointer lock to free the mouse cursor
         if (document.pointerLockElement) {
@@ -80,6 +111,12 @@ export default function GameCanvas() {
           Debug.log('GameCanvas', `Character sheet ${newState ? 'opened' : 'closed'}`);
           return newState;
         });
+      }
+      
+      // 'L' key (with Ctrl/Cmd) to save logs
+      if ((event.ctrlKey || event.metaKey) && event.code === 'KeyL' && !event.repeat) {
+        event.preventDefault();
+        Debug.saveLogs();
       }
     };
 

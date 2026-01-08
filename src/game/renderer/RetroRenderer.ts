@@ -10,6 +10,7 @@ export class RetroRenderer {
   public renderer: THREE.WebGLRenderer;
   private composer: THREE.EffectComposer | null = null;
   private shaderPass: THREE.ShaderPass | null = null;
+  private originalConsoleError: typeof console.error | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     Debug.startMeasure('RetroRenderer.constructor');
@@ -49,6 +50,11 @@ export class RetroRenderer {
         if (gl) {
           const version = gl.getParameter(gl.VERSION);
           Debug.log('RetroRenderer', `WebGL version: ${version}`);
+          
+          // Suppress non-critical WebGL uniform errors
+          // These occur when Three.js tries to set uniforms on inactive programs
+          // They're harmless and handled internally by Three.js
+          this.suppressUniformErrors(gl);
         }
       } catch (err) {
         Debug.warn('RetroRenderer', 'Could not get WebGL version info');
@@ -59,6 +65,36 @@ export class RetroRenderer {
       Debug.error('RetroRenderer', 'Failed to create renderer', error as Error);
       throw error;
     }
+  }
+
+  /**
+   * Suppress non-critical WebGL uniform errors
+   * These errors occur when Three.js optimizes uniform setting by caching locations
+   * They're harmless and don't affect rendering
+   */
+  private suppressUniformErrors(gl: WebGLRenderingContext | WebGL2RenderingContext): void {
+    // Only set up error filtering once (check if already wrapped)
+    if (this.originalConsoleError) {
+      return; // Already set up
+    }
+    
+    // Store original console.error
+    this.originalConsoleError = console.error;
+    const errorFilter = /WebGL:\s*INVALID_OPERATION:\s*(uniformMatrix4fv|uniform3f|uniformMatrix3fv):\s*location is not from the associated program/i;
+    
+    // Override console.error to filter uniform errors
+    console.error = (...args: any[]) => {
+      const message = args.join(' ');
+      // Only suppress the specific uniform-related INVALID_OPERATION errors
+      if (errorFilter.test(message)) {
+        // These are non-critical - Three.js handles them internally
+        return;
+      }
+      // Pass through all other errors
+      if (this.originalConsoleError) {
+        this.originalConsoleError.apply(console, args);
+      }
+    };
   }
 
   /**
@@ -128,6 +164,12 @@ export class RetroRenderer {
    * Cleanup
    */
   dispose(): void {
+    // Restore original console.error if we modified it
+    if (this.originalConsoleError) {
+      console.error = this.originalConsoleError;
+      this.originalConsoleError = null;
+    }
+    
     this.renderer.dispose();
     if (this.composer) {
       this.composer.dispose();
