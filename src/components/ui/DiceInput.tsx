@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface DiceInputProps {
   value: number;
@@ -30,6 +30,8 @@ export default function DiceInput({
   buttonClassName = '',
 }: DiceInputProps) {
   const [localValue, setLocalValue] = useState(value.toString());
+  const [showButtons, setShowButtons] = useState(false);
+  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Sync local value when prop changes
   useEffect(() => {
@@ -61,12 +63,38 @@ export default function DiceInput({
     onChange(newValue);
   };
 
+  const handleMouseEnter = () => {
+    // Clear any pending hide timeout
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
+    }
+    setShowButtons(true);
+  };
+
+  const handleMouseLeave = () => {
+    // Set a delay before hiding (500ms)
+    hideTimeoutRef.current = setTimeout(() => {
+      setShowButtons(false);
+      hideTimeoutRef.current = null;
+    }, 500);
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Size configurations
   const sizeConfig = {
     sm: {
       input: 'w-5 px-0.5 py-0.5 text-[0.7rem]',
-      button: 'text-[0.6rem] px-0.5',
-      height: 'h-[calc(0.875rem+0.25rem)]',
+      button: 'text-[0.65rem] px-0.5',
+      height: 'h-[calc(0.875rem+0.5rem+4px)]',
     },
     md: {
       input: 'w-7 px-1 py-1 text-sm',
@@ -85,7 +113,11 @@ export default function DiceInput({
   const isAtMax = value >= max;
 
   return (
-    <div className={`flex items-center gap-0 ${className}`}>
+    <div 
+      className={`relative inline-block ${className}`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <input
         type="number"
         min={min}
@@ -105,7 +137,23 @@ export default function DiceInput({
           handleInputBlur();
         }}
       />
-      <div className={`flex flex-col ${config.height}`}>
+      {/* Invisible hover area that extends backwards for easier access */}
+      {showButtons && (
+        <div 
+          className="absolute left-full top-0 h-full w-1"
+          style={{ marginLeft: '-4px', zIndex: 1 }}
+        />
+      )}
+      <div 
+        className={`absolute left-full top-0 flex flex-col ${config.height} transition-opacity duration-200 ${
+          showButtons ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        style={{ 
+          marginLeft: '-2px',
+          padding: '2px 2px 2px 0',
+          zIndex: 2,
+        }}
+      >
         <button
           type="button"
           onClick={handleIncrement}
@@ -116,7 +164,7 @@ export default function DiceInput({
             borderBottom: 'none',
             borderBottomLeftRadius: 0,
             borderBottomRightRadius: 0,
-            minHeight: 0,
+            minHeight: size === 'sm' ? '0.6rem' : '0',
           }}
         >
           +
@@ -131,7 +179,7 @@ export default function DiceInput({
             borderTop: 'none',
             borderTopLeftRadius: 0,
             borderTopRightRadius: 0,
-            minHeight: 0,
+            minHeight: size === 'sm' ? '0.6rem' : '0',
           }}
         >
           −
