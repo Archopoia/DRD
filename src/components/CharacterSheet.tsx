@@ -356,7 +356,10 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                   size="sm"
                                 />
                               </div>
-                              <ProgressBar value={totalMarks} max={100} height="sm" label={getLevelName(level)} />
+                              <div className="grid grid-cols-[1rem_1fr] items-center gap-1">
+                                <span className="text-xs font-medieval font-semibold text-text-cream whitespace-nowrap">N{level}</span>
+                                <ProgressBar value={totalMarks} max={100} height="sm" label={getLevelName(level)} level={level} />
+                              </div>
                             </div>
                           );
                         }
@@ -412,6 +415,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                           <ExpandableSection
                                             isExpanded={isCompExpanded}
                                             onToggle={() => toggleCompetence(comp)}
+                                            arrowPosition="right"
                                             title={
                                               <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                                                 <div onClick={(e) => e.stopPropagation()}>
@@ -429,7 +433,10 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                               </div>
                                             }
                                             headerFooter={
-                                              <ProgressBar value={totalMarks} max={100} height="sm" label={getLevelName(level)} />
+                                              <div className="grid grid-cols-[1rem_1fr] items-center gap-1">
+                                                <span className="text-xs font-medieval font-semibold text-text-dark whitespace-nowrap">N{level}</span>
+                                                <ProgressBar value={totalMarks} max={100} height="sm" label={getLevelName(level)} level={level} />
+                                              </div>
                                             }
                                             headerClassName="mb-1"
                                             contentClassName="space-y-1"

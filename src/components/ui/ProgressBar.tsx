@@ -6,6 +6,7 @@ interface ProgressBarProps {
   height?: 'sm' | 'md' | 'lg';
   className?: string;
   label?: string;
+  level?: number;
 }
 
 /**
@@ -18,6 +19,7 @@ export default function ProgressBar({
   height = 'md',
   className = '',
   label,
+  level,
 }: ProgressBarProps) {
   const percentage = Math.min((value / max) * 100, 100);
 

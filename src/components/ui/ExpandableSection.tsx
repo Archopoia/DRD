@@ -11,6 +11,7 @@ interface ExpandableSectionProps {
   headerClassName?: string;
   contentClassName?: string;
   indicator?: 'arrow' | 'chevron';
+  arrowPosition?: 'left' | 'right'; // Position of the arrow indicator
   headerActions?: ReactNode; // Actions rendered outside the button (e.g., inputs, buttons)
   headerFooter?: ReactNode; // Content rendered right after header (e.g., progress bars)
 }
@@ -28,6 +29,7 @@ export default function ExpandableSection({
   headerClassName = '',
   contentClassName = '',
   indicator = 'arrow',
+  arrowPosition = 'left',
   headerActions,
   headerFooter,
 }: ExpandableSectionProps) {
@@ -81,14 +83,24 @@ export default function ExpandableSection({
           onClick={onToggle}
           className="flex-1 text-left font-medieval font-semibold text-text-dark transition-colors duration-300 hover:text-red-theme"
         >
-          <span className="flex items-center gap-1">
-            <span 
-              className="inline-block transition-transform duration-300"
-              style={{ transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)' }}
-            >
-              ▼
-            </span>
+          <span className={`flex items-center gap-1 ${arrowPosition === 'right' ? 'justify-between' : ''}`}>
+            {arrowPosition === 'left' && (
+              <span 
+                className="inline-block transition-transform duration-300"
+                style={{ transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)' }}
+              >
+                ▼
+              </span>
+            )}
             {title}
+            {arrowPosition === 'right' && (
+              <span 
+                className="inline-block transition-transform duration-300 flex-shrink-0"
+                style={{ transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)' }}
+              >
+                ▼
+              </span>
+            )}
           </span>
         </button>
         {headerActions && (
