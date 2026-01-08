@@ -446,17 +446,53 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                               </button>
                                             )}
                                             
-                                            {/* Mastery Points Display */}
-                                            <div className="text-xs mb-2">
-                                              <span className="text-orange-theme font-bold">
-                                                Points MT: {manager.getMasteryPoints(comp)}
-                                              </span>
-                                            </div>
-                                            
                                             {/* Masteries Section */}
                                             <div className="space-y-1 mt-2 pt-2 border-t border-border-tan">
-                                              <div className="text-xs font-bold text-text-dark mb-2">
-                                                Maîtrises:
+                                              <div className="text-xs font-bold text-text-dark mb-2 flex items-center justify-between">
+                                                <span>Maîtrises:</span>
+                                                {manager.getMasteryPoints(comp) > 0 && (
+                                                  <div className="flex items-center gap-2">
+                                                    <button
+                                                      ref={(el) => {
+                                                        if (el) masteryButtonRefs.current.set(comp, el);
+                                                        else masteryButtonRefs.current.delete(comp);
+                                                      }}
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        const wasOpen = masterySelectionOpen === comp;
+                                                        setMasterySelectionOpen(wasOpen ? null : comp);
+                                                        
+                                                        if (!wasOpen) {
+                                                          const buttonEl = masteryButtonRefs.current.get(comp);
+                                                          if (buttonEl) {
+                                                            const rect = buttonEl.getBoundingClientRect();
+                                                            setMasteryDropdownPosition({
+                                                              top: rect.bottom + 4,
+                                                              left: rect.left,
+                                                              width: rect.width
+                                                            });
+                                                          }
+                                                        } else {
+                                                          setMasteryDropdownPosition(null);
+                                                        }
+                                                      }}
+                                                      className="px-2 py-1 bg-green-theme text-text-cream border border-border-dark rounded font-medieval font-semibold text-xs transition-all duration-300 hover:bg-hover-bg hover:text-text-dark"
+                                                      style={{
+                                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                                                      }}
+                                                    >
+                                                      Apprendre
+                                                    </button>
+                                                    <span 
+                                                      className="px-2 py-1 bg-green-theme text-text-cream border border-border-dark rounded font-medieval font-semibold text-xs"
+                                                      style={{
+                                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                                                      }}
+                                                    >
+                                                      {manager.getMasteryPoints(comp)}
+                                                    </span>
+                                                  </div>
+                                                )}
                                               </div>
                                               
                                               {/* List of unlocked masteries */}
@@ -492,46 +528,6 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                                   );
                                                 })}
                                               </div>
-                                              
-                                              {/* Unlock new mastery button */}
-                                              {manager.getMasteryPoints(comp) > 0 && (
-                                                <div 
-                                                  className="relative mastery-selection-container" 
-                                                  style={{ zIndex: masterySelectionOpen === comp ? 1000 : 'auto', position: 'relative' }}
-                                                >
-                                                  <button
-                                                    ref={(el) => {
-                                                      if (el) masteryButtonRefs.current.set(comp, el);
-                                                      else masteryButtonRefs.current.delete(comp);
-                                                    }}
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      const wasOpen = masterySelectionOpen === comp;
-                                                      setMasterySelectionOpen(wasOpen ? null : comp);
-                                                      
-                                                      if (!wasOpen) {
-                                                        const buttonEl = masteryButtonRefs.current.get(comp);
-                                                        if (buttonEl) {
-                                                          const rect = buttonEl.getBoundingClientRect();
-                                                          setMasteryDropdownPosition({
-                                                            top: rect.bottom + 4,
-                                                            left: rect.left,
-                                                            width: rect.width
-                                                          });
-                                                        }
-                                                      } else {
-                                                        setMasteryDropdownPosition(null);
-                                                      }
-                                                    }}
-                                                    className="w-full px-2 py-2 bg-green-theme text-text-cream border border-border-dark rounded font-medieval font-semibold text-xs text-center transition-all duration-300 hover:bg-hover-bg hover:text-text-dark hover:-translate-y-0.5"
-                                                    style={{
-                                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
-                                                    }}
-                                                  >
-                                                    + Débloquer Maîtrise (1 point)
-                                                  </button>
-                                                </div>
-                                              )}
                                               
                                               {/* Mastery selection dropdown - rendered via portal to escape overflow */}
                                               {masterySelectionOpen === comp && masteryDropdownPosition && typeof window !== 'undefined' && (() => {
