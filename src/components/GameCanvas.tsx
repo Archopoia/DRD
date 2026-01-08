@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Debug } from '@/game/utils/debug';
 import CharacterSheet from './CharacterSheet';
+import EventLog from './ui/EventLog';
 
 /**
  * React component that wraps the Three.js game canvas
@@ -175,6 +176,7 @@ export default function GameCanvas() {
         isOpen={showCharacterSheet}
         onClose={() => setShowCharacterSheet(false)}
       />
+      <EventLog maxVisible={5} />
     </>
   );
 }

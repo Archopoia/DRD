@@ -59,7 +59,7 @@ export class CharacterController {
   /**
    * Move the character in the given direction with collision detection
    */
-  move(direction: THREE.Vector3, deltaTime: number): void {
+  move(direction: THREE.Vector3, deltaTime: number, run: boolean = false): void {
     try {
       const currentPos = this.rigidBody.translation();
       const world = this.physicsWorld.world;
@@ -72,8 +72,8 @@ export class CharacterController {
         // Normalize direction
         const normalizedDir = direction.clone().normalize();
 
-        // Calculate movement speed
-        const speed = GAME_CONFIG.MOVE_SPEED;
+        // Calculate movement speed (apply run multiplier if running)
+        const speed = run ? GAME_CONFIG.MOVE_SPEED * GAME_CONFIG.RUN_MULTIPLIER : GAME_CONFIG.MOVE_SPEED;
         const moveVector = normalizedDir.multiplyScalar(speed * deltaTime);
         moveX = moveVector.x;
         moveZ = moveVector.z;
@@ -246,8 +246,6 @@ export class CharacterController {
                   contactToCenter.y * contactToCenter.y +
                   contactToCenter.z * contactToCenter.z
                 );
-                
-                Debug.log('CharacterController', `Pushing block: force=${forceMagnitude.toFixed(2)}, contact at (${blockInfo.contactPoint.x.toFixed(2)}, ${blockInfo.contactPoint.y.toFixed(2)}, ${blockInfo.contactPoint.z.toFixed(2)}), block center (${blockCenter.x.toFixed(2)}, ${blockCenter.y.toFixed(2)}, ${blockCenter.z.toFixed(2)}), distance from center=${distanceFromCenter.toFixed(2)}`);
                 
                 // Apply impulse at the contact point (where character touches block)
                 // This creates realistic rotation when pushing on edges

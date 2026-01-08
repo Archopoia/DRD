@@ -7,7 +7,7 @@ import { Attribute, getAttributeName, getAttributeAbbreviation } from '@/game/ch
 import { Aptitude, getAptitudeName, getAptitudeAttributes } from '@/game/character/data/AptitudeData';
 import { Action, getActionName, getActionAptitude, getActionLinkedAttribute } from '@/game/character/data/ActionData';
 import { Competence, getCompetenceName, getCompetenceAction } from '@/game/character/data/CompetenceData';
-import { Souffrance, getSouffranceName, getSouffranceAttribute } from '@/game/character/data/SouffranceData';
+import { Souffrance, getSouffranceName, getSouffranceAttribute, getResistanceCompetenceName } from '@/game/character/data/SouffranceData';
 import { getMasteries } from '@/game/character/data/MasteryRegistry';
 import { getLevelName, getLevelFromDiceCount } from '@/lib/utils';
 import DiceInput from './ui/DiceInput';
@@ -357,7 +357,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                   min={0}
                                   size="sm"
                                 />
-                                <span>[{getSouffranceName(souf)}]</span>
+                                <span>{getResistanceCompetenceName(souf)}</span>
                               </div>
                               <div className="grid grid-cols-[1rem_1fr] items-center gap-1">
                                 <span className="text-xs font-medieval font-semibold text-text-cream whitespace-nowrap">N{level}</span>

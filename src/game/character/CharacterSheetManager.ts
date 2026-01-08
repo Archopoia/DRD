@@ -287,6 +287,78 @@ export class CharacterSheetManager {
   }
 
   /**
+   * Add a mark to a souffrance (souffrances act as their own resistance competences)
+   */
+  addSouffranceMark(souffrance: Souffrance, isEternal: boolean = false): void {
+    const souf = this.state.souffrances[souffrance];
+    for (let i = 0; i < 100; i++) {
+      if (!souf.marks[i]) {
+        souf.marks[i] = true;
+        if (isEternal) {
+          souf.eternalMarkIndices.push(i);
+          souf.eternalMarks++;
+        }
+        return;
+      }
+    }
+  }
+
+  /**
+   * Get total marks for a souffrance
+   */
+  getTotalSouffranceMarks(souffrance: Souffrance): number {
+    return this.state.souffrances[souffrance].marks.filter(m => m).length;
+  }
+
+  /**
+   * Get souffrance level (Niv 0-5) based on dice count
+   * Same calculation as competence level
+   */
+  getSouffranceLevel(souffrance: Souffrance): number {
+    const diceCount = this.state.souffrances[souffrance].diceCount;
+    if (diceCount === 0) return 0;
+    if (diceCount <= 2) return 1;
+    if (diceCount <= 5) return 2;
+    if (diceCount <= 9) return 3;
+    if (diceCount <= 14) return 4;
+    return 5;
+  }
+
+  /**
+   * Check if souffrance is éprouvée (10 marks total, minus eternal marks)
+   */
+  isSouffranceEprouvee(souffrance: Souffrance): boolean {
+    const souf = this.state.souffrances[souffrance];
+    const totalMarks = this.getTotalSouffranceMarks(souffrance);
+    const requiredMarks = 10 - souf.eternalMarks;
+    return totalMarks >= requiredMarks;
+  }
+
+  /**
+   * Realize a souffrance (gain +1 dice when 10 marks reached, like competences)
+   */
+  realizeSouffrance(souffrance: Souffrance): void {
+    if (!this.isSouffranceEprouvee(souffrance)) return;
+    
+    const souf = this.state.souffrances[souffrance];
+    const oldDiceCount = souf.diceCount;
+    
+    // +1 dice to souffrance
+    souf.diceCount += 1;
+    
+    // Clear non-eternal marks
+    for (let i = 0; i < 100; i++) {
+      if (!souf.eternalMarkIndices.includes(i)) {
+        souf.marks[i] = false;
+      }
+    }
+    
+    // Gain free marks = current level (same as competence realization)
+    const level = this.getSouffranceLevel(souffrance);
+    this.state.freeMarks += level;
+  }
+
+  /**
    * Get mastery points (MT) for a competence
    */
   getMasteryPoints(competence: Competence): number {

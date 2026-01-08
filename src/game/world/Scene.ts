@@ -2,16 +2,33 @@ import * as THREE from 'three';
 import RAPIER from '@dimforge/rapier3d';
 import { RetroRenderer } from '../renderer/RetroRenderer';
 import { PhysicsWorld } from '../physics/PhysicsWorld';
+import { CharacterController } from '../physics/CharacterController';
+import { SouffranceHealthSystem } from '../character/SouffranceHealthSystem';
+import { Souffrance, getSouffranceName, getResistanceCompetenceName } from '../character/data/SouffranceData';
+import { Competence, getCompetenceName } from '../character/data/CompetenceData';
 import { Debug } from '../utils/debug';
+import { getEventLog, EventType } from '../utils/EventLog';
 
 /**
  * Basic 3D scene setup with test geometry
  */
+interface SouffrancePlatform {
+  mesh: THREE.Mesh;
+  rigidBody: RAPIER.RigidBody;
+  souffrance: Souffrance;
+  color: number;
+  lastDamageTime: number; // Track when we last applied damage
+}
+
 export class Scene {
   public scene: THREE.Scene;
   private renderer: RetroRenderer;
   private physicsWorld: PhysicsWorld;
   private physicsBodies: Map<THREE.Mesh, RAPIER.RigidBody> = new Map();
+  private characterController: CharacterController | null = null;
+  private healthSystem: SouffranceHealthSystem | null = null;
+  private souffrancePlatforms: SouffrancePlatform[] = [];
+  private damageInterval: number = 1000; // 1 second in milliseconds
 
   constructor(renderer: RetroRenderer, physicsWorld: PhysicsWorld) {
     Debug.startMeasure('Scene.constructor');
@@ -23,12 +40,21 @@ export class Scene {
       this.scene = new THREE.Scene();
       this.setupLighting();
       this.createTestRoom();
+      this.createSouffrancePlatforms();
       Debug.log('Scene', 'Scene initialized');
       Debug.endMeasure('Scene.constructor');
     } catch (error) {
       Debug.error('Scene', 'Failed to initialize scene', error as Error);
       throw error;
     }
+  }
+
+  /**
+   * Set character controller and health system for platform detection
+   */
+  setCharacterSystems(characterController: CharacterController, healthSystem: SouffranceHealthSystem): void {
+    this.characterController = characterController;
+    this.healthSystem = healthSystem;
   }
 
   private setupLighting(): void {
@@ -176,6 +202,80 @@ export class Scene {
     this.createTestObjects();
   }
 
+  /**
+   * Create 8 colored platforms for testing souffrances
+   * Each platform applies +1 DS of its souffrance type every second when stepped on
+   */
+  private createSouffrancePlatforms(): void {
+    const platformSize = 1.5;
+    const platformHeight = 0.1;
+    const platformSpacing = 3.0;
+    
+    // Colors for each souffrance type (distinct colors)
+    const souffranceColors: Record<Souffrance, number> = {
+      [Souffrance.BLESSURES]: 0xff0000,    // Red - physical wounds
+      [Souffrance.FATIGUES]: 0xff8800,     // Orange - exhaustion
+      [Souffrance.ENTRAVES]: 0xffff00,    // Yellow - impediments
+      [Souffrance.DISETTES]: 0x00ff00,     // Green - hunger/thirst
+      [Souffrance.ADDICTIONS]: 0x00ffff,   // Cyan - dependencies
+      [Souffrance.MALADIES]: 0x0088ff,    // Light Blue - diseases
+      [Souffrance.FOLIES]: 0x8800ff,      // Purple - mental disorders
+      [Souffrance.RANCOEURS]: 0xff00ff,    // Magenta - resentments
+    };
+
+    // Arrange platforms in a circle or grid pattern
+    const souffrances = Object.values(Souffrance);
+    const centerX = 0;
+    const centerZ = 0;
+    const radius = 4.0; // Distance from center
+
+    souffrances.forEach((souffrance, index) => {
+      // Arrange in a circle
+      const angle = (index / souffrances.length) * Math.PI * 2;
+      const x = centerX + Math.cos(angle) * radius;
+      const z = centerZ + Math.sin(angle) * radius;
+      const y = 0.05; // Slightly above floor
+
+      const color = souffranceColors[souffrance];
+      
+      // Create platform mesh
+      const platformGeometry = new THREE.BoxGeometry(platformSize, platformHeight, platformSize);
+      const platformMaterial = this.renderer.createRetroStandardMaterial(color);
+      const platformMesh = new THREE.Mesh(platformGeometry, platformMaterial);
+      platformMesh.position.set(x, y + platformHeight / 2, z);
+      this.scene.add(platformMesh);
+
+      // Create physics body (static, sensor-like - doesn't block movement but detects contact)
+      const platformCollider = RAPIER.ColliderDesc.cuboid(platformSize / 2, platformHeight / 2, platformSize / 2);
+      // Mark as sensor so it doesn't block movement but still detects collisions
+      platformCollider.setSensor(true);
+      const platformBody = this.physicsWorld.createStaticBody(
+        platformCollider,
+        { x, y: y + platformHeight / 2, z }
+      );
+      this.physicsBodies.set(platformMesh, platformBody);
+
+      // Store platform info
+      this.souffrancePlatforms.push({
+        mesh: platformMesh,
+        rigidBody: platformBody,
+        souffrance,
+        color,
+        lastDamageTime: 0,
+      });
+
+      // Add a label above the platform (using a simple text sprite or geometry)
+      // For now, we'll just use the mesh name for identification
+      platformMesh.name = `SouffrancePlatform_${souffrance}`;
+      platformMesh.userData = {
+        souffranceType: souffrance,
+        souffranceName: getSouffranceName(souffrance),
+      };
+
+      Debug.log('Scene', `Created ${getSouffranceName(souffrance)} platform at (${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`);
+    });
+  }
+
   private createTestObjects(): void {
     // Add a few boxes for visual interest (dynamic physics bodies)
     const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
@@ -227,6 +327,7 @@ export class Scene {
 
   /**
    * Update dynamic object positions to sync with physics
+   * Also check for character standing on souffrance platforms
    */
   update(deltaTime: number): void {
     try {
@@ -241,9 +342,103 @@ export class Scene {
           mesh.quaternion.set(rotation.x, rotation.y, rotation.z, rotation.w);
         }
       });
+
+      // Check if character is standing on any souffrance platform
+      if (this.characterController && this.healthSystem) {
+        this.checkSouffrancePlatforms();
+      }
     } catch (error) {
       Debug.error('Scene', 'Error updating scene', error as Error);
     }
+  }
+
+  /**
+   * Check if character is standing on any souffrance platform and apply damage
+   */
+  private checkSouffrancePlatforms(): void {
+    if (!this.characterController || !this.healthSystem) return;
+
+    const characterPos = this.characterController.getPosition();
+    const currentTime = performance.now();
+
+    // Character capsule info (from GAME_CONFIG)
+    const CHARACTER_HEIGHT = 1.6;
+    const CHARACTER_RADIUS = 0.3;
+    const capsuleHalfHeight = (CHARACTER_HEIGHT - 2 * CHARACTER_RADIUS) / 2; // 0.5
+    const capsuleBottomY = characterPos.y - (capsuleHalfHeight + CHARACTER_RADIUS); // Character's feet position
+
+    // Check each platform using simple distance check (more reliable than physics intersection)
+    this.souffrancePlatforms.forEach((platform) => {
+      const platformPos = platform.rigidBody.translation();
+      
+      // Calculate horizontal distance from character to platform center
+      const dx = characterPos.x - platformPos.x;
+      const dz = characterPos.z - platformPos.z;
+      const horizontalDistance = Math.sqrt(dx * dx + dz * dz);
+      
+      // Platform is 1.5x1.5, so radius is 0.75 (half of 1.5)
+      const platformSize = 1.5;
+      const platformRadius = platformSize / 2; // 0.75
+      const platformHeight = 0.1;
+      const platformTopY = platformPos.y + platformHeight / 2; // Platform top surface
+      const platformBottomY = platformPos.y - platformHeight / 2; // Platform bottom
+      
+      // Character is standing on platform if:
+      // 1. Horizontal distance is within platform bounds (with tolerance for capsule radius)
+      // 2. Character's feet are at or slightly above the platform (within 0.3 units tolerance)
+      const isWithinBounds = horizontalDistance <= platformRadius + CHARACTER_RADIUS + 0.2; // Platform radius + capsule radius + tolerance
+      const isOnPlatformHeight = capsuleBottomY >= platformBottomY - 0.1 && capsuleBottomY <= platformTopY + 0.3; // Allow some tolerance for physics
+      
+      const isOnPlatform = isWithinBounds && isOnPlatformHeight;
+
+      if (isOnPlatform) {
+        // Character is on platform - apply damage every second
+        if (currentTime - platform.lastDamageTime >= this.damageInterval) {
+          // Apply +1 DS of this souffrance type
+          // Use a dummy competence for testing (since this is environmental damage, not from a failed action)
+          // We'll use a generic competence like PAS (walking) as the "used competence"
+          const beforeDice = this.healthSystem['characterSheetManager'].getSouffrance(platform.souffrance).diceCount;
+          const applied = this.healthSystem.applySouffranceFromFailure(
+            platform.souffrance,
+            1, // +1 DS
+            Competence.PAS // Dummy competence for testing
+          );
+          const afterDice = this.healthSystem['characterSheetManager'].getSouffrance(platform.souffrance).diceCount;
+          
+          platform.lastDamageTime = currentTime;
+          
+          // Emit event to event log
+          const eventLog = getEventLog();
+          const souffranceName = getSouffranceName(platform.souffrance);
+          const resistanceName = getResistanceCompetenceName(platform.souffrance);
+          
+          if (applied > 0) {
+            // Damage was applied (not fully resisted)
+            eventLog.addEvent(
+              EventType.SOUFFRANCE_DAMAGE,
+              `+${applied} DS ${souffranceName} (${afterDice} DS total) - Stepping on ${souffranceName} platform`,
+              {
+                souffrance: platform.souffrance,
+                damage: applied,
+                totalDice: afterDice,
+              }
+            );
+          } else {
+            // Damage was fully resisted
+            eventLog.addEvent(
+              EventType.SOUFFRANCE_RESISTED,
+              `${resistanceName} resisted ${souffranceName} damage completely`,
+              {
+                souffrance: platform.souffrance,
+                resisted: true,
+              }
+            );
+          }
+          
+          Debug.log('Scene', `Character on ${souffranceName} platform - applied ${applied} DS (total: ${afterDice} DS)`);
+        }
+      }
+    });
   }
 
   /**

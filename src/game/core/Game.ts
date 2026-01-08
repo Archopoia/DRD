@@ -5,6 +5,8 @@ import { FPSCamera } from '../camera/FPSCamera';
 import { Scene } from '../world/Scene';
 import { PhysicsWorld } from '../physics/PhysicsWorld';
 import { CharacterController } from '../physics/CharacterController';
+import { CharacterSheetManager } from '../character/CharacterSheetManager';
+import { SouffranceHealthSystem } from '../character/SouffranceHealthSystem';
 import { GAME_CONFIG } from '@/lib/constants';
 import { Debug } from '../utils/debug';
 
@@ -22,6 +24,8 @@ export class Game {
   private frameCount: number = 0;
   private lastFpsUpdate: number = 0;
   private fps: number = 0;
+  private characterSheetManager: CharacterSheetManager;
+  private healthSystem: SouffranceHealthSystem;
 
   constructor(canvas: HTMLCanvasElement) {
     Debug.startMeasure('Game.constructor');
@@ -45,6 +49,12 @@ export class Game {
       this.physicsWorld = new PhysicsWorld();
       Debug.log('Game', 'Physics world initialized');
 
+      // Initialize character sheet manager and health system
+      Debug.log('Game', 'Initializing character systems...');
+      this.characterSheetManager = new CharacterSheetManager();
+      this.healthSystem = new SouffranceHealthSystem(this.characterSheetManager);
+      Debug.log('Game', 'Character systems initialized');
+
       // Initialize character controller
       Debug.log('Game', 'Initializing character controller...');
       // Start character at a safe height above the ground
@@ -66,6 +76,8 @@ export class Game {
       // Initialize scene (requires physics world)
       Debug.log('Game', 'Initializing scene...');
       this.scene = new Scene(this.renderer, this.physicsWorld);
+      // Connect character systems to scene for platform detection
+      this.scene.setCharacterSystems(this.characterController, this.healthSystem);
       Debug.log('Game', 'Scene initialized');
 
       // Setup game loop

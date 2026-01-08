@@ -205,13 +205,8 @@ export class FPSCamera {
     moveDirection.y = 0; // Keep movement on horizontal plane
     moveDirection.normalize();
 
-    // Apply speed multiplier for running
-    if (this.controls.run && moveDirection.length() > 0) {
-      moveDirection.multiplyScalar(GAME_CONFIG.RUN_MULTIPLIER);
-    }
-
-    // Move character controller
-    this.characterController.move(moveDirection, deltaTime);
+    // Move character controller (pass run state)
+    this.characterController.move(moveDirection, deltaTime, this.controls.run);
 
     // Sync camera position with character controller position
     const controllerPos = this.characterController.getPosition();

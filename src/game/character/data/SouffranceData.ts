@@ -44,6 +44,14 @@ export function getSouffranceName(souffrance: Souffrance): string {
   return SOUFFRANCE_NAMES[souffrance] || 'Unknown';
 }
 
+/**
+ * Get the resistance competence name for a souffrance
+ * Each souffrance acts as its own resistance competence, named R[Blessures], R[Fatigues], etc.
+ */
+export function getResistanceCompetenceName(souffrance: Souffrance): string {
+  return `R[${getSouffranceName(souffrance)}]`;
+}
+
 export function getSouffranceAttribute(souffrance: Souffrance): Attribute {
   return SOUFFRANCE_ATTRIBUTE[souffrance] || Attribute.FOR;
 }
