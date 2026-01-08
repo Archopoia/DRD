@@ -170,10 +170,23 @@ export class CharacterSheetManager {
       const atb2Value = this.state.attributes[atb2];
       const atb3Value = this.state.attributes[atb3];
       
-      // Simplified: ATB+3 = 6/10, ATB+2 = 3/10, ATB+1 = 1/10
-      const atb3Contribution = Math.floor(atb1Value * 6 / 10);
-      const atb2Contribution = Math.floor(atb2Value * 3 / 10);
-      const atb1Contribution = Math.floor(atb3Value * 1 / 10);
+      // Helper function to calculate contribution with proper rounding
+      // For positive: floor division (rounds down)
+      // For negative: truncate towards zero (so -0.6 becomes 0, not -1)
+      const calculateContribution = (value: number, divisor: number): number => {
+        if (value >= 0) {
+          return Math.floor(value / divisor);
+        } else {
+          return Math.ceil(value / divisor);
+        }
+      };
+      
+      // ATB+3 = 6/10: -/+1 every -/+1.667 (10/6)
+      const atb3Contribution = calculateContribution(atb1Value, 10 / 6);
+      // ATB+2 = 3/10: -/+1 every -/+3.333 (10/3)
+      const atb2Contribution = calculateContribution(atb2Value, 10 / 3);
+      // ATB+1 = 1/10: -/+1 every -/+10 (10/1)
+      const atb1Contribution = calculateContribution(atb3Value, 10 / 1);
       
       this.state.aptitudeLevels[aptitude] = atb3Contribution + atb2Contribution + atb1Contribution;
     });
