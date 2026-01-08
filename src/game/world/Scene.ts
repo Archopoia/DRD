@@ -29,6 +29,7 @@ export class Scene {
   private healthSystem: SouffranceHealthSystem | null = null;
   private souffrancePlatforms: SouffrancePlatform[] = [];
   private damageInterval: number = 1000; // 1 second in milliseconds
+  private lastDebugLogTime: Map<Souffrance, number> = new Map(); // Track last debug log per platform
 
   constructor(renderer: RetroRenderer, physicsWorld: PhysicsWorld) {
     Debug.startMeasure('Scene.constructor');
@@ -245,10 +246,10 @@ export class Scene {
       platformMesh.position.set(x, y + platformHeight / 2, z);
       this.scene.add(platformMesh);
 
-      // Create physics body (static, sensor-like - doesn't block movement but detects contact)
+      // Create physics body (static solid - supports character but also detects contact)
       const platformCollider = RAPIER.ColliderDesc.cuboid(platformSize / 2, platformHeight / 2, platformSize / 2);
-      // Mark as sensor so it doesn't block movement but still detects collisions
-      platformCollider.setSensor(true);
+      // Don't mark as sensor - we want solid platforms the character can stand on
+      // We'll detect contact via distance check instead
       const platformBody = this.physicsWorld.createStaticBody(
         platformCollider,
         { x, y: y + platformHeight / 2, z }
@@ -384,10 +385,12 @@ export class Scene {
       const platformBottomY = platformPos.y - platformHeight / 2; // Platform bottom
       
       // Character is standing on platform if:
-      // 1. Horizontal distance is within platform bounds (with tolerance for capsule radius)
-      // 2. Character's feet are at or slightly above the platform (within 0.3 units tolerance)
-      const isWithinBounds = horizontalDistance <= platformRadius + CHARACTER_RADIUS + 0.2; // Platform radius + capsule radius + tolerance
-      const isOnPlatformHeight = capsuleBottomY >= platformBottomY - 0.1 && capsuleBottomY <= platformTopY + 0.3; // Allow some tolerance for physics
+      // 1. Horizontal distance is within platform bounds (with generous tolerance for capsule radius)
+      const isWithinBounds = horizontalDistance <= platformRadius + CHARACTER_RADIUS + 0.8; // Platform radius (0.75) + capsule radius (0.3) + generous tolerance (0.8) = 1.85 units
+      
+      // Height check: character's feet should be at or above the platform top
+      // Platform top is at 0.15, so feet should be between 0.05 (slightly below) and 2.0 (way above, jumping)
+      const isOnPlatformHeight = capsuleBottomY >= platformBottomY - 0.1 && capsuleBottomY <= platformTopY + 2.5;
       
       const isOnPlatform = isWithinBounds && isOnPlatformHeight;
 
@@ -407,37 +410,22 @@ export class Scene {
           
           platform.lastDamageTime = currentTime;
           
-          // Emit event to event log
-          const eventLog = getEventLog();
+          // Note: Events are now logged in SouffranceHealthSystem.applySouffranceFromFailure
+          // No need to duplicate them here
           const souffranceName = getSouffranceName(platform.souffrance);
-          const resistanceName = getResistanceCompetenceName(platform.souffrance);
-          
-          if (applied > 0) {
-            // Damage was applied (not fully resisted)
-            eventLog.addEvent(
-              EventType.SOUFFRANCE_DAMAGE,
-              `+${applied} DS ${souffranceName} (${afterDice} DS total) - Stepping on ${souffranceName} platform`,
-              {
-                souffrance: platform.souffrance,
-                damage: applied,
-                totalDice: afterDice,
-              }
-            );
-          } else {
-            // Damage was fully resisted
-            eventLog.addEvent(
-              EventType.SOUFFRANCE_RESISTED,
-              `${resistanceName} resisted ${souffranceName} damage completely`,
-              {
-                souffrance: platform.souffrance,
-                resisted: true,
-              }
-            );
-          }
-          
-          Debug.log('Scene', `Character on ${souffranceName} platform - applied ${applied} DS (total: ${afterDice} DS)`);
+          Debug.log('Scene', `Character on ${souffranceName} platform - applied ${applied.toFixed(2)} DS (total: ${afterDice} DS)`);
         }
-      }
+        } else if (horizontalDistance < 3.0) {
+          // Debug log occasionally to help troubleshoot when very close
+          // Only log once per 2 seconds max per platform to avoid spam
+          const debugKey = platform.souffrance;
+          const lastDebugTime = this.lastDebugLogTime.get(debugKey) || 0;
+          if (currentTime - lastDebugTime >= 2000) {
+            const souffranceName = getSouffranceName(platform.souffrance);
+            Debug.log('Scene', `Near ${souffranceName} platform: hDist=${horizontalDistance.toFixed(2)}, charY=${characterPos.y.toFixed(2)}, feetY=${capsuleBottomY.toFixed(2)}, platY=${platformPos.y.toFixed(2)}, platTop=${platformTopY.toFixed(2)}, platBot=${platformBottomY.toFixed(2)}, inBounds=${isWithinBounds}, onHeight=${isOnPlatformHeight}, isOn=${isOnPlatform}`);
+            this.lastDebugLogTime.set(debugKey, currentTime);
+          }
+        }
     });
   }
 

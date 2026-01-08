@@ -14,6 +14,7 @@ export default function GameCanvas() {
   const [error, setError] = useState<string | null>(null);
   const [fps, setFps] = useState<number>(0);
   const [showCharacterSheet, setShowCharacterSheet] = useState<boolean>(false);
+  const [characterSheetManager, setCharacterSheetManager] = useState<any>(null);
 
   useEffect(() => {
     // Initialize Debug system to capture all console logs
@@ -40,6 +41,9 @@ export default function GameCanvas() {
         const game = new Game(canvas);
         gameRef.current = game;
         game.start();
+        
+        // Get character sheet manager from game
+        setCharacterSheetManager(game.getCharacterSheetManager());
 
         // Update FPS display every second
         const fpsInterval = setInterval(() => {
@@ -175,6 +179,7 @@ export default function GameCanvas() {
       <CharacterSheet
         isOpen={showCharacterSheet}
         onClose={() => setShowCharacterSheet(false)}
+        manager={characterSheetManager}
       />
       <EventLog maxVisible={5} />
     </>

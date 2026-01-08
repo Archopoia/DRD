@@ -174,6 +174,13 @@ export class Game {
   }
 
   /**
+   * Get character sheet manager (for UI integration)
+   */
+  getCharacterSheetManager(): CharacterSheetManager {
+    return this.characterSheetManager;
+  }
+
+  /**
    * Handle window resize
    */
   private handleResize = (): void => {

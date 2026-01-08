@@ -152,11 +152,13 @@ export class SouffranceHealthSystem {
     // Resistance level = souffrance level (Niv from dice count)
     const resistanceLevel = this.getSouffranceLevel(souffrance);
     
-    // Resistance absorbs souffrance passively (1 DS absorbed per resistance level)
-    const absorbedAmount = Math.min(diceAmount, resistanceLevel);
-    const actualDamage = diceAmount - absorbedAmount;
+    // Resistance is much weaker - only absorbs a small fraction per level
+    // At Niv 1: absorbs 0.1 DS (10%), Niv 2: 0.2 DS (20%), etc.
+    // Resistance becomes more effective at higher levels, but never fully negates damage
+    const absorbedAmount = Math.min(diceAmount * 0.1 * resistanceLevel, diceAmount * 0.5); // Max 50% absorption even at high levels
+    const actualDamage = Math.max(0, diceAmount - absorbedAmount);
 
-    Debug.log('SouffranceHealthSystem', `Applying ${diceAmount} DS of ${getSouffranceName(souffrance)}, ${getResistanceCompetenceName(souffrance)} Niv ${resistanceLevel} absorbed ${absorbedAmount}, actual damage ${actualDamage}`);
+    Debug.log('SouffranceHealthSystem', `Applying ${diceAmount} DS of ${getSouffranceName(souffrance)}, ${getResistanceCompetenceName(souffrance)} Niv ${resistanceLevel} absorbed ${absorbedAmount.toFixed(2)}, actual damage ${actualDamage.toFixed(2)}`);
 
     // Apply the actual damage (after resistance)
     if (actualDamage > 0) {
@@ -167,14 +169,15 @@ export class SouffranceHealthSystem {
       this.checkHealthStateChange();
     }
 
-    // Gain experience marks:
-    // 1. On the competence that was being used (because you suffered while using it)
-    // 2. On the souffrance itself (because it resisted damage)
+    // Gain experience marks and log events
+    const eventLog = getEventLog();
+    const souffranceName = getSouffranceName(souffrance);
+    const resistanceName = getResistanceCompetenceName(souffrance);
+    const currentDiceAfter = this.characterSheetManager.getSouffrance(souffrance).diceCount;
     
     // Mark 1: Competence used (1 mark for failure)
     // According to rules: "1 Marque par Échec dans une Épreuve Possible"
     this.characterSheetManager.addCompetenceMark(usedCompetence, false);
-    const eventLog = getEventLog();
     eventLog.addEvent(
       EventType.EXPERIENCE_GAIN,
       `Gained 1 mark on ${getCompetenceName(usedCompetence)} (used while suffering)`,
@@ -182,24 +185,50 @@ export class SouffranceHealthSystem {
     );
     Debug.log('SouffranceHealthSystem', `Gained 1 mark on used competence: ${usedCompetence}`);
 
-    // Mark 2: Souffrance resistance (marks = amount absorbed)
+    // Mark 2: Souffrance resistance (marks = amount absorbed, rounded up)
     // According to rules: "Chaque Échec déterminé comme une Souffrance ET outrepassant votre Résistance liée, s'accumule en Dé NÉGATIFS liés à cette Souffrance ET en Marque d'expérience dans la CT y ayant résisté"
     // The souffrance itself gains marks when it resists (absorbs damage)
     if (absorbedAmount > 0) {
-      // Gain marks on the souffrance (which acts as its own resistance competence)
-      for (let i = 0; i < absorbedAmount; i++) {
+      // Gain marks on the souffrance (round up absorbed amount to get marks)
+      const marksToAdd = Math.ceil(absorbedAmount);
+      for (let i = 0; i < marksToAdd; i++) {
         this.characterSheetManager.addSouffranceMark(souffrance, false);
       }
       eventLog.addEvent(
         EventType.EXPERIENCE_GAIN,
-        `Gained ${absorbedAmount} marks on ${getResistanceCompetenceName(souffrance)} (resisted ${absorbedAmount} DS)`,
+        `Gained ${marksToAdd} marks on ${resistanceName} (resisted ${absorbedAmount.toFixed(2)} DS)`,
         {
-          resistanceCompetence: getResistanceCompetenceName(souffrance),
-          marks: absorbedAmount,
+          resistanceCompetence: resistanceName,
+          marks: marksToAdd,
           absorbed: absorbedAmount,
         }
       );
-      Debug.log('SouffranceHealthSystem', `Gained ${absorbedAmount} marks on ${getResistanceCompetenceName(souffrance)}`);
+      Debug.log('SouffranceHealthSystem', `Gained ${marksToAdd} marks on ${resistanceName}`);
+    }
+    
+    // Log damage event if damage was applied
+    if (actualDamage > 0) {
+      eventLog.addEvent(
+        EventType.SOUFFRANCE_DAMAGE,
+        `+${actualDamage.toFixed(2)} DS ${souffranceName} (${currentDiceAfter} DS total)${usedCompetence === Competence.PAS ? ' - Stepping on platform' : ''}`,
+        {
+          souffrance: souffrance,
+          damage: actualDamage,
+          totalDice: currentDiceAfter,
+        }
+      );
+    } else if (absorbedAmount >= diceAmount * 0.9) {
+      // Only log resistance if most damage was resisted (90%+)
+      eventLog.addEvent(
+        EventType.SOUFFRANCE_RESISTED,
+        `${resistanceName} resisted ${souffranceName} damage (${absorbedAmount.toFixed(2)}/${diceAmount} DS absorbed)`,
+        {
+          souffrance: souffrance,
+          resisted: true,
+          absorbed: absorbedAmount,
+          total: diceAmount,
+        }
+      );
     }
 
     return actualDamage;

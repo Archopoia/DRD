@@ -18,6 +18,7 @@ import Tooltip from './ui/Tooltip';
 interface CharacterSheetProps {
   isOpen: boolean;
   onClose: () => void;
+  manager?: CharacterSheetManager; // Optional: if provided, use this manager instead of creating a new one
 }
 
 /**
@@ -34,9 +35,22 @@ function useCharacterSheet(manager: CharacterSheetManager) {
   return { state, updateState };
 }
 
-export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps) {
-  const [manager] = useState(() => new CharacterSheetManager());
+export default function CharacterSheet({ isOpen, onClose, manager: externalManager }: CharacterSheetProps) {
+  const [internalManager] = useState(() => new CharacterSheetManager());
+  const manager = externalManager || internalManager;
   const { state, updateState } = useCharacterSheet(manager);
+  
+  // Update state periodically when using external manager (to sync with game state)
+  useEffect(() => {
+    if (!externalManager) return;
+    
+    // Poll for updates every 100ms when sheet is open
+    const interval = setInterval(() => {
+      updateState();
+    }, 100);
+    
+    return () => clearInterval(interval);
+  }, [externalManager, updateState]);
   const [expandedActions, setExpandedActions] = useState<Set<Action>>(new Set());
   const [expandedCompetences, setExpandedCompetences] = useState<Set<Competence>>(new Set());
   const [masterySelectionOpen, setMasterySelectionOpen] = useState<Competence | null>(null);
@@ -229,7 +243,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                 return (
                   <div 
                     key={aptitude}
-                    className="relative"
+                    className="relative flex flex-col"
                     style={{
                       perspective: '1000px',
                       flex: isFlipped ? '0 0 6.25%' : '1 1 12.5%',
@@ -237,8 +251,89 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                       transition: 'flex 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                     }}
                   >
+                    {/* Souffrance Bar - At the top of each column, fills from bottom upward */}
+                    {(() => {
+                        // Find the souffrance linked to the primary attribute (atb1) of this aptitude
+                        const linkedSouffrance = Object.values(Souffrance).find(
+                          (souf) => getSouffranceAttribute(souf) === atb1
+                        );
+                        
+                        if (linkedSouffrance) {
+                          const soufData = state.souffrances[linkedSouffrance];
+                          const diceCount = soufData?.diceCount || 0;
+                          const maxDS = 26; // Max DS before death
+                          
+                          // Colors matching the platform colors (converted to hex)
+                          const souffranceColors: Record<Souffrance, string> = {
+                            [Souffrance.BLESSURES]: '#ff0000',    // Red - physical wounds
+                            [Souffrance.FATIGUES]: '#ff8800',     // Orange - exhaustion
+                            [Souffrance.ENTRAVES]: '#ffff00',     // Yellow - impediments
+                            [Souffrance.DISETTES]: '#00ff00',     // Green - hunger/thirst
+                            [Souffrance.ADDICTIONS]: '#00ffff',   // Cyan - dependencies
+                            [Souffrance.MALADIES]: '#0088ff',     // Light Blue - diseases
+                            [Souffrance.FOLIES]: '#8800ff',       // Purple - mental disorders
+                            [Souffrance.RANCOEURS]: '#ff00ff',    // Magenta - resentments
+                          };
+                          
+                          const barColor = souffranceColors[linkedSouffrance];
+                          
+                          // Calculate height percentage, but ensure minimum visibility
+                          const barHeightPercent = Math.min(100, (diceCount / maxDS) * 100);
+                          
+                          // Use fixed pixel height for small values to ensure visibility
+                          // For larger values, use percentage
+                          const useFixedHeight = diceCount > 0 && barHeightPercent < 5;
+                          const barHeight = useFixedHeight ? `${Math.max(20, diceCount * 4)}px` : `${barHeightPercent}%`;
+                          
+                          return (
+                            <div
+                              className="relative w-full overflow-hidden"
+                              style={{
+                                height: '40px', // Fixed height for the bar container
+                                minHeight: '40px',
+                                backgroundColor: 'transparent',
+                                marginBottom: '0.5rem',
+                              }}
+                            >
+                              {/* Bar that grows from bottom upward */}
+                              <div
+                                className="absolute bottom-0 left-0 right-0 w-full"
+                                style={{
+                                  height: barHeight,
+                                  backgroundColor: barColor,
+                                  opacity: diceCount > 0 ? 0.85 : 0,
+                                  zIndex: 1,
+                                  transition: 'height 0.3s ease-out, opacity 0.3s ease-out',
+                                  pointerEvents: 'none',
+                                  minHeight: diceCount > 0 ? '2px' : '0px',
+                                }}
+                              >
+                                {/* DS Count displayed in the bar */}
+                                {diceCount > 0 && (
+                                  <div
+                                    className="absolute inset-0 flex items-center justify-center"
+                                    style={{
+                                      color: '#ffffff',
+                                      textShadow: '2px 2px 4px rgba(0, 0, 0, 1), -1px -1px 2px rgba(0, 0, 0, 0.8), 0 0 4px rgba(0, 0, 0, 0.8)',
+                                      fontWeight: 'bold',
+                                      fontSize: diceCount >= 10 ? '0.7rem' : '0.75rem',
+                                      fontFamily: 'monospace',
+                                      zIndex: 2,
+                                      pointerEvents: 'none',
+                                    }}
+                                  >
+                                    {diceCount}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+                      
                     <div
-                      className="relative w-full h-full"
+                      className="relative w-full flex-1"
                       style={{
                         transformStyle: 'preserve-3d',
                         transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -260,8 +355,9 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                       >
                         {/* Aptitude Name with Modifier - Name on left, Modifier on right */}
                         <div 
-                          className="mb-2 pb-2 border-b-2 border-border-dark cursor-pointer"
+                          className="mb-2 pb-2 border-b-2 border-border-dark cursor-pointer relative z-10"
                           onClick={() => toggleAptitudeFlip(aptitude)}
+                          style={{ backgroundColor: 'transparent' }}
                         >
                           <div className="flex justify-between items-center">
                             <div className="font-medieval text-xs font-bold text-red-theme uppercase tracking-wide">
@@ -274,7 +370,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                         </div>
 
                     {/* Attributes Section */}
-                    <div className="flex gap-2 mb-3 pb-3 border-b-2 border-border-dark">
+                    <div className="flex gap-2 mb-3 pb-3 border-b-2 border-border-dark relative z-10" style={{ backgroundColor: 'transparent' }}>
                       {/* Attributes */}
                       <div className="flex-1 flex items-center justify-around gap-1">
                         {/* Attribute 1 - Emp */}
