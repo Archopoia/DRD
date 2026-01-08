@@ -382,7 +382,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                 onToggle={() => toggleAction(action)}
                                 title={
                                   <div className="flex justify-between items-center w-full">
-                                    <span>{getActionName(action)}</span>
+                                    <span>{getActionName(action).toUpperCase()}</span>
                                     <span className="text-text-secondary">({getAttributeAbbreviation(linkedAttr)})</span>
                                   </div>
                                 }
@@ -451,76 +451,113 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                             
                                             {/* Masteries Section */}
                                             <div className="space-y-1 mt-2">
-                                              <div className="text-xs font-bold text-text-dark mb-2 flex items-center justify-between">
-                                                <span>Maîtrises:</span>
-                                                {manager.getMasteryPoints(comp) > 0 && (
-                                                  <button
-                                                    ref={(el) => {
-                                                      if (el) masteryButtonRefs.current.set(comp, el);
-                                                      else masteryButtonRefs.current.delete(comp);
-                                                    }}
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      const wasOpen = masterySelectionOpen === comp;
-                                                      setMasterySelectionOpen(wasOpen ? null : comp);
-                                                      
-                                                      if (!wasOpen) {
-                                                        const buttonEl = masteryButtonRefs.current.get(comp);
-                                                        if (buttonEl) {
-                                                          const rect = buttonEl.getBoundingClientRect();
-                                                          setMasteryDropdownPosition({
-                                                            top: rect.bottom + 4,
-                                                            left: rect.left,
-                                                            width: rect.width
-                                                          });
+                                              {/* Unlock button when there are existing masteries */}
+                                              {compData.masteries.length > 0 && manager.getMasteryPoints(comp) > 0 && (() => {
+                                                const availableMasteries = getMasteries(comp);
+                                                const unlockedMasteryNames = compData.masteries.map(m => m.name);
+                                                const unselectedMasteries = availableMasteries.filter(
+                                                  masteryName => !unlockedMasteryNames.includes(masteryName)
+                                                );
+                                                const hasUnselectedMasteries = unselectedMasteries.length > 0;
+                                                
+                                                return (
+                                                  <div className="flex items-center justify-between mb-2">
+                                                    {hasUnselectedMasteries ? (
+                                                      <span 
+                                                        className="text-text-secondary italic text-xs cursor-pointer hover:text-text-dark transition-colors"
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          const wasOpen = masterySelectionOpen === comp;
+                                                          setMasterySelectionOpen(wasOpen ? null : comp);
+                                                          
+                                                          if (!wasOpen) {
+                                                            const buttonEl = masteryButtonRefs.current.get(comp);
+                                                            const rect = buttonEl ? buttonEl.getBoundingClientRect() : e.currentTarget.getBoundingClientRect();
+                                                            setMasteryDropdownPosition({
+                                                              top: rect.bottom + 4,
+                                                              left: rect.left,
+                                                              width: rect.width
+                                                            });
+                                                          } else {
+                                                            setMasteryDropdownPosition(null);
+                                                          }
+                                                        }}
+                                                      >
+                                                        Apprendre Maîtrise
+                                                      </span>
+                                                    ) : (
+                                                      <span className="text-text-secondary italic text-xs">Toutes connues</span>
+                                                    )}
+                                                    <button
+                                                      ref={(el) => {
+                                                        if (el) masteryButtonRefs.current.set(comp, el);
+                                                        else masteryButtonRefs.current.delete(comp);
+                                                      }}
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        const wasOpen = masterySelectionOpen === comp;
+                                                        setMasterySelectionOpen(wasOpen ? null : comp);
+                                                        
+                                                        if (!wasOpen) {
+                                                          const buttonEl = masteryButtonRefs.current.get(comp);
+                                                          if (buttonEl) {
+                                                            const rect = buttonEl.getBoundingClientRect();
+                                                            setMasteryDropdownPosition({
+                                                              top: rect.bottom + 4,
+                                                              left: rect.left,
+                                                              width: rect.width
+                                                            });
+                                                          }
+                                                        } else {
+                                                          setMasteryDropdownPosition(null);
                                                         }
-                                                      } else {
-                                                        setMasteryDropdownPosition(null);
-                                                      }
-                                                    }}
-                                                    className="px-2 py-1 bg-green-theme text-text-cream border border-border-dark rounded font-medieval font-semibold text-xs transition-all duration-300 hover:bg-hover-bg hover:text-text-dark cursor-pointer"
-                                                    style={{
-                                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
-                                                    }}
-                                                  >
-                                                    {manager.getMasteryPoints(comp)}
-                                                  </button>
-                                                )}
-                                              </div>
+                                                      }}
+                                                      className="px-2 py-1 bg-green-theme text-text-cream border border-border-dark rounded font-medieval font-semibold text-xs transition-all duration-300 hover:bg-hover-bg hover:text-text-dark cursor-pointer"
+                                                      style={{
+                                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                                                      }}
+                                                    >
+                                                      {manager.getMasteryPoints(comp)}
+                                                    </button>
+                                                  </div>
+                                                );
+                                              })()}
                                               
                                               {/* List of unlocked masteries */}
-                                              <div className="space-y-1 mb-2">
-                                                {compData.masteries.map((mastery, masteryIdx) => {
-                                                  const maxDice = level;
-                                                  const canUpgrade = mastery.diceCount < maxDice && manager.getMasteryPoints(comp) > 0;
-                                                  
-                                                  return (
-                                                    <div key={masteryIdx} className="text-xs flex items-center justify-between">
-                                                      <span className="flex-1"><span className="mr-1">•</span>{mastery.name}</span>
-                                                      <div className="flex items-center gap-1">
-                                                        <span className="text-text-secondary text-xs">{mastery.diceCount}D</span>
-                                                        {canUpgrade && (
-                                                          <Tooltip
-                                                            content="Upgrade (+1 point)"
-                                                            position="top"
-                                                            delay={200}
-                                                          >
-                                                            <button
-                                                              onClick={() => {
-                                                                manager.upgradeMastery(comp, mastery.name);
-                                                                updateState();
-                                                              }}
-                                                              className="px-2 py-1 bg-blue-600 text-white border border-border-dark rounded font-medieval font-semibold text-xs transition-all duration-300 hover:bg-hover-bg hover:text-text-dark"
+                                              {compData.masteries.length > 0 && (
+                                                <div className="space-y-1 mb-2">
+                                                  {compData.masteries.map((mastery, masteryIdx) => {
+                                                    const maxDice = level;
+                                                    const canUpgrade = mastery.diceCount < maxDice && manager.getMasteryPoints(comp) > 0;
+                                                    
+                                                    return (
+                                                      <div key={masteryIdx} className="text-xs flex items-center justify-between">
+                                                        <span className="flex-1"><span className="mr-1">•</span>{mastery.name}</span>
+                                                        <div className="flex items-center gap-1">
+                                                          <span className="text-text-secondary text-xs">{mastery.diceCount}D</span>
+                                                          {canUpgrade && (
+                                                            <Tooltip
+                                                              content="Upgrade (+1 point)"
+                                                              position="top"
+                                                              delay={200}
                                                             >
-                                                              +1
-                                                            </button>
-                                                          </Tooltip>
-                                                        )}
+                                                              <button
+                                                                onClick={() => {
+                                                                  manager.upgradeMastery(comp, mastery.name);
+                                                                  updateState();
+                                                                }}
+                                                                className="px-2 py-1 bg-blue-600 text-white border border-border-dark rounded font-medieval font-semibold text-xs transition-all duration-300 hover:bg-hover-bg hover:text-text-dark"
+                                                              >
+                                                                +1
+                                                              </button>
+                                                            </Tooltip>
+                                                          )}
+                                                        </div>
                                                       </div>
-                                                    </div>
-                                                  );
-                                                })}
-                                              </div>
+                                                    );
+                                                  })}
+                                                </div>
+                                              )}
                                               
                                               {/* Mastery selection dropdown - rendered via portal to escape overflow */}
                                               {masterySelectionOpen === comp && masteryDropdownPosition && typeof window !== 'undefined' && (() => {
@@ -594,11 +631,84 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                                 );
                                               })()}
                                               
-                                              {compData.masteries.length === 0 && manager.getMasteryPoints(comp) === 0 && (
-                                                <div className="text-xs text-text-secondary italic">
-                                                  Aucune maîtrise
-                                                </div>
-                                              )}
+                                              {/* No masteries section */}
+                                              {compData.masteries.length === 0 && (() => {
+                                                const availableMasteries = getMasteries(comp);
+                                                const unlockedMasteryNames = compData.masteries.map(m => m.name);
+                                                const unselectedMasteries = availableMasteries.filter(
+                                                  masteryName => !unlockedMasteryNames.includes(masteryName)
+                                                );
+                                                const hasUnselectedMasteries = unselectedMasteries.length > 0;
+                                                
+                                                return (
+                                                  <div className="text-xs flex items-center justify-between">
+                                                    {manager.getMasteryPoints(comp) > 0 ? (
+                                                      <>
+                                                        {hasUnselectedMasteries ? (
+                                                          <span 
+                                                            className="text-text-secondary italic cursor-pointer hover:text-text-dark transition-colors"
+                                                            onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              const wasOpen = masterySelectionOpen === comp;
+                                                              setMasterySelectionOpen(wasOpen ? null : comp);
+                                                              
+                                                              if (!wasOpen) {
+                                                                // Use button position for dropdown if available
+                                                                const buttonEl = masteryButtonRefs.current.get(comp);
+                                                                const rect = buttonEl ? buttonEl.getBoundingClientRect() : e.currentTarget.getBoundingClientRect();
+                                                                setMasteryDropdownPosition({
+                                                                  top: rect.bottom + 4,
+                                                                  left: rect.left,
+                                                                  width: rect.width
+                                                                });
+                                                              } else {
+                                                                setMasteryDropdownPosition(null);
+                                                              }
+                                                            }}
+                                                          >
+                                                            Apprendre Maîtrise
+                                                          </span>
+                                                        ) : (
+                                                          <span className="text-text-secondary italic">Toutes connues</span>
+                                                        )}
+                                                        <button
+                                                          ref={(el) => {
+                                                            if (el) masteryButtonRefs.current.set(comp, el);
+                                                            else masteryButtonRefs.current.delete(comp);
+                                                          }}
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            const wasOpen = masterySelectionOpen === comp;
+                                                            setMasterySelectionOpen(wasOpen ? null : comp);
+                                                            
+                                                            if (!wasOpen) {
+                                                              const buttonEl = masteryButtonRefs.current.get(comp);
+                                                              if (buttonEl) {
+                                                                const rect = buttonEl.getBoundingClientRect();
+                                                                setMasteryDropdownPosition({
+                                                                  top: rect.bottom + 4,
+                                                                  left: rect.left,
+                                                                  width: rect.width
+                                                                });
+                                                              }
+                                                            } else {
+                                                              setMasteryDropdownPosition(null);
+                                                            }
+                                                          }}
+                                                          className="px-2 py-1 bg-green-theme text-text-cream border border-border-dark rounded font-medieval font-semibold text-xs transition-all duration-300 hover:bg-hover-bg hover:text-text-dark cursor-pointer"
+                                                          style={{
+                                                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                                                          }}
+                                                        >
+                                                          {manager.getMasteryPoints(comp)}
+                                                        </button>
+                                                      </>
+                                                    ) : (
+                                                      <span className="text-text-secondary italic">Aucune maîtrise</span>
+                                                    )}
+                                                  </div>
+                                                );
+                                              })()}
                                             </div>
                                             {/* Bottom border after all masteries */}
                                             <div className="border-t border-border-tan mt-2 pt-2"></div>
