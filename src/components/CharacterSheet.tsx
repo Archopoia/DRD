@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { CharacterSheetManager } from '@/game/character/CharacterSheetManager';
 import { Attribute, getAttributeName, getAttributeAbbreviation } from '@/game/character/data/AttributeData';
 import { Aptitude, getAptitudeName, getAptitudeAttributes } from '@/game/character/data/AptitudeData';
@@ -40,21 +41,49 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
   const [expandedCompetences, setExpandedCompetences] = useState<Set<Competence>>(new Set());
   const [masterySelectionOpen, setMasterySelectionOpen] = useState<Competence | null>(null);
   const [flippedAptitudes, setFlippedAptitudes] = useState<Set<Aptitude>>(new Set());
+  const [masteryDropdownPosition, setMasteryDropdownPosition] = useState<{ top: number; left: number; width: number } | null>(null);
+  const masteryButtonRefs = useRef<Map<Competence, HTMLButtonElement>>(new Map());
 
-  // Close mastery selection when clicking outside
+  // Update dropdown position on scroll/resize and close on outside click
   useEffect(() => {
-    if (!masterySelectionOpen) return;
+    if (!masterySelectionOpen || !masteryDropdownPosition) return;
     
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.mastery-selection-container')) {
-        setMasterySelectionOpen(null);
+    const updatePosition = () => {
+      const buttonEl = masteryButtonRefs.current.get(masterySelectionOpen!);
+      if (buttonEl) {
+        const rect = buttonEl.getBoundingClientRect();
+        setMasteryDropdownPosition({
+          top: rect.bottom + 4,
+          left: rect.left,
+          width: rect.width
+        });
       }
     };
     
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      // Check if click is outside both the button and the dropdown portal
+      const dropdownElement = document.querySelector('[data-mastery-dropdown]');
+      if (
+        !target.closest('.mastery-selection-container') && 
+        !(dropdownElement && dropdownElement.contains(target))
+      ) {
+        setMasterySelectionOpen(null);
+        setMasteryDropdownPosition(null);
+      }
+    };
+    
+    // Update position on scroll/resize
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [masterySelectionOpen]);
+    
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [masterySelectionOpen, masteryDropdownPosition]);
 
   if (!isOpen) return null;
 
@@ -333,7 +362,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                     </div>
 
                     {/* Actions (3 per Aptitude) */}
-                    <div className="space-y-0">
+                    <div className="space-y-0" style={{ marginLeft: '-1.75rem', paddingLeft: '1.25rem' }}>
                       {actions.map((action, actionIdx) => {
                         const competences = getCompetencesForAction(action);
                         const isExpanded = expandedActions.has(action);
@@ -466,9 +495,34 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                               
                                               {/* Unlock new mastery button */}
                                               {manager.getMasteryPoints(comp) > 0 && (
-                                                <div className="relative mastery-selection-container" style={{ zIndex: masterySelectionOpen === comp ? 1000 : 'auto' }}>
+                                                <div 
+                                                  className="relative mastery-selection-container" 
+                                                  style={{ zIndex: masterySelectionOpen === comp ? 1000 : 'auto', position: 'relative' }}
+                                                >
                                                   <button
-                                                    onClick={() => setMasterySelectionOpen(masterySelectionOpen === comp ? null : comp)}
+                                                    ref={(el) => {
+                                                      if (el) masteryButtonRefs.current.set(comp, el);
+                                                      else masteryButtonRefs.current.delete(comp);
+                                                    }}
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      const wasOpen = masterySelectionOpen === comp;
+                                                      setMasterySelectionOpen(wasOpen ? null : comp);
+                                                      
+                                                      if (!wasOpen) {
+                                                        const buttonEl = masteryButtonRefs.current.get(comp);
+                                                        if (buttonEl) {
+                                                          const rect = buttonEl.getBoundingClientRect();
+                                                          setMasteryDropdownPosition({
+                                                            top: rect.bottom + 4,
+                                                            left: rect.left,
+                                                            width: rect.width
+                                                          });
+                                                        }
+                                                      } else {
+                                                        setMasteryDropdownPosition(null);
+                                                      }
+                                                    }}
                                                     className="w-full px-2 py-2 bg-green-theme text-text-cream border border-border-dark rounded font-medieval font-semibold text-xs text-center transition-all duration-300 hover:bg-hover-bg hover:text-text-dark hover:-translate-y-0.5"
                                                     style={{
                                                       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
@@ -476,68 +530,80 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                                   >
                                                     + Débloquer Maîtrise (1 point)
                                                   </button>
-                                                  
-                                                  {/* Mastery selection dropdown */}
-                                                  {masterySelectionOpen === comp && (() => {
-                                                    const availableMasteries = getMasteries(comp);
-                                                    const unlockedMasteryNames = compData.masteries.map(m => m.name);
-                                                    const unselectedMasteries = availableMasteries.filter(
-                                                      masteryName => !unlockedMasteryNames.includes(masteryName)
-                                                    );
-                                                    
-                                                    if (process.env.NODE_ENV === 'development') {
-                                                      console.log('Mastery dropdown for', getCompetenceName(comp), {
-                                                        available: availableMasteries.length,
-                                                        unlocked: unlockedMasteryNames.length,
-                                                        unselected: unselectedMasteries.length,
-                                                        unselectedList: unselectedMasteries
-                                                      });
-                                                    }
-                                                    
-                                                    return (
-                                                      <div 
-                                                        className="absolute mt-1 bg-parchment-dark border-2 border-gold-glow rounded shadow-2xl max-h-40 overflow-y-auto w-full min-w-[200px] z-[10000]"
-                                                        style={{
-                                                          boxShadow: '0 0 0 1px #643030, 0 0 0 2px #ffebc6, 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 0 0 1px #ceb68d'
-                                                        }}
-                                                      >
-                                                        {unselectedMasteries.length > 0 ? (
-                                                          unselectedMasteries.map((masteryName) => (
-                                                            <button
-                                                              key={masteryName}
-                                                              onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                e.preventDefault();
-                                                                manager.unlockMastery(comp, masteryName);
-                                                                if (process.env.NODE_ENV === 'development') {
-                                                                  console.log('Unlock mastery:', {
-                                                                    competence: getCompetenceName(comp),
-                                                                    mastery: masteryName,
-                                                                    success: true,
-                                                                    pointsBefore: manager.getMasteryPoints(comp) + 1,
-                                                                    pointsAfter: manager.getMasteryPoints(comp)
-                                                                  });
-                                                                }
-                                                                updateState();
-                                                                setMasterySelectionOpen(null);
-                                                              }}
-                                                              className="w-full px-2 py-2 text-xs text-left font-medieval text-text-dark block whitespace-nowrap transition-colors duration-300 hover:bg-hover-bg hover:text-red-theme border-b border-border-tan last:border-b-0"
-                                                            >
-                                                              {masteryName}
-                                                            </button>
-                                                          ))
-                                                        ) : (
-                                                          <div className="px-2 py-2 text-xs text-text-secondary italic">
-                                                            {availableMasteries.length === 0 
-                                                              ? 'Aucune maîtrise disponible' 
-                                                              : 'Toutes les maîtrises sont débloquées'}
-                                                          </div>
-                                                        )}
-                                                      </div>
-                                                    );
-                                                  })()}
                                                 </div>
                                               )}
+                                              
+                                              {/* Mastery selection dropdown - rendered via portal to escape overflow */}
+                                              {masterySelectionOpen === comp && masteryDropdownPosition && typeof window !== 'undefined' && (() => {
+                                                const availableMasteries = getMasteries(comp);
+                                                const unlockedMasteryNames = compData.masteries.map(m => m.name);
+                                                const unselectedMasteries = availableMasteries.filter(
+                                                  masteryName => !unlockedMasteryNames.includes(masteryName)
+                                                );
+                                                
+                                                if (process.env.NODE_ENV === 'development') {
+                                                  console.log('Mastery dropdown for', getCompetenceName(comp), {
+                                                    available: availableMasteries.length,
+                                                    unlocked: unlockedMasteryNames.length,
+                                                    unselected: unselectedMasteries.length,
+                                                    unselectedList: unselectedMasteries
+                                                  });
+                                                }
+                                                
+                                                return createPortal(
+                                                  <div 
+                                                    data-mastery-dropdown
+                                                    className="fixed bg-parchment-dark border-2 border-gold-glow rounded shadow-2xl max-h-40 overflow-y-auto min-w-[200px] z-[10001]"
+                                                    style={{
+                                                      top: `${masteryDropdownPosition.top}px`,
+                                                      left: `${masteryDropdownPosition.left}px`,
+                                                      width: `${Math.max(masteryDropdownPosition.width, 200)}px`,
+                                                      boxShadow: '0 0 0 1px #643030, 0 0 0 2px #ffebc6, 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 0 0 1px #ceb68d'
+                                                    }}
+                                                    onMouseDown={(e) => e.stopPropagation()}
+                                                  >
+                                                    {unselectedMasteries.length > 0 ? (
+                                                      unselectedMasteries.map((masteryName) => (
+                                                        <button
+                                                          key={masteryName}
+                                                          type="button"
+                                                          onMouseDown={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                          }}
+                                                          onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            manager.unlockMastery(comp, masteryName);
+                                                            if (process.env.NODE_ENV === 'development') {
+                                                              console.log('Unlock mastery:', {
+                                                                competence: getCompetenceName(comp),
+                                                                mastery: masteryName,
+                                                                success: true,
+                                                                pointsBefore: manager.getMasteryPoints(comp) + 1,
+                                                                pointsAfter: manager.getMasteryPoints(comp)
+                                                              });
+                                                            }
+                                                            updateState();
+                                                            setMasterySelectionOpen(null);
+                                                            setMasteryDropdownPosition(null);
+                                                          }}
+                                                          className="w-full px-2 py-2 text-xs text-left font-medieval text-text-dark block whitespace-nowrap transition-colors duration-300 hover:bg-hover-bg hover:text-red-theme border-b border-border-tan last:border-b-0"
+                                                        >
+                                                          {masteryName}
+                                                        </button>
+                                                      ))
+                                                    ) : (
+                                                      <div className="px-2 py-2 text-xs text-text-secondary italic">
+                                                        {availableMasteries.length === 0 
+                                                          ? 'Aucune maîtrise disponible' 
+                                                          : 'Toutes les maîtrises sont débloquées'}
+                                                      </div>
+                                                    )}
+                                                  </div>,
+                                                  document.body
+                                                );
+                                              })()}
                                               
                                               {compData.masteries.length === 0 && manager.getMasteryPoints(comp) === 0 && (
                                                 <div className="text-xs text-text-secondary italic">
