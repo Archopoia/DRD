@@ -99,8 +99,8 @@ export class Scene {
     backWall.position.set(0, wallHeight / 2, -roomSize / 2);
     this.scene.add(backWall);
 
-    // Create static physics body for back wall
-    const backWallCollider = RAPIER.ColliderDesc.cuboid(roomSize / 2, wallHeight / 2, 0.1);
+    // Create static physics body for back wall (thicker for better collision)
+    const backWallCollider = RAPIER.ColliderDesc.cuboid(roomSize / 2, wallHeight / 2, 0.3);
     const backWallBody = this.physicsWorld.createStaticBody(
       backWallCollider,
       { x: 0, y: wallHeight / 2, z: -roomSize / 2 }
@@ -115,8 +115,8 @@ export class Scene {
     frontWallLeft.position.set(-roomSize / 4 - 0.5, wallHeight / 2, roomSize / 2);
     this.scene.add(frontWallLeft);
 
-    // Create static physics body for front wall left
-    const frontWallLeftCollider = RAPIER.ColliderDesc.cuboid((roomSize / 2 - 1) / 2, wallHeight / 2, 0.1);
+    // Create static physics body for front wall left (thicker for better collision)
+    const frontWallLeftCollider = RAPIER.ColliderDesc.cuboid((roomSize / 2 - 1) / 2, wallHeight / 2, 0.3);
     const frontWallLeftBody = this.physicsWorld.createStaticBody(
       frontWallLeftCollider,
       { x: -roomSize / 4 - 0.5, y: wallHeight / 2, z: roomSize / 2 }
@@ -130,8 +130,8 @@ export class Scene {
     frontWallRight.position.set(roomSize / 4 + 0.5, wallHeight / 2, roomSize / 2);
     this.scene.add(frontWallRight);
 
-    // Create static physics body for front wall right
-    const frontWallRightCollider = RAPIER.ColliderDesc.cuboid((roomSize / 2 - 1) / 2, wallHeight / 2, 0.1);
+    // Create static physics body for front wall right (thicker for better collision)
+    const frontWallRightCollider = RAPIER.ColliderDesc.cuboid((roomSize / 2 - 1) / 2, wallHeight / 2, 0.3);
     const frontWallRightBody = this.physicsWorld.createStaticBody(
       frontWallRightCollider,
       { x: roomSize / 4 + 0.5, y: wallHeight / 2, z: roomSize / 2 }
@@ -147,8 +147,8 @@ export class Scene {
     leftWall.position.set(-roomSize / 2, wallHeight / 2, 0);
     this.scene.add(leftWall);
 
-    // Create static physics body for left wall
-    const leftWallCollider = RAPIER.ColliderDesc.cuboid(0.1, wallHeight / 2, roomSize / 2);
+    // Create static physics body for left wall (thicker for better collision)
+    const leftWallCollider = RAPIER.ColliderDesc.cuboid(0.3, wallHeight / 2, roomSize / 2);
     const leftWallBody = this.physicsWorld.createStaticBody(
       leftWallCollider,
       { x: -roomSize / 2, y: wallHeight / 2, z: 0 }
@@ -164,8 +164,8 @@ export class Scene {
     rightWall.position.set(roomSize / 2, wallHeight / 2, 0);
     this.scene.add(rightWall);
 
-    // Create static physics body for right wall
-    const rightWallCollider = RAPIER.ColliderDesc.cuboid(0.1, wallHeight / 2, roomSize / 2);
+    // Create static physics body for right wall (thicker for better collision)
+    const rightWallCollider = RAPIER.ColliderDesc.cuboid(0.3, wallHeight / 2, roomSize / 2);
     const rightWallBody = this.physicsWorld.createStaticBody(
       rightWallCollider,
       { x: roomSize / 2, y: wallHeight / 2, z: 0 }
