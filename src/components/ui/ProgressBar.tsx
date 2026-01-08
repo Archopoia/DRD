@@ -157,14 +157,14 @@ export default function ProgressBar({
     e.stopPropagation();
     setIsRealizing(true);
     
-    // Call the onClick handler after a brief delay to show the animation
+    // Call the onClick handler after the blink animation completes
     setTimeout(() => {
       onClick();
-      // Reset the animation state after the realization completes
+      // Keep the pulsating animation going for a bit longer, then reset
       setTimeout(() => {
         setIsRealizing(false);
-      }, 300);
-    }, 200);
+      }, 1500); // Keep pulsating for 1.5 seconds after realization
+    }, 400); // Wait for blink animation to complete (0.4s)
   };
 
   // Determine fill color - only change to bluish-white when clicked
@@ -184,7 +184,7 @@ export default function ProgressBar({
       <div
         className={`h-full transition-all duration-200 relative ${fillColor} ${
           isFull ? 'progress-bar-fill-pulse' : ''
-        }`}
+        } ${isRealizing ? 'progress-bar-realizing' : ''}`}
         style={{
           width: `${percentage}%`,
           boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.3)',
