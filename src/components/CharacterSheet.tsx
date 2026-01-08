@@ -344,8 +344,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                             <div key={souf} className="text-xs bg-red-theme-alpha border-2 border-border-dark rounded p-2" style={{
                               boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
                             }}>
-                              <div className="font-bold text-text-cream mb-1 flex justify-between items-center">
-                                <span>{getSouffranceName(souf)}</span>
+                              <div className="font-bold text-text-cream mb-1 flex items-center gap-1">
                                 <DiceInput
                                   value={soufData.diceCount}
                                   onChange={(value) => {
@@ -355,6 +354,7 @@ export default function CharacterSheet({ isOpen, onClose }: CharacterSheetProps)
                                   min={0}
                                   size="sm"
                                 />
+                                <span>[{getSouffranceName(souf)}]</span>
                               </div>
                               <div className="grid grid-cols-[1rem_1fr] items-center gap-1">
                                 <span className="text-xs font-medieval font-semibold text-text-cream whitespace-nowrap">N{level}</span>
