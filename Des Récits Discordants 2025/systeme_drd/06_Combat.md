@@ -1,5 +1,9 @@
 # Système de Combat
 
+## Vue d'Ensemble
+
+Le système de combat fait partie d'un système plus large de **8 Types de Conflits**, chacun lié à une Aptitude. Ce document se concentre sur les règles de **Bataille** (Puissance), mais les autres types de conflits (Infiltration, Artisanat, Prouesse, Corrompre, Énigme, Enquête, Débat) suivent des mécaniques similaires adaptées à leur nature spécifique. Voir `03_Attributs_Aptitudes_Competences.md` pour une description complète des 8 Types de Conflits.
+
 ## Concepts Fondamentaux
 
 ### Clins

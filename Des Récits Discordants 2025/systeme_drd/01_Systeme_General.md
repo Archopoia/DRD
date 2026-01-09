@@ -18,6 +18,19 @@
 - **Succès** : Résultat ≥ Niv d'Épreuve
 - **Échec** : Résultat < Niv d'Épreuve
 
+### Les 8 Types de Conflits (Gameplay)
+Le système propose **8 types de gameplay** directement liés aux 8 Aptitudes, remplaçant la division traditionnelle combat/stealth/social par une approche plus nuancée :
+- **Bataille (Puissance)** : Confrontation directe et violente
+- **Infiltration (Aisance)** : Évitement et dissimulation
+- **Artisanat (Précision)** : Cunning et manipulation technique
+- **Prouesse (Athlétisme)** : Exploit physique et endurance
+- **Corrompre (Charisme)** : Manipulation sociale et corruption
+- **Énigme (Réflexion)** : Résolution par la pensée et la créativité
+- **Enquête (Détection)** : Investigation et découverte de secrets
+- **Débat (Domination)** : Persuasion par la volonté et l'argumentation
+
+Chaque conflit peut être résolu de multiples façons, encourageant la créativité. Voir `03_Attributs_Aptitudes_Competences.md` pour une description complète.
+
 ### Échecs Critiques et Succès Critiques
 - **Échec Critique** : Tous les dés sont `-` → 5 Marques d'expérience
 - **Succès Critique** : Tous les dés sont `+` → Effet spécial

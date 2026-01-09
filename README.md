@@ -134,11 +134,20 @@ Planned features for future development:
 - **Combat system** - Action-based combat with stat-driven modifiers (weapon sway, attack speed, damage)
 - **Movement system** - Stat-driven movement speed, jump height, stamina, affected by environmental conditions
 
-### Gameplay Systems (Integrated Minigames)
-- **Social system** - Dialogue and persuasion with stat-driven success windows
-- **Stealth system** - Visibility, detection, and hiding mechanics
-- **Exploration system** - Discovery, investigation, and knowledge mechanics
-- **Crafting system** - Item creation with skill-based difficulty
+### Gameplay Systems (8 Types of Conflicts/Gameplay)
+
+The game features **8 distinct types of gameplay** directly connected to the 8 Aptitudes, replacing the traditional combat/stealth/social division with a more nuanced approach:
+
+1. **Bataille (Puissance)** - Direct frontal combat; kill/destroy to take or pass
+2. **Infiltration (Aisance)** - Stealth and evasion; steal/sneak past undetected
+3. **Artisanat (Précision)** - Subterfuge and crafting; create diversions/alternative paths through cunning
+4. **Prouesse (Athlétisme)** - Physical feats; overcome obstacles through strength and athleticism
+5. **Corrompre (Charisme)** - Social manipulation; exploit vices/interests to get what you want
+6. **Énigme (Réflexion)** - Puzzle-solving; find rare solutions through logic and creativity
+7. **Enquête (Détection)** - Investigation; discover secrets and hidden flaws
+8. **Débat (Domination)** - Persuasion and debate; convince through will and argumentation
+
+Each gameplay type can be used for two scenarios: obtaining a guarded object or overcoming a guarding obstacle. Multiple solutions are encouraged for any given conflict.
 
 ### World & Content
 - Sprite billboards for enemies and NPCs

@@ -243,6 +243,17 @@ The Godot implementation was used as a **reference** for:
    - Complete progression tracking
 
 3. **Gameplay Systems** (Immersive Sim + Action-RPG Mechanics)
+   - **8 Types of Conflicts/Gameplay** - Each of the 8 Aptitudes is directly connected to a gameplay type:
+     1. **Bataille (Puissance)** - Direct frontal combat; kill/destroy to take or pass
+     2. **Infiltration (Aisance)** - Stealth and evasion; steal/sneak past undetected  
+     3. **Artisanat (Précision)** - Subterfuge and crafting; create diversions/alternative paths through cunning
+     4. **Prouesse (Athlétisme)** - Physical feats; overcome obstacles through strength and athleticism
+     5. **Corrompre (Charisme)** - Social manipulation; exploit vices/interests to get what you want
+     6. **Énigme (Réflexion)** - Puzzle-solving; find rare solutions through logic and creativity
+     7. **Enquête (Détection)** - Investigation; discover secrets and hidden flaws
+     8. **Débat (Domination)** - Persuasion and debate; convince through will and argumentation
+   - Each gameplay type can be used for two scenarios: obtaining a guarded object or overcoming a guarding obstacle
+   - Multiple solutions encouraged for any given conflict
    - **Stat-to-Gameplay Modifier System** - Translate character stats into gameplay variables
    - **Environmental Conditions System** - 8 axes affecting gameplay:
      - **FLU (Flow)**: Mud/bog vs being carried by currents
@@ -253,11 +264,19 @@ The Godot implementation was used as a **reference** for:
      - **RAD (Radiation)**: Disorientation vs irradiation
      - **LUM (Luminance)**: Darkness vs brightness
      - **PRE (Pressure)**: Zero gravity vs crushing pressure
-   - **Combat system** - Action-based with stat-driven modifiers (weapon sway, attack speed, damage)
-   - **Movement system** - Stat-driven movement speed, jump height, stamina, affected by environmental conditions
-   - **Social system** - Dialogue and persuasion with stat-driven success windows
-   - **Stealth system** - Visibility, detection, and hiding mechanics (affected by LUM conditions)
-   - **Exploration system** - Discovery, investigation, and knowledge mechanics
+   - **24 Immersive Minigames** - Each of the 3 Actions per Aptitude (8 Aptitudes) = one distinct immersive minigame:
+     - Each minigame is first-person, real-time, action-based, and seamless (no pause, no menus)
+     - Character stats directly affect gameplay variables (sway, timing, range, speed, etc.)
+     - Examples: Melee combat (Frapper), Ranged combat (Tirer), Wrestling (Neutraliser), Pickpocketing (Dérober), Lockpicking (Manier), Parkour (Traverser), Social interaction (Captiver), Investigation (Découvrir), Puzzle-solving (Concevoir), Animal taming (Dompter), etc.
+     - See `systeme_drd/16_Minigames_Immersifs.md` for complete design of all 24 minigames
+   - **Bataille system** - Action-based combat with stat-driven modifiers (weapon sway, attack speed, damage), affected by environmental conditions
+   - **Infiltration system** - Visibility, detection, and hiding mechanics (affected by LUM conditions), stealth movement
+   - **Artisanat system** - Crafting, tool creation, and subterfuge mechanics, creating diversions and alternative solutions
+   - **Prouesse system** - Movement speed, jump height, stamina, physical feats, affected by environmental conditions
+   - **Corrompre system** - Social manipulation, dialogue, and corruption mechanics with stat-driven success windows
+   - **Énigme system** - Puzzle-solving and creative problem-solving mechanics, finding rare solutions
+   - **Enquête system** - Investigation, discovery, and knowledge mechanics, uncovering secrets and flaws
+   - **Débat system** - Persuasion, debate, and will-based conviction mechanics
    - **Tool/Equipment System** - Tools that resist environmental conditions, require maintenance
    - **Souffrance application** - Injuries affect gameplay variables (movement, accuracy, etc.), can be caused by environmental failures
 

@@ -24,7 +24,7 @@ export enum Competence {
   // Aisance - Réagir (3 competences)
   FLUIDITE = 'FLUIDITE',
   ESQUIVE = 'ESQUIVE',
-  MINUTIE = 'MINUTIE',
+  EVASION = 'EVASION',
   
   // Aisance - Dérober (3 competences)
   ESCAMOTAGE = 'ESCAMOTAGE',
@@ -33,7 +33,7 @@ export enum Competence {
   
   // Aisance - Coordonner (3 competences)
   GESTUELLE = 'GESTUELLE',
-  EVASION = 'EVASION',
+  MINUTIE = 'MINUTIE',
   EQUILIBRE = 'EQUILIBRE',
   
   // Précision - Manier (3 competences)
@@ -139,12 +139,12 @@ export const COMPETENCE_NAMES: Record<Competence, string> = {
   [Competence.JETE]: '[Jeté]',
   [Competence.FLUIDITE]: '[Fluidité]',
   [Competence.ESQUIVE]: '[Esquive]',
-  [Competence.MINUTIE]: '[Minutie]',
+  [Competence.EVASION]: '[Évasion]',
   [Competence.ESCAMOTAGE]: '[Escamotage]',
   [Competence.ILLUSIONS]: '[Illusions]',
   [Competence.DISSIMULATION]: '[Dissimulation]',
   [Competence.GESTUELLE]: '[Gestuelle]',
-  [Competence.EVASION]: '[Évasion]',
+  [Competence.MINUTIE]: '[Minutie]',
   [Competence.EQUILIBRE]: '[Équilibre]',
   [Competence.VISEE]: '[Visée]',
   [Competence.CONDUITE]: '[Conduite]',
@@ -222,7 +222,7 @@ export const COMPETENCE_ACTION: Record<Competence, Action> = {
   // Aisance - Réagir
   [Competence.FLUIDITE]: Action.REAGIR,
   [Competence.ESQUIVE]: Action.REAGIR,
-  [Competence.MINUTIE]: Action.REAGIR,
+  [Competence.EVASION]: Action.REAGIR,
   
   // Aisance - Dérober
   [Competence.ESCAMOTAGE]: Action.DEROBER,
@@ -231,7 +231,7 @@ export const COMPETENCE_ACTION: Record<Competence, Action> = {
   
   // Aisance - Coordonner
   [Competence.GESTUELLE]: Action.COORDONNER,
-  [Competence.EVASION]: Action.COORDONNER,
+  [Competence.MINUTIE]: Action.COORDONNER,
   [Competence.EQUILIBRE]: Action.COORDONNER,
   
   // Précision - Manier

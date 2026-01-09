@@ -51,14 +51,6 @@ Each individual souffrance type has levels:
 ### Resistance System
 
 Each Souffrance has a **Resistance Competence**:
-- **Blessures** → [Robustesse] (resists)
-- **Fatigues** → [Satiété] (resists)
-- **Entraves** → [Rectitude] (resists)
-- **Disettes** → [Satiété] (resists)
-- **Addictions** → [Rectitude] (resists)
-- **Maladies** → [Immunité] (resists)
-- **Folies** → [Rectitude] (resists)
-- **Rancœurs** → [Rectitude] (resists)
 
 **Resistance Calculation:**
 - Resistance level = Competence Level (Niv) of resistance competence
@@ -242,3 +234,4 @@ The health bars provide immediate visual feedback:
 ---
 
 **Last Updated:** 2026-01-08
+

@@ -71,7 +71,7 @@ export const MASTERY_REGISTRY: Record<Competence, string[]> = {
   // Aisance - Réagir
   [Competence.FLUIDITE]: ["Réactivité", "Spontanéité", "Rythmique", "Feinter", "Contrer"],
   [Competence.ESQUIVE]: ["Repositionnante", "en Roulade", "Préparée", "Instinctive"],
-  [Competence.MINUTIE]: ["Délicatesse", "Doigté", "Impact", "Impulsion"],
+  [Competence.EVASION]: ["(Dés)Engagement", "Faufilage", "Déliement", "Délivrement"],
   
   // Aisance - Dérober
   [Competence.ESCAMOTAGE]: ["Espionnant", "d'Objets portés", "de Véhicules", "de Créatures"],
@@ -80,7 +80,7 @@ export const MASTERY_REGISTRY: Record<Competence, string[]> = {
   
   // Aisance - Coordonner
   [Competence.GESTUELLE]: ["Danse", "Posture (au combat)", "Pantomime", "Rituelle", "Athlétique", "Improvisée"],
-  [Competence.EVASION]: ["(Dés)Engagement", "Faufilage", "Déliement", "Délivrement"],
+  [Competence.MINUTIE]: ["Délicatesse", "Doigté", "Impact", "Impulsion"],
   [Competence.EQUILIBRE]: ["Stabilisant", "en Sols difficiles", "Funambule", "Jonglage", "Surchargé"],
   
   // Précision - Manier
