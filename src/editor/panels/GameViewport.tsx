@@ -168,9 +168,10 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
     };
   }, [scene, updateCameraPosition]);
 
-  // Handle click to select object or gizmo handle
+  // Handle click to select object (gizmo detection is now in handleMouseDown)
   const handleClick = useCallback((e: React.MouseEvent) => {
     if (!containerRef.current || !scene || !editorCameraRef.current || !rendererRef.current) return;
+    if (isDraggingGizmo) return; // Don't select if we're dragging gizmo
 
     const rect = containerRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -179,33 +180,7 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
     mouseRef.current.set(x, y);
     raycasterRef.current.setFromCamera(mouseRef.current, editorCameraRef.current);
 
-    // First check if gizmo is clicked
-    if (gizmoRef.current) {
-      const gizmoGroup = gizmoRef.current.getGizmoGroup();
-      if (gizmoGroup) {
-        const gizmoIntersects = raycasterRef.current.intersectObjects(gizmoGroup.children, true);
-        if (gizmoIntersects.length > 0) {
-          const intersection = gizmoIntersects[0];
-          const axis = intersection.object.userData.axis;
-          const type = intersection.object.userData.type;
-
-          if (axis && type === transformMode && selectedObject) {
-            // Start dragging gizmo
-            setIsDraggingGizmo(true);
-            setDraggingAxis(axis);
-            dragStartMouseRef.current = new THREE.Vector2(e.clientX, e.clientY);
-            dragStartObjectTransformRef.current = {
-              position: selectedObject.position.clone(),
-              rotation: selectedObject.rotation.clone(),
-              scale: selectedObject.scale.clone(),
-            };
-            return; // Don't select object when clicking gizmo
-          }
-        }
-      }
-    }
-
-    // If not clicking gizmo, select object
+    // Select object (gizmos are already excluded)
     // Get all meshes in scene (excluding gizmos)
     const meshes: THREE.Mesh[] = [];
     scene.traverse((object) => {
@@ -224,7 +199,7 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
       // Only clear selection if not doing multi-select
       onSelectObject(null, false);
     }
-  }, [scene, onSelectObject, selectedObject, transformMode]);
+  }, [scene, onSelectObject, isDraggingGizmo]);
 
   // Handle mouse events for orbit controls and gizmo
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -239,6 +214,42 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
 
     if (e.button === 0) {
       // Left click - select object or gizmo (Ctrl+click for multi-select)
+      // Check if we clicked on gizmo first
+      if (gizmoRef.current && selectedObject && editorCameraRef.current) {
+        const gizmoGroup = gizmoRef.current.getGizmoGroup();
+        if (gizmoGroup) {
+          raycasterRef.current.setFromCamera(mouseRef.current, editorCameraRef.current);
+          const gizmoIntersects = raycasterRef.current.intersectObjects(gizmoGroup.children, true);
+          if (gizmoIntersects.length > 0) {
+            let hitObject: THREE.Object3D | null = gizmoIntersects[0].object;
+            let axis: string | undefined = hitObject.userData.axis;
+            let type: string | undefined = hitObject.userData.type;
+            
+            // Traverse up parent chain to find axis info
+            while (!axis && hitObject && hitObject.parent && hitObject.parent !== gizmoGroup.parent) {
+              hitObject = hitObject.parent;
+              axis = hitObject.userData.axis;
+              type = hitObject.userData.type;
+            }
+
+            if (axis && type === transformMode) {
+              // Start dragging gizmo - prevent default and stop propagation
+              e.preventDefault();
+              e.stopPropagation();
+              setIsDraggingGizmo(true);
+              setDraggingAxis(axis);
+              dragStartMouseRef.current = new THREE.Vector2(e.clientX, e.clientY);
+              dragStartObjectTransformRef.current = {
+                position: selectedObject.position.clone(),
+                rotation: selectedObject.rotation.clone(),
+                scale: selectedObject.scale.clone(),
+              };
+              return; // Don't process object selection
+            }
+          }
+        }
+      }
+      // If not gizmo, handle object selection
       handleClick(e);
     } else if (e.button === 1) {
       // Middle mouse button - pan
@@ -249,7 +260,7 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
       e.preventDefault();
       setIsRotating(true);
     }
-  }, [handleClick]);
+  }, [handleClick, selectedObject, transformMode]);
 
   // Handle hover highlighting for gizmo
   const handleMouseMoveForHover = useCallback((e: React.MouseEvent) => {
@@ -276,6 +287,127 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
     }
   }, [scene, transformMode, isDraggingGizmo]);
 
+  // Handle gizmo dragging with document-level event listeners
+  useEffect(() => {
+    if (!isDraggingGizmo || !selectedObject || !gizmoRef.current || !dragStartMouseRef.current || !dragStartObjectTransformRef.current || !editorCameraRef.current) {
+      return;
+    }
+
+    // Store refs in local variables to avoid stale closures
+    const currentObject = selectedObject;
+    const currentMode = transformMode;
+    const currentAxis = draggingAxis;
+    const startMouse = dragStartMouseRef.current;
+    const startTransform = dragStartObjectTransformRef.current;
+    const camera = editorCameraRef.current;
+
+    const handleGizmoDrag = (e: MouseEvent) => {
+      const currentGizmo = gizmoRef.current;
+      if (!currentGizmo || !camera) return;
+
+      const gizmoGroup = currentGizmo.getGizmoGroup();
+      if (!gizmoGroup) return;
+
+      // Calculate mouse movement from start position
+      const mouseDeltaX = e.clientX - startMouse.x;
+      const mouseDeltaY = -(e.clientY - startMouse.y); // Invert Y for screen space
+      
+      // Get the axis direction in local space
+      const axisDirection = new THREE.Vector3();
+      if (currentAxis === 'x') axisDirection.set(1, 0, 0);
+      else if (currentAxis === 'y') axisDirection.set(0, 1, 0);
+      else if (currentAxis === 'z') axisDirection.set(0, 0, 1);
+      
+      // Transform axis to world space using gizmo/object orientation
+      // For rotate mode, gizmo doesn't rotate with object, so use world axes directly
+      if (currentMode !== 'rotate') {
+        axisDirection.applyQuaternion(gizmoGroup.quaternion);
+      }
+      axisDirection.normalize();
+      
+      if (currentMode === 'translate') {
+        // Calculate movement along the axis in world space
+        if (startTransform.position) {
+          // Use distance-based sensitivity
+          const distance = currentObject.position.distanceTo(camera.position);
+          const sensitivity = 0.015 * Math.max(0.5, Math.min(2.0, distance / 10));
+          
+          // Project mouse movement onto axis (use combined delta for better feel)
+          const mouseDelta = mouseDeltaX + mouseDeltaY;
+          const movement = axisDirection.clone().multiplyScalar(mouseDelta * sensitivity);
+          
+          currentObject.position.copy(startTransform.position).add(movement);
+        }
+
+      } else if (currentMode === 'rotate') {
+        // Rotate mode - calculate angle from mouse movement
+        if (startTransform.rotation) {
+          // Use combined mouse delta for rotation
+          const angle = (mouseDeltaX + mouseDeltaY) * 0.015; // Radians
+          
+          // Reset to start rotation
+          currentObject.rotation.copy(startTransform.rotation);
+          
+          // Rotate around the world axis
+          currentObject.rotateOnWorldAxis(axisDirection, angle);
+        }
+
+      } else if (currentMode === 'scale') {
+        // Scale mode - calculate based on mouse movement
+        if (startTransform.scale) {
+          // Use distance-based sensitivity
+          const distance = currentObject.position.distanceTo(camera.position);
+          const sensitivity = 0.01 * Math.max(0.5, Math.min(2.0, distance / 10));
+          
+          // Calculate scale factor from mouse movement
+          const mouseDelta = mouseDeltaX + mouseDeltaY;
+          const scaleFactor = 1 + (mouseDelta * sensitivity);
+          
+          // Reset to start scale
+          currentObject.scale.copy(startTransform.scale);
+          
+          // Apply scaling to the selected axis
+          if (currentAxis === 'x') {
+            currentObject.scale.x = startTransform.scale.x * scaleFactor;
+          } else if (currentAxis === 'y') {
+            currentObject.scale.y = startTransform.scale.y * scaleFactor;
+          } else if (currentAxis === 'z') {
+            currentObject.scale.z = startTransform.scale.z * scaleFactor;
+          }
+          
+          // Clamp scale to reasonable values
+          if (currentObject.scale.x < 0.01) currentObject.scale.x = 0.01;
+          if (currentObject.scale.y < 0.01) currentObject.scale.y = 0.01;
+          if (currentObject.scale.z < 0.01) currentObject.scale.z = 0.01;
+        }
+      }
+
+      // Update gizmo position/rotation to match object
+      if (currentGizmo) {
+        currentGizmo.updatePosition();
+      }
+
+      if (onObjectChange) {
+        onObjectChange(currentObject);
+      }
+    };
+
+    const handleGizmoDragEnd = () => {
+      setIsDraggingGizmo(false);
+      setDraggingAxis(null);
+      dragStartMouseRef.current = null;
+      dragStartObjectTransformRef.current = null;
+    };
+
+    document.addEventListener('mousemove', handleGizmoDrag);
+    document.addEventListener('mouseup', handleGizmoDragEnd);
+
+    return () => {
+      document.removeEventListener('mousemove', handleGizmoDrag);
+      document.removeEventListener('mouseup', handleGizmoDragEnd);
+    };
+  }, [isDraggingGizmo, draggingAxis, selectedObject, transformMode, onObjectChange]);
+
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!containerRef.current || !editorCameraRef.current || !scene) return;
 
@@ -287,72 +419,9 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
       handleMouseMoveForHover(e);
     }
 
-    // Handle gizmo dragging
-    if (isDraggingGizmo && draggingAxis && selectedObject && dragStartMouseRef.current && dragStartObjectTransformRef.current) {
-      const mouseDeltaX = (e.clientX - dragStartMouseRef.current.x) * 0.01;
-      const mouseDeltaY = -(e.clientY - dragStartMouseRef.current.y) * 0.01; // Invert Y for screen space
-
-      if (transformMode === 'translate') {
-        // Calculate direction based on axis
-        const direction = new THREE.Vector3();
-        if (draggingAxis === 'x') direction.set(1, 0, 0);
-        else if (draggingAxis === 'y') direction.set(0, 1, 0);
-        else if (draggingAxis === 'z') direction.set(0, 0, 1);
-
-        // Get gizmo orientation to transform direction to world space
-        if (gizmoRef.current) {
-          const gizmoGroup = gizmoRef.current.getGizmoGroup();
-          if (gizmoGroup) {
-            direction.applyQuaternion(gizmoGroup.quaternion);
-          }
-        }
-
-        const movement = direction.multiplyScalar(mouseDeltaX + mouseDeltaY);
-        if (dragStartObjectTransformRef.current.position) {
-          selectedObject.position.copy(dragStartObjectTransformRef.current.position).add(movement);
-        }
-
-      } else if (transformMode === 'rotate') {
-        const angle = (mouseDeltaX + mouseDeltaY) * 2; // Radians
-        
-        if (dragStartObjectTransformRef.current.rotation) {
-          selectedObject.rotation.copy(dragStartObjectTransformRef.current.rotation);
-          
-          if (draggingAxis === 'x') {
-            selectedObject.rotateX(angle);
-          } else if (draggingAxis === 'y') {
-            selectedObject.rotateY(angle);
-          } else if (draggingAxis === 'z') {
-            selectedObject.rotateZ(angle);
-          }
-        }
-
-      } else if (transformMode === 'scale') {
-        const scaleFactor = 1 + (mouseDeltaX + mouseDeltaY);
-        
-        if (dragStartObjectTransformRef.current.scale) {
-          selectedObject.scale.copy(dragStartObjectTransformRef.current.scale);
-          
-          if (draggingAxis === 'x') {
-            selectedObject.scale.x *= scaleFactor;
-          } else if (draggingAxis === 'y') {
-            selectedObject.scale.y *= scaleFactor;
-          } else if (draggingAxis === 'z') {
-            selectedObject.scale.z *= scaleFactor;
-          }
-        }
-      }
-
-      // Update gizmo position/rotation to match object
-      if (gizmoRef.current) {
-        gizmoRef.current.updatePosition();
-      }
-
-      if (onObjectChange) {
-        onObjectChange(selectedObject);
-      }
-
-    } else if (isRotating) {
+    // Gizmo dragging is now handled by document-level event listeners in useEffect
+    // Only handle camera controls here
+    if (isRotating) {
       // Orbit rotation
       const sensitivity = 0.01;
       orbitAngleRef.current.horizontal -= deltaX * sensitivity;
@@ -375,20 +444,13 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
     }
 
     lastMousePosRef.current = { x: e.clientX, y: e.clientY };
-  }, [scene, isRotating, isPanning, isDraggingGizmo, draggingAxis, selectedObject, transformMode, onObjectChange, updateCameraPosition, handleMouseMoveForHover]);
+  }, [scene, isRotating, isPanning, isDraggingGizmo, updateCameraPosition, handleMouseMoveForHover]);
 
   const handleMouseUp = useCallback(() => {
     setIsPanning(false);
     setIsRotating(false);
-    
-    // End gizmo dragging
-    if (isDraggingGizmo) {
-      setIsDraggingGizmo(false);
-      setDraggingAxis(null);
-      dragStartMouseRef.current = null;
-      dragStartObjectTransformRef.current = null;
-    }
-  }, [isDraggingGizmo]);
+    // Gizmo dragging end is now handled by document-level mouseup listener
+  }, []);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();

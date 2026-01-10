@@ -64,11 +64,12 @@ export class TransformGizmo {
       obj.children.forEach(child => markAsGizmo(child));
     };
 
-    // Calculate gizmo size
+    // Calculate gizmo size - make it proportionally larger
     const box = new THREE.Box3().setFromObject(this.selectedObject);
     const size = box.getSize(new THREE.Vector3());
     const maxSize = Math.max(size.x, size.y, size.z);
-    const gizmoSize = Math.max(0.5, Math.min(2.0, maxSize * 0.3));
+    // Make gizmo 50-80% of object size, but with reasonable min/max bounds
+    const gizmoSize = Math.max(0.8, Math.min(5.0, maxSize * 0.6));
 
     if (this.mode === 'translate') {
       this.createTranslateGizmo(gizmoSize);
@@ -97,31 +98,26 @@ export class TransformGizmo {
   private createTranslateGizmo(size: number): void {
     if (!this.gizmoGroup) return;
 
-    const arrowLength = size;
-    const arrowRadius = size * 0.05;
-    const coneHeight = size * 0.2;
-    const coneRadius = size * 0.1;
+    // Make arrows longer for better visibility and easier clicking
+    const arrowLength = size * 1.5;
+    const arrowRadius = size * 0.06;
+    const coneHeight = size * 0.25;
+    const coneRadius = size * 0.12;
 
     // X axis - Red
-    const xArrow = this.createArrow(new THREE.Color(0xff0000), arrowLength, arrowRadius, coneHeight, coneRadius);
+    const xArrow = this.createArrow(new THREE.Color(0xff0000), arrowLength, arrowRadius, coneHeight, coneRadius, 'x', 'translate');
     xArrow.rotation.z = -Math.PI / 2;
-    xArrow.userData.axis = 'x';
-    xArrow.userData.type = 'translate';
     xArrow.userData.color = 0xff0000;
     this.gizmoGroup.add(xArrow);
 
     // Y axis - Green
-    const yArrow = this.createArrow(new THREE.Color(0x00ff00), arrowLength, arrowRadius, coneHeight, coneRadius);
-    yArrow.userData.axis = 'y';
-    yArrow.userData.type = 'translate';
+    const yArrow = this.createArrow(new THREE.Color(0x00ff00), arrowLength, arrowRadius, coneHeight, coneRadius, 'y', 'translate');
     yArrow.userData.color = 0x00ff00;
     this.gizmoGroup.add(yArrow);
 
     // Z axis - Blue
-    const zArrow = this.createArrow(new THREE.Color(0x0000ff), arrowLength, arrowRadius, coneHeight, coneRadius);
+    const zArrow = this.createArrow(new THREE.Color(0x0000ff), arrowLength, arrowRadius, coneHeight, coneRadius, 'z', 'translate');
     zArrow.rotation.x = Math.PI / 2;
-    zArrow.userData.axis = 'z';
-    zArrow.userData.type = 'translate';
     zArrow.userData.color = 0x0000ff;
     this.gizmoGroup.add(zArrow);
   }
@@ -132,8 +128,9 @@ export class TransformGizmo {
   private createRotateGizmo(size: number): void {
     if (!this.gizmoGroup) return;
 
-    const radius = size * 0.8;
-    const tubeRadius = size * 0.02;
+    // Make rotation circles larger for better visibility
+    const radius = size * 1.2;
+    const tubeRadius = size * 0.03;
     const segments = 64;
 
     // X axis - Red
@@ -166,29 +163,25 @@ export class TransformGizmo {
   private createScaleGizmo(size: number): void {
     if (!this.gizmoGroup) return;
 
-    const axisLength = size * 0.8;
-    const axisRadius = size * 0.03;
-    const boxSize = size * 0.15;
+    // Make scale handles longer and boxes bigger for easier interaction
+    const axisLength = size * 1.3;
+    const axisRadius = size * 0.05;
+    const boxSize = size * 0.2;
 
     // X axis - Red
-    const xScale = this.createScaleHandle(new THREE.Color(0xff0000), axisLength, axisRadius, boxSize);
-    xScale.userData.axis = 'x';
-    xScale.userData.type = 'scale';
+    const xScale = this.createScaleHandle(new THREE.Color(0xff0000), axisLength, axisRadius, boxSize, 'x', 'scale');
+    xScale.rotation.z = -Math.PI / 2; // Rotate around Z axis to point along X
     xScale.userData.color = 0xff0000;
     this.gizmoGroup.add(xScale);
 
-    // Y axis - Green
-    const yScale = this.createScaleHandle(new THREE.Color(0x00ff00), axisLength, axisRadius, boxSize);
-    yScale.userData.axis = 'y';
-    yScale.userData.type = 'scale';
+    // Y axis - Green (no rotation needed, already along Y axis)
+    const yScale = this.createScaleHandle(new THREE.Color(0x00ff00), axisLength, axisRadius, boxSize, 'y', 'scale');
     yScale.userData.color = 0x00ff00;
     this.gizmoGroup.add(yScale);
 
     // Z axis - Blue
-    const zScale = this.createScaleHandle(new THREE.Color(0x0000ff), axisLength, axisRadius, boxSize);
-    zScale.rotation.z = -Math.PI / 2;
-    zScale.userData.axis = 'z';
-    zScale.userData.type = 'scale';
+    const zScale = this.createScaleHandle(new THREE.Color(0x0000ff), axisLength, axisRadius, boxSize, 'z', 'scale');
+    zScale.rotation.x = Math.PI / 2; // Rotate around X axis to point along Z
     zScale.userData.color = 0x0000ff;
     this.gizmoGroup.add(zScale);
   }
@@ -196,8 +189,10 @@ export class TransformGizmo {
   /**
    * Create arrow for translation
    */
-  private createArrow(color: THREE.Color, length: number, radius: number, coneHeight: number, coneRadius: number): THREE.Group {
+  private createArrow(color: THREE.Color, length: number, radius: number, coneHeight: number, coneRadius: number, axis: string, type: string): THREE.Group {
     const group = new THREE.Group();
+    group.userData.axis = axis;
+    group.userData.type = type;
     
     const shaftGeometry = new THREE.CylinderGeometry(radius, radius, length, 8);
     const shaftMaterial = new THREE.MeshStandardMaterial({ 
@@ -209,6 +204,9 @@ export class TransformGizmo {
     });
     const shaft = new THREE.Mesh(shaftGeometry, shaftMaterial);
     shaft.position.y = length / 2;
+    // Copy axis and type info to child mesh for raycasting
+    shaft.userData.axis = axis;
+    shaft.userData.type = type;
     group.add(shaft);
     
     const coneGeometry = new THREE.ConeGeometry(coneRadius, coneHeight, 8);
@@ -221,6 +219,9 @@ export class TransformGizmo {
     });
     const cone = new THREE.Mesh(coneGeometry, coneMaterial);
     cone.position.y = length + coneHeight / 2;
+    // Copy axis and type info to child mesh for raycasting
+    cone.userData.axis = axis;
+    cone.userData.type = type;
     group.add(cone);
     
     return group;
@@ -247,8 +248,10 @@ export class TransformGizmo {
   /**
    * Create scale handle
    */
-  private createScaleHandle(color: THREE.Color, length: number, radius: number, boxSize: number): THREE.Group {
+  private createScaleHandle(color: THREE.Color, length: number, radius: number, boxSize: number, axis: string, type: string): THREE.Group {
     const group = new THREE.Group();
+    group.userData.axis = axis;
+    group.userData.type = type;
     
     const shaftGeometry = new THREE.CylinderGeometry(radius, radius, length, 8);
     const shaftMaterial = new THREE.MeshStandardMaterial({ 
@@ -260,6 +263,9 @@ export class TransformGizmo {
     });
     const shaft = new THREE.Mesh(shaftGeometry, shaftMaterial);
     shaft.position.y = length / 2;
+    // Copy axis and type info to child mesh for raycasting
+    shaft.userData.axis = axis;
+    shaft.userData.type = type;
     group.add(shaft);
     
     const boxGeometry = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
@@ -272,6 +278,9 @@ export class TransformGizmo {
     });
     const box = new THREE.Mesh(boxGeometry, boxMaterial);
     box.position.y = length + boxSize / 2;
+    // Copy axis and type info to child mesh (box is easier to click)
+    box.userData.axis = axis;
+    box.userData.type = type;
     group.add(box);
     
     return group;
