@@ -5,6 +5,7 @@
 Build a retro, Daggerfall-like first-person RPG fully in the browser, optimized for AI-assisted development and rapid iteration.
 
 ## Core Principles: AI-Optimized Development
+When requiring to fix an issue, always check the LATEST logs in /logs.
 
 ### 1. Language: TypeScript
 **Rule:**
