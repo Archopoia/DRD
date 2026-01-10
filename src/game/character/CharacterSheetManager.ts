@@ -249,8 +249,15 @@ export class CharacterSheetManager {
     return this.state.competences[competence].marks.filter(m => m).length;
   }
 
+  /**
+   * Check if competence is éprouvée (10 marks total, minus eternal marks)
+   * According to page 63-64: "Dès qu'une CT obtient son maximum de Marques, habituellement 10 Marques, elle est Éprouvée"
+   */
   isCompetenceEprouvee(competence: Competence): boolean {
-    return this.getTotalMarks(competence) >= 100;
+    const comp = this.state.competences[competence];
+    const totalMarks = this.getTotalMarks(competence);
+    const requiredMarks = 10 - comp.eternalMarks;
+    return totalMarks >= requiredMarks;
   }
 
   realizeCompetence(competence: Competence): void {
@@ -269,7 +276,7 @@ export class CharacterSheetManager {
       comp.masteryPoints += 1;
     }
     
-    // Clear non-eternal marks
+    // Clear non-eternal marks (only clear up to 10 marks, the rest are overflow/storage)
     for (let i = 0; i < 100; i++) {
       if (!comp.eternalMarkIndices.includes(i)) {
         comp.marks[i] = false;
