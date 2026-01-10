@@ -8,6 +8,7 @@ import Assets from './panels/Assets';
 import GameViewport from './panels/GameViewport';
 import Console from '@/components/ui/Console';
 import * as THREE from 'three';
+import { TransformMode } from './gizmos/TransformGizmo';
 
 interface GameEditorProps {
   isOpen: boolean;
@@ -41,6 +42,7 @@ export default function GameEditor({
   const [scene, setScene] = useState<THREE.Scene | null>(null);
   const [hierarchyKey, setHierarchyKey] = useState(0); // Force re-render when scene changes
   const previousSelectionRef = useRef<THREE.Object3D | null>(null);
+  const [transformMode, setTransformMode] = useState<TransformMode>('translate');
 
   // Apply visual selection highlighting for multi-select
   useEffect(() => {
@@ -182,6 +184,19 @@ export default function GameEditor({
         event.preventDefault();
         handleDuplicateObject(selectedObject);
       }
+      // Transform mode shortcuts
+      else if (event.code === 'KeyW' && selectedObject) {
+        event.preventDefault();
+        setTransformMode('translate');
+      }
+      else if (event.code === 'KeyE' && selectedObject) {
+        event.preventDefault();
+        setTransformMode('rotate');
+      }
+      else if (event.code === 'KeyR' && selectedObject) {
+        event.preventDefault();
+        setTransformMode('scale');
+      }
     };
 
     document.addEventListener('keydown', handleKeyDown);
@@ -197,6 +212,45 @@ export default function GameEditor({
       {/* Top Toolbar */}
       <div className="h-10 bg-gray-800 border-b border-gray-700 flex items-center px-4 gap-4 flex-shrink-0">
         <div className="text-white font-mono text-sm font-semibold">Game Editor</div>
+        
+        {/* Transform Tool Selector */}
+        {selectedObject && (
+          <div className="flex gap-1 border-l border-gray-700 pl-4">
+            <button
+              onClick={() => setTransformMode('translate')}
+              className={`px-3 py-1 text-xs font-mono rounded transition-colors ${
+                transformMode === 'translate'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+              title="Translate/Move (W)"
+            >
+              Move
+            </button>
+            <button
+              onClick={() => setTransformMode('rotate')}
+              className={`px-3 py-1 text-xs font-mono rounded transition-colors ${
+                transformMode === 'rotate'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+              title="Rotate (E)"
+            >
+              Rotate
+            </button>
+            <button
+              onClick={() => setTransformMode('scale')}
+              className={`px-3 py-1 text-xs font-mono rounded transition-colors ${
+                transformMode === 'scale'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+              title="Scale/Resize (R)"
+            >
+              Scale
+            </button>
+          </div>
+        )}
         
         {/* Toolbar buttons */}
         <div className="flex gap-2 border-l border-gray-700 pl-4">
@@ -369,6 +423,7 @@ export default function GameEditor({
             scene={scene}
             selectedObject={selectedObject}
             selectedObjects={selectedObjects}
+            transformMode={transformMode}
             onSelectObject={(object, multiSelect) => {
               if (multiSelect) {
                 // Multi-select mode - toggle object in selection set
