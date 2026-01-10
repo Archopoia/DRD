@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { GAME_CONFIG } from '@/lib/constants';
 import { TransformGizmo, TransformMode } from '@/editor/gizmos/TransformGizmo';
+import { logGizmo, logTransform } from '@/editor/utils/debugLogger';
 
 interface GameViewportProps {
   scene: THREE.Scene | null;
@@ -220,22 +221,70 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
         if (gizmoGroup) {
           raycasterRef.current.setFromCamera(mouseRef.current, editorCameraRef.current);
           const gizmoIntersects = raycasterRef.current.intersectObjects(gizmoGroup.children, true);
+          
+          logGizmo(`Gizmo click detection`, {
+            hasGizmoGroup: !!gizmoGroup,
+            intersectionsCount: gizmoIntersects.length,
+            currentMode: transformMode,
+            gizmoGroupChildrenCount: gizmoGroup.children.length,
+            mouseCoords: { x: mouseRef.current.x, y: mouseRef.current.y },
+          });
+          
           if (gizmoIntersects.length > 0) {
             let hitObject: THREE.Object3D | null = gizmoIntersects[0].object;
             let axis: string | undefined = hitObject.userData.axis;
             let type: string | undefined = hitObject.userData.type;
             
+            logGizmo(`First intersection`, {
+              objectType: hitObject.type,
+              objectName: hitObject.name,
+              hasAxis: !!axis,
+              hasType: !!type,
+              axis,
+              type,
+              userData: hitObject.userData,
+            });
+            
             // Traverse up parent chain to find axis info
-            while (!axis && hitObject && hitObject.parent && hitObject.parent !== gizmoGroup.parent) {
+            let traversalDepth = 0;
+            while (!axis && hitObject && hitObject.parent && hitObject.parent !== gizmoGroup.parent && traversalDepth < 10) {
               hitObject = hitObject.parent;
               axis = hitObject.userData.axis;
               type = hitObject.userData.type;
+              traversalDepth++;
+              
+              if (traversalDepth === 1) {
+                logGizmo(`Traversing to parent`, {
+                  parentType: hitObject.type,
+                  parentName: hitObject.name,
+                  axis,
+                  type,
+                });
+              }
             }
+
+            logGizmo(`Final axis detection`, {
+              axis,
+              type,
+              transformMode,
+              matches: axis && type === transformMode,
+            });
 
             if (axis && type === transformMode) {
               // Start dragging gizmo - prevent default and stop propagation
               e.preventDefault();
               e.stopPropagation();
+              
+              logGizmo(`Gizmo clicked: axis=${axis}, mode=${transformMode}`, {
+                axis,
+                mode: transformMode,
+                objectName: selectedObject.name,
+                objectType: selectedObject.type,
+                objectPosition: selectedObject.position.clone(),
+                objectRotation: selectedObject.rotation.clone(),
+                objectScale: selectedObject.scale.clone(),
+              });
+              
               setIsDraggingGizmo(true);
               setDraggingAxis(axis);
               dragStartMouseRef.current = new THREE.Vector2(e.clientX, e.clientY);
@@ -244,10 +293,38 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
                 rotation: selectedObject.rotation.clone(),
                 scale: selectedObject.scale.clone(),
               };
+              
+              logTransform(`Dragging started: ${transformMode} on ${axis} axis`, {
+                startMouse: { x: e.clientX, y: e.clientY },
+                startPosition: dragStartObjectTransformRef.current.position,
+                startRotation: dragStartObjectTransformRef.current.rotation,
+                startScale: dragStartObjectTransformRef.current.scale,
+              });
+              
               return; // Don't process object selection
+            } else {
+              logGizmo(`Gizmo click detected but not matching mode`, {
+                axis,
+                type,
+                transformMode,
+                reason: !axis ? 'no axis' : type !== transformMode ? 'type mismatch' : 'unknown',
+              });
             }
+          } else {
+            logGizmo(`No gizmo intersections found`, {
+              gizmoGroupChildrenCount: gizmoGroup.children.length,
+              mouseCoords: { x: mouseRef.current.x, y: mouseRef.current.y },
+            });
           }
+        } else {
+          logGizmo(`No gizmo group available`, {});
         }
+      } else {
+        logGizmo(`Gizmo click check skipped`, {
+          hasGizmoRef: !!gizmoRef.current,
+          hasSelectedObject: !!selectedObject,
+          hasCamera: !!editorCameraRef.current,
+        });
       }
       // If not gizmo, handle object selection
       handleClick(e);
@@ -301,16 +378,44 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
     const startTransform = dragStartObjectTransformRef.current;
     const camera = editorCameraRef.current;
 
+    logGizmo(`Gizmo drag useEffect triggered`, {
+      isDraggingGizmo,
+      hasSelectedObject: !!selectedObject,
+      hasGizmoRef: !!gizmoRef.current,
+      hasDragStartMouse: !!dragStartMouseRef.current,
+      hasDragStartTransform: !!dragStartObjectTransformRef.current,
+      hasCamera: !!editorCameraRef.current,
+      mode: currentMode,
+      axis: currentAxis,
+    });
+
     const handleGizmoDrag = (e: MouseEvent) => {
       const currentGizmo = gizmoRef.current;
-      if (!currentGizmo || !camera) return;
+      if (!currentGizmo || !camera) {
+        logGizmo(`Drag handler: Missing gizmo or camera`, { hasGizmo: !!currentGizmo, hasCamera: !!camera });
+        return;
+      }
 
       const gizmoGroup = currentGizmo.getGizmoGroup();
-      if (!gizmoGroup) return;
+      if (!gizmoGroup) {
+        logGizmo(`Drag handler: No gizmo group`);
+        return;
+      }
 
       // Calculate mouse movement from start position
       const mouseDeltaX = e.clientX - startMouse.x;
       const mouseDeltaY = -(e.clientY - startMouse.y); // Invert Y for screen space
+      
+      logTransform(`Drag update: delta=(${mouseDeltaX.toFixed(2)}, ${mouseDeltaY.toFixed(2)})`, {
+        mouseX: e.clientX,
+        mouseY: e.clientY,
+        startMouseX: startMouse.x,
+        startMouseY: startMouse.y,
+        deltaX: mouseDeltaX,
+        deltaY: mouseDeltaY,
+        mode: currentMode,
+        axis: currentAxis,
+      });
       
       // Get the axis direction in local space
       const axisDirection = new THREE.Vector3();
@@ -318,12 +423,21 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
       else if (currentAxis === 'y') axisDirection.set(0, 1, 0);
       else if (currentAxis === 'z') axisDirection.set(0, 0, 1);
       
+      const axisDirectionLocal = axisDirection.clone();
+      
       // Transform axis to world space using gizmo/object orientation
       // For rotate mode, gizmo doesn't rotate with object, so use world axes directly
       if (currentMode !== 'rotate') {
         axisDirection.applyQuaternion(gizmoGroup.quaternion);
       }
       axisDirection.normalize();
+      
+      logTransform(`Axis direction calculated`, {
+        local: { x: axisDirectionLocal.x, y: axisDirectionLocal.y, z: axisDirectionLocal.z },
+        world: { x: axisDirection.x, y: axisDirection.y, z: axisDirection.z },
+        gizmoQuaternion: gizmoGroup.quaternion,
+        mode: currentMode,
+      });
       
       if (currentMode === 'translate') {
         // Calculate movement along the axis in world space
@@ -336,6 +450,15 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
           const mouseDelta = mouseDeltaX + mouseDeltaY;
           const movement = axisDirection.clone().multiplyScalar(mouseDelta * sensitivity);
           
+          logTransform(`Translate calculation`, {
+            distance,
+            sensitivity,
+            mouseDelta,
+            movement: { x: movement.x, y: movement.y, z: movement.z },
+            startPosition: startTransform.position,
+            newPosition: startTransform.position.clone().add(movement),
+          });
+          
           currentObject.position.copy(startTransform.position).add(movement);
         }
 
@@ -345,11 +468,25 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
           // Use combined mouse delta for rotation
           const angle = (mouseDeltaX + mouseDeltaY) * 0.015; // Radians
           
+          logTransform(`Rotate calculation`, {
+            mouseDeltaX,
+            mouseDeltaY,
+            angle,
+            angleDegrees: (angle * 180 / Math.PI).toFixed(2),
+            axis: currentAxis,
+            axisDirection: { x: axisDirection.x, y: axisDirection.y, z: axisDirection.z },
+            startRotation: startTransform.rotation,
+          });
+          
           // Reset to start rotation
           currentObject.rotation.copy(startTransform.rotation);
           
           // Rotate around the world axis
           currentObject.rotateOnWorldAxis(axisDirection, angle);
+          
+          logTransform(`Rotate applied`, {
+            newRotation: currentObject.rotation.clone(),
+          });
         }
 
       } else if (currentMode === 'scale') {
@@ -379,6 +516,13 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
           if (currentObject.scale.x < 0.01) currentObject.scale.x = 0.01;
           if (currentObject.scale.y < 0.01) currentObject.scale.y = 0.01;
           if (currentObject.scale.z < 0.01) currentObject.scale.z = 0.01;
+          
+          logTransform(`Scale applied`, {
+            scaleFactor,
+            mouseDelta,
+            sensitivity,
+            newScale: currentObject.scale.clone(),
+          });
         }
       }
 
@@ -393,6 +537,14 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
     };
 
     const handleGizmoDragEnd = () => {
+      logGizmo(`Gizmo drag ended`, {
+        mode: currentMode,
+        axis: currentAxis,
+        finalPosition: currentObject.position.clone(),
+        finalRotation: currentObject.rotation.clone(),
+        finalScale: currentObject.scale.clone(),
+      });
+      
       setIsDraggingGizmo(false);
       setDraggingAxis(null);
       dragStartMouseRef.current = null;

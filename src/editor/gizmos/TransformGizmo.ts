@@ -124,6 +124,10 @@ export class TransformGizmo {
 
   /**
    * Create rotation gizmo (circles)
+   * Torus geometry is created in XY plane by default, so we need to rotate appropriately:
+   * - X axis: Rotate around Y axis (90°) to make circle in XZ plane
+   * - Y axis: No rotation needed (circle already in XY plane)
+   * - Z axis: Rotate around X axis (90°) to make circle in YZ plane
    */
   private createRotateGizmo(size: number): void {
     if (!this.gizmoGroup) return;
@@ -133,24 +137,25 @@ export class TransformGizmo {
     const tubeRadius = size * 0.03;
     const segments = 64;
 
-    // X axis - Red
+    // X axis - Red (circle in XZ plane)
     const xCircle = this.createCircle(new THREE.Color(0xff0000), radius, tubeRadius, segments);
-    xCircle.rotation.z = Math.PI / 2;
+    xCircle.rotation.y = Math.PI / 2; // Rotate around Y to place in XZ plane
     xCircle.userData.axis = 'x';
     xCircle.userData.type = 'rotate';
     xCircle.userData.color = 0xff0000;
     this.gizmoGroup.add(xCircle);
 
-    // Y axis - Green
+    // Y axis - Green (circle in XY plane - default orientation)
     const yCircle = this.createCircle(new THREE.Color(0x00ff00), radius, tubeRadius, segments);
+    // No rotation needed - torus is already in XY plane
     yCircle.userData.axis = 'y';
     yCircle.userData.type = 'rotate';
     yCircle.userData.color = 0x00ff00;
     this.gizmoGroup.add(yCircle);
 
-    // Z axis - Blue
+    // Z axis - Blue (circle in YZ plane)
     const zCircle = this.createCircle(new THREE.Color(0x0000ff), radius, tubeRadius, segments);
-    zCircle.rotation.x = Math.PI / 2;
+    zCircle.rotation.x = Math.PI / 2; // Rotate around X to place in YZ plane
     zCircle.userData.axis = 'z';
     zCircle.userData.type = 'rotate';
     zCircle.userData.color = 0x0000ff;
