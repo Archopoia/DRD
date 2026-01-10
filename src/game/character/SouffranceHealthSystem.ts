@@ -195,10 +195,18 @@ export class SouffranceHealthSystem {
     // Rules: 1 CT = 3 marks, 2 CTs = 1.5 marks each, 3 CTs = 1 mark each
     // Priority: If more than 3 CTs active, prioritize those with lowest degree count
     
-    // Mark the used competence as active FIRST (before getting active list)
-    this.activeCompetencesTracker.markActive(usedCompetence);
+    // Get currently active competences FIRST (from gameplay actions like walking, jumping, etc.)
+    // This captures the current state BEFORE we potentially mark usedCompetence
+    const currentActiveCompetences = this.activeCompetencesTracker.getActiveCompetences();
     
-    // Get all active competences (now includes the one we just marked)
+    // Only mark the used competence as active if it's not already active
+    // This prevents environmental damage from resetting timers of CTs that are already active from gameplay
+    if (!currentActiveCompetences.includes(usedCompetence)) {
+      this.activeCompetencesTracker.markActive(usedCompetence);
+    }
+    
+    // Get the final active competences list (after potentially adding usedCompetence)
+    // This ensures we have the most up-to-date list for XP distribution
     const activeCompetences = this.activeCompetencesTracker.getActiveCompetences();
     
     // Distribute marks among active competences
@@ -224,16 +232,25 @@ export class SouffranceHealthSystem {
         : allActiveNames; // Fallback
       
       // Create detailed message showing all active CTs and which ones received XP
+      // Format should clearly show: which CTs were active, which ones received XP, and how much each got
+      const selectedNamesList = selectedCompetences.map(c => getCompetenceName(c)).join(', ');
       let message = '';
-      if (activeCompetences.length === 1) {
-        // Only one active CT (just the used one, no others active)
-        message = `Active CTs: ${allActiveNames}. Gained ${(totalMarksPerFailure * failures).toFixed(1)} marks - ${(marksPerCT * failures).toFixed(1)} marks per CT`;
-      } else if (activeCompetences.length <= 3) {
-        // 2-3 active CTs, all receive XP
-        message = `Active CTs: ${allActiveNames}. Gained ${(totalMarksPerFailure * failures).toFixed(1)} marks distributed - ${(marksPerCT * failures).toFixed(1)} marks per CT`;
+      
+      if (numCompetences === 0) {
+        // No active CTs (shouldn't happen, but handle gracefully)
+        message = `No active CTs. Gained ${(totalMarksPerFailure * failures).toFixed(1)} marks on ${getCompetenceName(usedCompetence)}`;
+      } else if (numCompetences === 1) {
+        // Only one CT active and received XP
+        message = `Active CTs: ${selectedNamesList}. Gained ${(totalMarksPerFailure * failures).toFixed(1)} marks total (${(marksPerCT * failures).toFixed(1)} marks to ${selectedNamesList})`;
       } else {
-        // More than 3 active CTs, show which were selected (prioritized by lowest degree)
-        message = `Active CTs: ${allActiveNames} (${activeCompetences.length} total). Selected: ${selectedNames} (lowest degree). Gained ${(totalMarksPerFailure * failures).toFixed(1)} marks distributed - ${(marksPerCT * failures).toFixed(1)} marks per CT`;
+        // Multiple CTs active - show all that received XP clearly
+        if (activeCompetences.length === selectedCompetences.length) {
+          // All active CTs received XP (2-3 CTs) - show both CTs clearly
+          message = `Active CTs: ${selectedNamesList}. Gained ${(totalMarksPerFailure * failures).toFixed(1)} marks total (${(marksPerCT * failures).toFixed(1)} marks each to ${selectedNamesList})`;
+        } else {
+          // More than 3 active CTs, only some were selected
+          message = `Active CTs: ${allActiveNames} (${activeCompetences.length} total). Selected: ${selectedNamesList} (lowest degree). Gained ${(totalMarksPerFailure * failures).toFixed(1)} marks total (${(marksPerCT * failures).toFixed(1)} marks each to ${selectedNamesList})`;
+        }
       }
       
       eventLog.addEvent(

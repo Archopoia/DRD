@@ -396,26 +396,19 @@ export class Scene {
       const isOnPlatform = isWithinBounds && isOnPlatformHeight;
 
       if (isOnPlatform && this.healthSystem) {
-        // Character is on platform - mark competences as active
-        // When walking on a harmful platform, mark PAS (walking) as active
-        // In a real combat/action scenario, you would also mark other active competences like:
-        // - Running: PAS
-        // - Jumping: SAUT
-        // - Attacking: ARME, DESARME, etc.
-        const activeTracker = this.healthSystem.getActiveCompetencesTracker();
-        activeTracker.markActive(Competence.PAS, currentTime); // Mark walking as active
-        
         // Character is on platform - apply damage every second
+        // The platform triggers environmental suffering, which will distribute XP among currently active CTs
+        // PAS should already be active from walking (handled in FPSCamera), so XP will be distributed accordingly
         if (currentTime - platform.lastDamageTime >= this.damageInterval) {
           // Environmental damage: stepping on a harmful platform
           // This represents 1 failure on a check, which causes 1 DS of suffering
-          // The active competences tracker now has PAS marked, so XP will be distributed accordingly
+          // XP will be distributed among all currently active competences (e.g., PAS if walking, SAUT if jumping, etc.)
           const characterSheetManager = this.healthSystem.getCharacterSheetManager();
           const beforeDegree = characterSheetManager.getSouffrance(platform.souffrance).degreeCount;
           const applied = this.healthSystem.applySouffranceFromFailure(
             platform.souffrance,
             1, // 1 failure (which equals 1 DS of suffering before resistance)
-            Competence.PAS // Used compétence d'Action (walking, since this is environmental damage)
+            Competence.PAS // Used compétence d'Action (for environmental damage context, but XP goes to all active CTs)
           );
           const afterDegreeRaw = characterSheetManager.getSouffrance(platform.souffrance).degreeCount;
           const afterDegree = Math.round(afterDegreeRaw * 10) / 10; // Round to 1 decimal
