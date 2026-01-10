@@ -203,6 +203,78 @@ export class Game {
   }
 
   /**
+   * Get Three.js scene (for editor/inspector)
+   */
+  getScene(): THREE.Scene {
+    return this.scene.scene;
+  }
+
+  /**
+   * Get renderer (for editor - creating materials)
+   */
+  getRenderer(): RetroRenderer {
+    return this.renderer;
+  }
+
+  /**
+   * Add an object to the scene (for editor)
+   */
+  addObjectToScene(type: 'box' | 'sphere' | 'plane' | 'light' | 'group'): THREE.Object3D | null {
+    try {
+      let newObject: THREE.Object3D;
+
+      switch (type) {
+        case 'box': {
+          const geometry = new THREE.BoxGeometry(1, 1, 1);
+          const material = this.renderer.createRetroStandardMaterial(0x8a4a4a);
+          newObject = new THREE.Mesh(geometry, material);
+          newObject.name = 'Box';
+          newObject.position.set(0, 1, 0);
+          break;
+        }
+        case 'sphere': {
+          const geometry = new THREE.SphereGeometry(0.5, 16, 16);
+          const material = this.renderer.createRetroStandardMaterial(0x4a8a4a);
+          newObject = new THREE.Mesh(geometry, material);
+          newObject.name = 'Sphere';
+          newObject.position.set(0, 1, 0);
+          break;
+        }
+        case 'plane': {
+          const geometry = new THREE.PlaneGeometry(2, 2);
+          const material = this.renderer.createRetroStandardMaterial(0x4a4a8a);
+          newObject = new THREE.Mesh(geometry, material);
+          newObject.name = 'Plane';
+          newObject.rotation.x = -Math.PI / 2;
+          newObject.position.set(0, 0, 0);
+          break;
+        }
+        case 'light': {
+          newObject = new THREE.PointLight(0xffffff, 1, 10);
+          newObject.name = 'PointLight';
+          newObject.position.set(0, 3, 0);
+          break;
+        }
+        case 'group': {
+          newObject = new THREE.Group();
+          newObject.name = 'Group';
+          break;
+        }
+        default:
+          Debug.warn('Game', `Unknown object type: ${type}`);
+          return null;
+      }
+
+      this.scene.scene.add(newObject);
+      Debug.log('Game', `Added ${type} object to scene: ${newObject.name}`);
+      return newObject;
+    } catch (error) {
+      Debug.error('Game', `Failed to add ${type} object to scene`, error as Error);
+      return null;
+    }
+  }
+
+  /**
    * Disable all game controls (for UI overlays like console)
    */
   disableControls(): void {

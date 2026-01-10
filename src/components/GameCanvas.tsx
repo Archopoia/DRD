@@ -5,6 +5,7 @@ import { Debug } from '@/game/utils/debug';
 import CharacterSheet from './CharacterSheet';
 import EventLog from './ui/EventLog';
 import Console from './ui/Console';
+import GameEditor from '@/editor/GameEditor';
 import ActiveCompetencesDisplay from './ui/ActiveCompetencesDisplay';
 
 /**
@@ -17,24 +18,25 @@ export default function GameCanvas() {
   const [fps, setFps] = useState<number>(0);
   const [showCharacterSheet, setShowCharacterSheet] = useState<boolean>(false);
   const [showConsole, setShowConsole] = useState<boolean>(false);
+  const [showEditor, setShowEditor] = useState<boolean>(false); // Game Editor (includes console)
   const [characterSheetManager, setCharacterSheetManager] = useState<any>(null);
   const [godMode, setGodMode] = useState<boolean>(true); // Default to true (god mode on by default)
   const [activeCTs, setActiveCTs] = useState<Array<{ competence: any; remainingTime: number }>>([]);
 
-  // Handle console open/close - disable controls when console is open
+  // Handle console/editor open/close - disable controls when console or editor is open
   useEffect(() => {
     if (gameRef.current) {
-      if (showConsole) {
+      if (showConsole || showEditor) {
         gameRef.current.disableControls();
       } else {
         gameRef.current.enableControls();
       }
     }
-  }, [showConsole]);
+  }, [showConsole, showEditor]);
 
-  // Ensure cursor is visible when console is open
+  // Ensure cursor is visible when console or editor is open
   useEffect(() => {
-    if (showConsole) {
+    if (showConsole || showEditor) {
       // Force cursor to be visible on body
       document.body.style.cursor = 'auto';
       // Also ensure canvas shows cursor
@@ -56,7 +58,7 @@ export default function GameCanvas() {
         canvasRef.current.style.cursor = '';
       }
     };
-  }, [showConsole]);
+  }, [showConsole, showEditor]);
 
   useEffect(() => {
     // Initialize Debug system to capture all console logs
@@ -177,7 +179,7 @@ export default function GameCanvas() {
   // Handle keyboard shortcuts (separate effect to avoid re-initializing game)
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Tab key for console (only if not in an input field)
+      // Tab key for game editor (includes console) (only if not in an input field)
       if (event.code === 'Tab' && !event.repeat) {
         const target = event.target as HTMLElement;
         const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
@@ -185,21 +187,21 @@ export default function GameCanvas() {
         if (!isInput) {
           event.preventDefault();
           
-          // Exit pointer lock immediately when opening console
-          if (document.pointerLockElement && !showConsole) {
+          // Exit pointer lock immediately when opening editor
+          if (document.pointerLockElement && !showEditor) {
             document.exitPointerLock();
           }
           
-          setShowConsole((prev) => {
+          setShowEditor((prev) => {
             const newState = !prev;
-            Debug.log('GameCanvas', `Console ${newState ? 'opened' : 'closed'}`);
+            Debug.log('GameCanvas', `Game Editor ${newState ? 'opened' : 'closed'}`);
             return newState;
           });
         }
       }
       
-      // 'C' key for character sheet
-      if (event.code === 'KeyC' && !event.repeat && !showConsole) {
+      // 'C' key for character sheet (only if editor/console not open)
+      if (event.code === 'KeyC' && !event.repeat && !showConsole && !showEditor) {
         // Exit pointer lock to free the mouse cursor
         if (document.pointerLockElement) {
           document.exitPointerLock();
@@ -225,7 +227,7 @@ export default function GameCanvas() {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [showConsole]);
+  }, [showConsole, showEditor]);
 
   if (error) {
     return (
@@ -265,13 +267,25 @@ export default function GameCanvas() {
       {godMode && (
         <ActiveCompetencesDisplay activeCompetencesWithTime={activeCTs} />
       )}
-      <Console
-        isOpen={showConsole}
-        onClose={() => setShowConsole(false)}
+      {/* Show GameEditor when Tab is pressed (includes console), or standalone console if opened separately */}
+      <GameEditor
+        isOpen={showEditor}
+        onClose={() => setShowEditor(false)}
         manager={characterSheetManager}
         godMode={godMode}
         setGodMode={setGodMode}
+        gameInstance={gameRef.current}
       />
+      {/* Keep standalone console for backward compatibility (can be removed if not needed) */}
+      {!showEditor && (
+        <Console
+          isOpen={showConsole}
+          onClose={() => setShowConsole(false)}
+          manager={characterSheetManager}
+          godMode={godMode}
+          setGodMode={setGodMode}
+        />
+      )}
     </>
   );
 }

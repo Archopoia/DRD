@@ -13,6 +13,7 @@ interface ConsoleProps {
   manager?: CharacterSheetManager;
   godMode: boolean;
   setGodMode: (enabled: boolean) => void;
+  embedded?: boolean; // If true, console is embedded in editor (no Tab close, different styling)
 }
 
 interface ConsoleMessage {
@@ -24,9 +25,9 @@ interface ConsoleMessage {
 /**
  * Game Console Component
  * Allows typing commands to affect game variables
- * Press Tab to toggle
+ * Press Tab to toggle (unless embedded)
  */
-export default function Console({ isOpen, onClose, manager, godMode, setGodMode }: ConsoleProps) {
+export default function Console({ isOpen, onClose, manager, godMode, setGodMode, embedded = false }: ConsoleProps) {
   const [input, setInput] = useState('');
   const [history, setHistory] = useState<ConsoleMessage[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -150,7 +151,7 @@ export default function Console({ isOpen, onClose, manager, godMode, setGodMode 
           setInput(historyRef.current[newIndex]);
         }
       }
-    } else if (e.key === 'Tab') {
+    } else if (e.key === 'Tab' && !embedded) {
       e.preventDefault();
       e.stopPropagation();
       onClose();
@@ -159,6 +160,70 @@ export default function Console({ isOpen, onClose, manager, godMode, setGodMode 
 
   if (!isOpen) return null;
 
+  if (embedded) {
+    // Embedded mode - full height, no positioning, simpler styling
+    return (
+      <div className="h-full flex flex-col bg-gray-900 overflow-hidden">
+        {/* Header */}
+        <div className="bg-gray-800 border-b border-gray-700 px-3 py-2 flex items-center justify-between flex-shrink-0">
+          <span className="text-xs font-mono text-gray-300 font-semibold">
+            Console
+          </span>
+        </div>
+
+        {/* History */}
+        <div
+          className="flex-1 px-3 py-2 overflow-y-auto font-mono text-xs"
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          }}
+        >
+          {history.length === 0 ? (
+            <div className="text-gray-500 italic">
+              Type commands to affect game variables. Type 'help' for available commands.
+            </div>
+          ) : (
+            history.map((msg, idx) => (
+              <div
+                key={idx}
+                className={`mb-1 ${
+                  msg.type === 'command'
+                    ? 'text-gray-300'
+                    : msg.type === 'success'
+                    ? 'text-green-400'
+                    : msg.type === 'error'
+                    ? 'text-red-400'
+                    : 'text-blue-400'
+                }`}
+              >
+                {msg.type === 'command' && <span className="text-gray-500">$ </span>}
+                {msg.text}
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Input */}
+        <div className="px-3 py-2 bg-gray-800 border-t border-gray-700 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400 font-mono text-xs">$</span>
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="flex-1 bg-transparent text-white font-mono text-xs outline-none"
+              placeholder="Type a command..."
+              autoComplete="off"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Standalone mode - original floating console
   return (
     <div
       className="fixed left-4 max-w-md pointer-events-auto z-30"
