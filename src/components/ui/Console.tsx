@@ -273,9 +273,11 @@ function handleGainXP(args: string[], manager?: CharacterSheetManager): string {
 
   const totalMarks = manager.getTotalMarks(competence);
   const level = manager.getCompetenceLevel(competence);
+  const comp = manager.getCompetence(competence);
+  const requiredMarks = 10 - comp.eternalMarks;
   const eternalText = isEternal ? ' (eternal)' : '';
 
-  return `Added ${amount} mark${amount > 1 ? 's' : ''}${eternalText} to ${getCompetenceName(competence)}. Total: ${totalMarks}/100 (Level ${level})`;
+  return `Added ${amount} mark${amount > 1 ? 's' : ''}${eternalText} to ${getCompetenceName(competence)}. Total: ${totalMarks}/${requiredMarks} (Level ${level})`;
 }
 
 function handleSetAttribute(args: string[], manager?: CharacterSheetManager): string {

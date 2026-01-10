@@ -653,7 +653,7 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                                 <span className="text-xs font-medieval font-semibold text-text-dark whitespace-nowrap">N{level}</span>
                                                 <ProgressBar 
                                                   value={totalMarks} 
-                                                  max={100} 
+                                                  max={10} 
                                                   height="sm" 
                                                   label={getLevelName(level)} 
                                                   level={level}
