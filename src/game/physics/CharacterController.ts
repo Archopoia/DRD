@@ -417,6 +417,11 @@ export class CharacterController {
         this.wantsToJump = false;
       }
 
+      // Mark ACROBATIE as active when airborne (acrobatics/air control)
+      if (!this.isGrounded && this.activeCompetencesTracker) {
+        this.activeCompetencesTracker.markActive(Competence.ACROBATIE);
+      }
+
       // Apply gravity to vertical velocity
       if (!this.isGrounded) {
         const gravity = GAME_CONFIG.PHYSICS.GRAVITY.y;

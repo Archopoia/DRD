@@ -181,6 +181,11 @@ export class FPSCamera {
     const sensitivity = GAME_CONFIG.MOUSE_SENSITIVITY;
     this.euler.setFromQuaternion(this.camera.quaternion);
 
+    // Mark VISION as active when looking around (camera rotation)
+    if ((this.mouseState.deltaX !== 0 || this.mouseState.deltaY !== 0) && this.activeCompetencesTracker) {
+      this.activeCompetencesTracker.markActive(Competence.VISION);
+    }
+
     this.euler.y -= this.mouseState.deltaX * sensitivity;
     this.euler.x -= this.mouseState.deltaY * sensitivity;
 
@@ -227,9 +232,14 @@ export class FPSCamera {
     moveDirection.y = 0; // Keep movement on horizontal plane
     moveDirection.normalize();
 
-    // Mark PAS as active when moving (walking/running)
+    // Mark movement-related CTs as active when moving
     if (this.direction.length() > 0 && this.activeCompetencesTracker) {
+      // PAS - Walking/running (basic movement)
       this.activeCompetencesTracker.markActive(Competence.PAS);
+      // EQUILIBRE - Balance (required for all movement)
+      this.activeCompetencesTracker.markActive(Competence.EQUILIBRE);
+      // FLUIDITE - Movement fluidity (smooth, fluid movement)
+      this.activeCompetencesTracker.markActive(Competence.FLUIDITE);
     }
 
     // Move character controller (pass run state)
