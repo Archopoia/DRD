@@ -5,10 +5,10 @@ import { Debug } from '../utils/debug';
 import { getEventLog, EventType } from '../utils/EventLog';
 
 /**
- * Health state based on total souffrance dice count
+ * Health state based on total souffrance degree count
  */
 export enum HealthState {
-  NORMAL = 'NORMAL',           // 0-14 total DS
+  NORMAL = 'NORMAL',           // 0-14 total DS (Degrees of Souffrance)
   RAGE = 'RAGE',               // 10-14 total DS (overlaps with normal)
   UNCONSCIOUS = 'UNCONSCIOUS', // 15-20 total DS
   DEFEATED = 'DEFEATED',       // 21-25 total DS (Coma/Madness)
@@ -29,20 +29,20 @@ export enum SequeleType {
 }
 
 /**
- * Resistance Competence System
+ * Compétence de Résistance System
  * 
- * Each Souffrance IS its own resistance competence, named R[Blessures], R[Fatigues], etc.
- * The souffrance itself (with its niveau/level from dice count) is used to resist damage.
+ * Each Souffrance has its own resistance compétence (compétence de Résistance), named R[Blessures], R[Fatigues], etc.
+ * These are compétences used to resist damage.
  * 
- * Key distinction:
- * - **Souffrance dice (DS)**: The actual damage/negative dice you have (e.g., "3 DS Blessures")
- * - **Resistance competence R[Souffrance]**: The competence that resists damage (e.g., "R[Blessures] Niv 2")
+ * Key distinctions:
+ * - **Souffrances**: The actual DS (Degrees of Souffrance) accumulated on top of character sheet (e.g., "3 DS Blessures")
+ * - **Compétences de Résistance R[Souffrance]**: The compétences that resist damage (e.g., "R[Blessures] Niv 2")
  * 
- * So when resisting Blessures damage, you use R[Blessures] competence level (Niv from dice count).
- * When resisting Fatigues damage, you use R[Fatigues] competence level, etc.
+ * So when resisting Blessures damage, you use R[Blessures] compétence level (Niv from degree count).
+ * When resisting Fatigues damage, you use R[Fatigues] compétence level, etc.
  * 
- * Each souffrance acts as its own resistance competence - there are no separate
- * ROBUSTESSE, SATIETE, RECTITUDE, or IMMUNITE competences.
+ * R[Souffrance] are compétences de Résistance - they are compétences, nothing else.
+ * There are no separate ROBUSTESSE, SATIETE, RECTITUDE, or IMMUNITE compétences.
  */
 
 /**
@@ -59,13 +59,13 @@ export class SouffranceHealthSystem {
   }
 
   /**
-   * Get total souffrance dice across all 8 types
+   * Get total souffrance degrees (DS) across all 8 types
    */
   getTotalSouffrance(): number {
     let total = 0;
     Object.values(Souffrance).forEach((souffrance) => {
       const souffranceData = this.characterSheetManager.getSouffrance(souffrance);
-      total += souffranceData.diceCount;
+      total += souffranceData.degreeCount;
     });
     return Math.round(total * 10) / 10; // Round to 1 decimal to avoid floating point errors
   }
@@ -93,58 +93,58 @@ export class SouffranceHealthSystem {
    */
   getSequeleType(souffrance: Souffrance): SequeleType {
     const souffranceData = this.characterSheetManager.getSouffrance(souffrance);
-    const diceCount = souffranceData.diceCount;
+    const degreeCount = souffranceData.degreeCount;
 
-    if (diceCount >= 26) {
+    if (degreeCount >= 26) {
       return SequeleType.MORT;
-    } else if (diceCount >= 21) {
+    } else if (degreeCount >= 21) {
       return SequeleType.VAINCU;
-    } else if (diceCount >= 15) {
+    } else if (degreeCount >= 15) {
       return SequeleType.FATALE;
-    } else if (diceCount >= 10) {
+    } else if (degreeCount >= 10) {
       return SequeleType.PERMANENTE;
-    } else if (diceCount >= 6) {
+    } else if (degreeCount >= 6) {
       return SequeleType.DURABLE;
-    } else if (diceCount >= 3) {
+    } else if (degreeCount >= 3) {
       return SequeleType.PASSAGERE;
     }
     return SequeleType.NONE;
   }
 
   /**
-   * Get souffrance level (Niv 0-5) based on dice count
-   * Same as competence level calculation
+   * Get souffrance level (Niv 0-5) based on degree count
+   * Same as compétence level calculation
    */
   getSouffranceLevel(souffrance: Souffrance): number {
     const souffranceData = this.characterSheetManager.getSouffrance(souffrance);
-    const diceCount = souffranceData.diceCount;
+    const degreeCount = souffranceData.degreeCount;
     
-    if (diceCount === 0) return 0;
-    if (diceCount <= 2) return 1;
-    if (diceCount <= 5) return 2;
-    if (diceCount <= 9) return 3;
-    if (diceCount <= 14) return 4;
+    if (degreeCount === 0) return 0;
+    if (degreeCount <= 2) return 1;
+    if (degreeCount <= 5) return 2;
+    if (degreeCount <= 9) return 3;
+    if (degreeCount <= 14) return 4;
     return 5;
   }
 
   /**
-   * Apply souffrance from a competence failure
+   * Apply souffrance from a compétence failure
    * This is the main method that links suffering to experience
    * 
    * According to rules (page 63 & 72):
-   * - Each failure on the competence check = 1 mark on the competence used
+   * - Each failure on the compétence check = 1 mark on the compétence used
    * - Each failure also causes suffering (1 DS per failure, typically)
-   * - After resistance absorbs some suffering, the actual damage that goes through = marks on resistance competence
+   * - After resistance absorbs some suffering, the actual damage that goes through = marks on resistance compétence
    * 
    * Example: Walk [Pas] vs DC +5, roll -2 = 7 failures
-   * - 7 marks on [Pas] (the competence used)
-   * - 7 failures = 7 Blessures
-   * - R[Blessures] Niv +2 absorbs 2 Blessures
-   * - 5 actual Blessures = 5 marks on R[Blessures]
+   * - 7 marks on [Pas] (the compétence d'Action used)
+   * - 7 failures = 7 Blessures DS
+   * - R[Blessures] compétence de Résistance Niv +2 absorbs 2 DS
+   * - 5 actual Blessures DS = 5 marks on R[Blessures] compétence de Résistance
    * 
    * @param souffrance The type of souffrance to apply
-   * @param failures The number of failures on the competence check (each failure = 1 mark on used competence, and typically 1 DS of suffering)
-   * @param usedCompetence The competence that was being used when the failure occurred
+   * @param failures The number of failures on the compétence check (each failure = 1 mark on used compétence, and typically 1 DS of suffering)
+   * @param usedCompetence The compétence d'Action that was being used when the failure occurred
    * @returns The actual amount of DS applied (after resistance)
    */
   applySouffranceFromFailure(
@@ -158,29 +158,29 @@ export class SouffranceHealthSystem {
 
     // Each failure typically equals 1 DS of suffering
     // The suffering amount equals the number of failures (unless specified otherwise by the Révélateur)
-    const diceAmount = failures;
+    const degreeAmount = failures;
 
-    Debug.log('SouffranceHealthSystem', `Applying ${diceAmount} DS of ${getSouffranceName(souffrance)} (from ${failures} failures) (resisted by ${getResistanceCompetenceName(souffrance)}) from failure using ${usedCompetence}`);
+    Debug.log('SouffranceHealthSystem', `Applying ${degreeAmount} DS of ${getSouffranceName(souffrance)} (from ${failures} failures) (resisted by ${getResistanceCompetenceName(souffrance)}) from failure using ${usedCompetence}`);
 
     // Calculate resistance
-    // The souffrance has a separate resistance competence
-    // Resistance level = resistance competence level (Niv from resistance dice count, not souffrance dice)
+    // The souffrance has a separate resistance compétence (compétence de Résistance)
+    // Resistance level = resistance compétence level (Niv from resistance degree count, not souffrance degree)
     const resistanceLevel = this.characterSheetManager.getResistanceLevel(souffrance);
     
     // Resistance absorbs a number of DS equal to the resistance level
     // According to page 72: "Vous absorberez passivement un nombre de Souffrances égal à votre Niv de CT de Résistance liée au mal"
     // So if R[Blessures] is Niv 2, it absorbs 2 DS
-    const absorbedAmount = Math.min(resistanceLevel, diceAmount);
-    const actualDamage = diceAmount - absorbedAmount;
+    const absorbedAmount = Math.min(resistanceLevel, degreeAmount);
+    const actualDamage = degreeAmount - absorbedAmount;
 
-    Debug.log('SouffranceHealthSystem', `Applying ${diceAmount} DS of ${getSouffranceName(souffrance)}, ${getResistanceCompetenceName(souffrance)} Niv ${resistanceLevel} absorbed ${absorbedAmount}, actual damage ${actualDamage}`);
+    Debug.log('SouffranceHealthSystem', `Applying ${degreeAmount} DS of ${getSouffranceName(souffrance)}, ${getResistanceCompetenceName(souffrance)} Niv ${resistanceLevel} absorbed ${absorbedAmount}, actual damage ${actualDamage}`);
 
     // Gain experience marks FIRST (before applying damage)
     const eventLog = getEventLog();
     const souffranceName = getSouffranceName(souffrance);
     const resistanceName = getResistanceCompetenceName(souffrance);
     
-    // Mark 1: Competence used - ALL failures give marks
+    // Mark 1: Compétence d'Action used - ALL failures give marks
     // According to page 63: "Pour chaque Échec obtenu lorsque vous vous éprouverez d'une Épreuve Possible, attribuez-vous 1 Marque à la CT utilisée"
     for (let i = 0; i < failures; i++) {
       this.characterSheetManager.addCompetenceMark(usedCompetence, false);
@@ -191,58 +191,58 @@ export class SouffranceHealthSystem {
         `Gained ${failures} mark${failures > 1 ? 's' : ''} on ${getCompetenceName(usedCompetence)} (${failures} failure${failures > 1 ? 's' : ''} on check)`,
         { competence: usedCompetence, marks: failures }
       );
-      Debug.log('SouffranceHealthSystem', `Gained ${failures} marks on used competence: ${usedCompetence}`);
+      Debug.log('SouffranceHealthSystem', `Gained ${failures} marks on used compétence d'Action: ${usedCompetence}`);
     }
 
-    // Mark 2: Souffrance resistance - only actual damage gives marks
+    // Mark 2: Compétence de Résistance - only actual damage gives marks
     // According to page 72: "Chaque Échec déterminé comme une Souffrance ET outrepassant votre Résistance liée, s'accumule en Dé NÉGATIFS liés à cette Souffrance ET en Marque d'expérience dans la CT y ayant résisté"
-    // The resistance competence gains marks equal to the actual damage taken (after resistance absorption)
+    // The resistance compétence gains marks equal to the actual damage taken (after resistance absorption)
     if (actualDamage > 0) {
       for (let i = 0; i < actualDamage; i++) {
         this.characterSheetManager.addSouffranceMark(souffrance, false);
       }
       eventLog.addEvent(
         EventType.EXPERIENCE_GAIN,
-        `Gained ${actualDamage} mark${actualDamage > 1 ? 's' : ''} on ${resistanceName} (${actualDamage} DS after resistance, ${absorbedAmount}/${diceAmount} absorbed)`,
+        `Gained ${actualDamage} mark${actualDamage > 1 ? 's' : ''} on ${resistanceName} (${actualDamage} DS after resistance, ${absorbedAmount}/${degreeAmount} absorbed)`,
         {
           resistanceCompetence: resistanceName,
           marks: actualDamage,
           actualDamage: actualDamage,
           absorbed: absorbedAmount,
-          total: diceAmount,
+          total: degreeAmount,
         }
       );
-      Debug.log('SouffranceHealthSystem', `Gained ${actualDamage} marks on ${resistanceName} (actual damage after ${absorbedAmount} absorbed)`);
+      Debug.log('SouffranceHealthSystem', `Gained ${actualDamage} marks on ${resistanceName} compétence de Résistance (actual damage after ${absorbedAmount} absorbed)`);
     } else if (absorbedAmount > 0) {
       // If all damage was resisted, still log it (but no marks gained since no actual damage)
       eventLog.addEvent(
         EventType.SOUFFRANCE_RESISTED,
-        `${resistanceName} fully resisted ${souffranceName} (${absorbedAmount}/${diceAmount} DS absorbed)`,
+        `${resistanceName} fully resisted ${souffranceName} (${absorbedAmount}/${degreeAmount} DS absorbed)`,
         {
           souffrance: souffrance,
           resisted: true,
           absorbed: absorbedAmount,
-          total: diceAmount,
+          total: degreeAmount,
         }
       );
     }
 
     // Apply the actual damage (after resistance)
     if (actualDamage > 0) {
-      const currentDice = this.characterSheetManager.getSouffrance(souffrance).diceCount;
-      const newDiceCount = Math.round((currentDice + actualDamage) * 10) / 10; // Round to 1 decimal
-      this.characterSheetManager.setSouffranceDice(souffrance, newDiceCount);
+      const currentDegree = this.characterSheetManager.getSouffrance(souffrance).degreeCount;
+      const newDegreeCount = Math.round((currentDegree + actualDamage) * 10) / 10; // Round to 1 decimal
+      this.characterSheetManager.setSouffranceDegree(souffrance, newDegreeCount);
       
-      const currentDiceAfter = this.characterSheetManager.getSouffrance(souffrance).diceCount;
+      const currentDegreeAfter = this.characterSheetManager.getSouffrance(souffrance).degreeCount;
       
       // Log damage event
       eventLog.addEvent(
         EventType.SOUFFRANCE_DAMAGE,
-        `+${actualDamage.toFixed(1)} DS ${souffranceName} (${currentDiceAfter.toFixed(1)} DS total)${usedCompetence === Competence.PAS ? ' - Stepping on platform' : ''}`,
+        `+${actualDamage.toFixed(1)} DS ${souffranceName} (${currentDegreeAfter.toFixed(1)} DS total)${usedCompetence === Competence.PAS ? ' - Stepping on platform' : ''}`,
         {
           souffrance: souffrance,
           damage: actualDamage,
-          totalDice: currentDiceAfter,
+          totalDegree: currentDegreeAfter,
         }
       );
       
@@ -259,7 +259,7 @@ export class SouffranceHealthSystem {
    * 
    * @param souffrance The type of souffrance to apply
    * @param failures The number of failures on the check (but for critical failure, marks are 5 regardless)
-   * @param usedCompetence The competence that was being used
+   * @param usedCompetence The compétence d'Action that was being used
    * @returns The actual amount of DS applied
    */
   applyCriticalFailure(
@@ -271,7 +271,7 @@ export class SouffranceHealthSystem {
     
     const eventLog = getEventLog();
     
-    // Critical failure: 5 marks on the competence, regardless of number of failures
+    // Critical failure: 5 marks on the compétence d'Action, regardless of number of failures
     // According to page 63: "Lors d'un Échec Critique vous obtiendrez 5 M d'un coup (quel qu'en soit le nombre d'Échecs par rapport au Niv d'Épreuve)"
     for (let i = 0; i < 5; i++) {
       this.characterSheetManager.addCompetenceMark(usedCompetence, false);
@@ -288,15 +288,20 @@ export class SouffranceHealthSystem {
 
 
   /**
-   * Get all souffrance dice counts as a record
+   * Get all souffrance degree counts as a record
    */
-  getAllSouffranceDice(): Record<Souffrance, number> {
+  getAllSouffranceDegrees(): Record<Souffrance, number> {
     const result: Record<Souffrance, number> = {} as Record<Souffrance, number>;
     Object.values(Souffrance).forEach((souffrance) => {
-      const diceCount = this.characterSheetManager.getSouffrance(souffrance).diceCount;
-      result[souffrance] = Math.round(diceCount * 10) / 10; // Round to 1 decimal
+      const degreeCount = this.characterSheetManager.getSouffrance(souffrance).degreeCount;
+      result[souffrance] = Math.round(degreeCount * 10) / 10; // Round to 1 decimal
     });
     return result;
+  }
+
+  // Legacy alias for backwards compatibility during migration
+  getAllSouffranceDice(): Record<Souffrance, number> {
+    return this.getAllSouffranceDegrees();
   }
 
   /**

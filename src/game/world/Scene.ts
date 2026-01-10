@@ -395,27 +395,28 @@ export class Scene {
       
       const isOnPlatform = isWithinBounds && isOnPlatformHeight;
 
-      if (isOnPlatform) {
+      if (isOnPlatform && this.healthSystem) {
         // Character is on platform - apply damage every second
         if (currentTime - platform.lastDamageTime >= this.damageInterval) {
           // Environmental damage: stepping on a harmful platform
           // This represents 1 failure on a check, which causes 1 DS of suffering
           // Use PAS (walking) as the "used competence" since this is environmental damage
-          const beforeDice = this.healthSystem['characterSheetManager'].getSouffrance(platform.souffrance).diceCount;
+          const characterSheetManager = this.healthSystem.getCharacterSheetManager();
+          const beforeDegree = characterSheetManager.getSouffrance(platform.souffrance).degreeCount;
           const applied = this.healthSystem.applySouffranceFromFailure(
             platform.souffrance,
             1, // 1 failure (which equals 1 DS of suffering before resistance)
-            Competence.PAS // Used competence (walking, since this is environmental damage)
+            Competence.PAS // Used compétence d'Action (walking, since this is environmental damage)
           );
-          const afterDiceRaw = this.healthSystem['characterSheetManager'].getSouffrance(platform.souffrance).diceCount;
-          const afterDice = Math.round(afterDiceRaw * 10) / 10; // Round to 1 decimal
+          const afterDegreeRaw = characterSheetManager.getSouffrance(platform.souffrance).degreeCount;
+          const afterDegree = Math.round(afterDegreeRaw * 10) / 10; // Round to 1 decimal
           
           platform.lastDamageTime = currentTime;
           
           // Note: Events are now logged in SouffranceHealthSystem.applySouffranceFromFailure
           // No need to duplicate them here
           const souffranceName = getSouffranceName(platform.souffrance);
-          Debug.log('Scene', `Character on ${souffranceName} platform - applied ${applied.toFixed(1)} DS (total: ${afterDice.toFixed(1)} DS)`);
+          Debug.log('Scene', `Character on ${souffranceName} platform - applied ${applied.toFixed(1)} DS (total: ${afterDegree.toFixed(1)} DS)`);
         }
         } else if (horizontalDistance < 3.0) {
           // Debug log occasionally to help troubleshoot when very close

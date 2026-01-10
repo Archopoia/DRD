@@ -19,15 +19,15 @@ export function getLevelName(level: number): string {
 }
 
 /**
- * Calculate level from dice count
- * Used for Souffrances and Competences
+ * Calculate level from degree count
+ * Used for Souffrances and Compétences
  */
-export function getLevelFromDiceCount(diceCount: number): number {
-  if (diceCount === 0) return 0;
-  if (diceCount <= 2) return 1;
-  if (diceCount <= 5) return 2;
-  if (diceCount <= 9) return 3;
-  if (diceCount <= 14) return 4;
+export function getLevelFromDegreeCount(degreeCount: number): number {
+  if (degreeCount === 0) return 0;
+  if (degreeCount <= 2) return 1;
+  if (degreeCount <= 5) return 2;
+  if (degreeCount <= 9) return 3;
+  if (degreeCount <= 14) return 4;
   return 5;
 }
 

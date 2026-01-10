@@ -36,14 +36,14 @@ export default function SouffranceHealthBars({ healthSystem }: SouffranceHealthB
   };
 
   // Get color for souffrance level
-  const getSouffranceBarColor = (diceCount: number): string => {
-    if (diceCount >= 26) return 'bg-red-900';
-    if (diceCount >= 21) return 'bg-red-700';
-    if (diceCount >= 15) return 'bg-red-500';
-    if (diceCount >= 10) return 'bg-orange-500';
-    if (diceCount >= 6) return 'bg-yellow-500';
-    if (diceCount >= 3) return 'bg-yellow-300';
-    if (diceCount >= 1) return 'bg-green-300';
+  const getSouffranceBarColor = (degreeCount: number): string => {
+    if (degreeCount >= 26) return 'bg-red-900';
+    if (degreeCount >= 21) return 'bg-red-700';
+    if (degreeCount >= 15) return 'bg-red-500';
+    if (degreeCount >= 10) return 'bg-orange-500';
+    if (degreeCount >= 6) return 'bg-yellow-500';
+    if (degreeCount >= 3) return 'bg-yellow-300';
+    if (degreeCount >= 1) return 'bg-green-300';
     return 'bg-gray-200';
   };
 
@@ -110,19 +110,19 @@ export default function SouffranceHealthBars({ healthSystem }: SouffranceHealthB
       <div className="space-y-2">
         <h4 className="text-sm font-semibold text-gray-300 mb-2">
           Résistances aux Souffrances (8 types)
-          <span className="text-xs text-gray-500 ml-2">(R[Souffrance] = resistance competence, DS = actual damage)</span>
+          <span className="text-xs text-gray-500 ml-2">(R[Souffrance] = compétence de Résistance, DS = Degrees of Souffrance accumulated)</span>
         </h4>
         {Object.values(Souffrance).map((souffrance) => {
-          const souffranceDice = healthSystem.getAllSouffranceDice();
-          const diceCount = souffranceDice[souffrance];
+          const souffranceDegrees = healthSystem.getAllSouffranceDegrees();
+          const degreeCount = souffranceDegrees[souffrance];
           const attribute = getSouffranceAttribute(souffrance);
           const attributeAbbr = getAttributeAbbreviation(attribute);
           const sequeleType = healthSystem.getSequeleType(souffrance);
           const sequeleLabel = getSequeleLabel(sequeleType);
           const level = healthSystem.getSouffranceLevel(souffrance);
 
-          // Calculate bar width (0-26 dice, shown as 0-100%)
-          const barWidth = Math.min(100, (diceCount / 26) * 100);
+          // Calculate bar width (0-26 degrees, shown as 0-100%)
+          const barWidth = Math.min(100, (degreeCount / 26) * 100);
 
           return (
             <div
@@ -143,19 +143,19 @@ export default function SouffranceHealthBars({ healthSystem }: SouffranceHealthB
                 </div>
                 <div className="flex items-center gap-2">
                   {level > 0 && (
-                    <span className="text-xs text-gray-400" title="Resistance competence level">
+                    <span className="text-xs text-gray-400" title="Compétence de Résistance level">
                       Niv {level}
                     </span>
                   )}
-                  <span className="text-xs font-mono text-gray-300" title="Actual souffrance damage dice">
-                    {diceCount} DS {getSouffranceName(souffrance)}
+                  <span className="text-xs font-mono text-gray-300" title="Actual Souffrance degrees (DS)">
+                    {degreeCount} DS {getSouffranceName(souffrance)}
                   </span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex-1 h-3 bg-gray-700 rounded-full overflow-hidden">
                   <div
-                    className={`h-full transition-all duration-300 ${getSouffranceBarColor(diceCount)}`}
+                    className={`h-full transition-all duration-300 ${getSouffranceBarColor(degreeCount)}`}
                     style={{ width: `${barWidth}%` }}
                   />
                 </div>
@@ -164,31 +164,31 @@ export default function SouffranceHealthBars({ healthSystem }: SouffranceHealthB
                   {/* Markers at 3, 10, 15, 21, 26 thresholds */}
                   <div
                     className={`w-0.5 h-3 ${
-                      diceCount >= 3 ? 'bg-yellow-400' : 'bg-gray-600'
+                      degreeCount >= 3 ? 'bg-yellow-400' : 'bg-gray-600'
                     }`}
                     title="3 DS - Passagère"
                   />
                   <div
                     className={`w-0.5 h-3 ${
-                      diceCount >= 10 ? 'bg-orange-400' : 'bg-gray-600'
+                      degreeCount >= 10 ? 'bg-orange-400' : 'bg-gray-600'
                     }`}
                     title="10 DS - Permanente"
                   />
                   <div
                     className={`w-0.5 h-3 ${
-                      diceCount >= 15 ? 'bg-red-400' : 'bg-gray-600'
+                      degreeCount >= 15 ? 'bg-red-400' : 'bg-gray-600'
                     }`}
                     title="15 DS - Fatale"
                   />
                   <div
                     className={`w-0.5 h-3 ${
-                      diceCount >= 21 ? 'bg-red-600' : 'bg-gray-600'
+                      degreeCount >= 21 ? 'bg-red-600' : 'bg-gray-600'
                     }`}
                     title="21 DS - Vaincu"
                   />
                   <div
                     className={`w-0.5 h-3 ${
-                      diceCount >= 26 ? 'bg-red-900' : 'bg-gray-600'
+                      degreeCount >= 26 ? 'bg-red-900' : 'bg-gray-600'
                     }`}
                     title="26 DS - Mort"
                   />

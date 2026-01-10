@@ -277,7 +277,7 @@ function handleGainXP(args: string[], manager?: CharacterSheetManager): string {
   const requiredMarks = 10 - comp.eternalMarks;
   const eternalText = isEternal ? ' (eternal)' : '';
 
-  return `Added ${amount} mark${amount > 1 ? 's' : ''}${eternalText} to ${getCompetenceName(competence)}. Total: ${totalMarks}/${requiredMarks} (Level ${level})`;
+  return `Added ${amount} mark${amount > 1 ? 's' : ''}${eternalText} to ${getCompetenceName(competence)} compétence. Total: ${totalMarks}/${requiredMarks} (Level ${level})`;
 }
 
 function handleSetAttribute(args: string[], manager?: CharacterSheetManager): string {
@@ -339,14 +339,14 @@ function handleSetCompetence(args: string[], manager?: CharacterSheetManager): s
   }
 
   if (args.length < 2) {
-    return 'Error: Usage: setCompetence <competence> <diceCount>';
+    return 'Error: Usage: setCompetence <competence> <degreeCount>';
   }
 
   const competenceName = args[0].toUpperCase();
-  const diceCount = parseInt(args[1], 10);
+  const degreeCount = parseInt(args[1], 10);
 
-  if (isNaN(diceCount) || diceCount < 0) {
-    return 'Error: Dice count must be a non-negative number';
+  if (isNaN(degreeCount) || degreeCount < 0) {
+    return 'Error: Degree count must be a non-negative number';
   }
 
   const competence = Object.values(Competence).find(
@@ -354,13 +354,13 @@ function handleSetCompetence(args: string[], manager?: CharacterSheetManager): s
   );
 
   if (!competence) {
-    return `Error: Competence '${competenceName}' not found`;
+    return `Error: Compétence '${competenceName}' not found`;
   }
 
-  manager.setCompetenceDice(competence, diceCount);
+  manager.setCompetenceDegree(competence, degreeCount);
   const level = manager.getCompetenceLevel(competence);
 
-  return `Set ${getCompetenceName(competence)} to ${diceCount} dice (Level ${level})`;
+  return `Set ${getCompetenceName(competence)} to ${degreeCount} degree${degreeCount !== 1 ? 's' : ''} (Level ${level})`;
 }
 
 function handleReveal(args: string[], manager?: CharacterSheetManager): string {
@@ -382,7 +382,7 @@ function handleReveal(args: string[], manager?: CharacterSheetManager): string {
   }
 
   manager.revealCompetence(competence);
-  return `Revealed ${getCompetenceName(competence)}`;
+  return `Revealed ${getCompetenceName(competence)} compétence`;
 }
 
 function handleGodMode(args: string[], godMode: boolean, setGodMode: (enabled: boolean) => void): string {
@@ -407,11 +407,11 @@ function handleGodMode(args: string[], godMode: boolean, setGodMode: (enabled: b
 
 function getHelpText(): string {
   return `Available commands:
-  gainXP <competence> <amount> [eternal]  - Add marks to a competence
+  gainXP <competence> <amount> [eternal]  - Add marks to a compétence
   setAttribute <attribute> <value>       - Set attribute value (-50 to 50)
   addFreeMarks <amount>                    - Add free marks
-  setCompetence <competence> <diceCount>   - Set competence dice count
-  reveal <competence>                      - Reveal a hidden competence
+  setCompetence <competence> <degreeCount> - Set compétence degree count
+  reveal <competence>                      - Reveal a hidden compétence
   godmode [on|off]                         - Toggle God mode (enables editing all CS fields)
   help                                     - Show this help
 
@@ -420,7 +420,7 @@ Examples:
   gainXP LUTTE 10 eternal
   setAttribute FOR 20
   addFreeMarks 50
-  setCompetence VISION 5
+  setCompetence VISION 5  - Set VISION compétence to 5 degrees
   reveal INVESTIGATION
   godmode on`;
 }

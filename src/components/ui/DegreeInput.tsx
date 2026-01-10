@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 
-interface DiceInputProps {
+interface DegreeInputProps {
   value: number;
   onChange: (value: number) => void;
   onClick?: () => void; // Optional click handler for realization
@@ -16,10 +16,10 @@ interface DiceInputProps {
 }
 
 /**
- * Reusable dice input component with +/- buttons
+ * Reusable degree input component with +/- buttons
  * Used for attributes, souffrances, and competences
  */
-export default function DiceInput({
+export default function DegreeInput({
   value,
   onChange,
   onClick,

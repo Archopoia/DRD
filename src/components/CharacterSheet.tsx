@@ -9,8 +9,8 @@ import { Action, getActionName, getActionAptitude, getActionLinkedAttribute } fr
 import { Competence, getCompetenceName, getCompetenceAction } from '@/game/character/data/CompetenceData';
 import { Souffrance, getSouffranceName, getSouffranceAttribute, getResistanceCompetenceName } from '@/game/character/data/SouffranceData';
 import { getMasteries } from '@/game/character/data/MasteryRegistry';
-import { getLevelName, getLevelFromDiceCount } from '@/lib/utils';
-import DiceInput from './ui/DiceInput';
+import { getLevelName, getLevelFromDegreeCount } from '@/lib/utils';
+import DegreeInput from './ui/DegreeInput';
 import ProgressBar from './ui/ProgressBar';
 import ExpandableSection from './ui/ExpandableSection';
 import Tooltip from './ui/Tooltip';
@@ -142,7 +142,7 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
     return Object.values(Action).filter((action) => getActionAptitude(action) === aptitude);
   };
 
-  // Get competences for an action
+  // Get compétences d'Action for an action (compétences used to act)
   const getCompetencesForAction = (action: Action): Competence[] => {
     return Object.values(Competence).filter((comp) => getCompetenceAction(comp) === action);
   };
@@ -274,9 +274,9 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                         
                         if (linkedSouffrance) {
                           const soufData = state.souffrances[linkedSouffrance];
-                          const diceCountRaw = soufData?.diceCount || 0;
-                          const diceCount = Math.round(diceCountRaw * 10) / 10; // Round to 1 decimal to avoid floating point errors
-                          const maxDS = 26; // Max DS before death
+                          const degreeCountRaw = soufData?.degreeCount || 0;
+                          const degreeCount = Math.round(degreeCountRaw * 10) / 10; // Round to 1 decimal to avoid floating point errors
+                          const maxDS = 26; // Max DS (Degrees of Souffrance) before death
                           
                           // Colors toned down to match the muted, earthy theme
                           // Muted, desaturated colors that fit the parchment/brown aesthetic
@@ -294,12 +294,12 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                           const barColor = souffranceColors[linkedSouffrance];
                           
                           // Calculate height percentage, but ensure minimum visibility
-                          const barHeightPercent = Math.min(100, (diceCount / maxDS) * 100);
+                          const barHeightPercent = Math.min(100, (degreeCount / maxDS) * 100);
                           
                           // Use fixed pixel height for small values to ensure visibility
                           // For larger values, use percentage
-                          const useFixedHeight = diceCount > 0 && barHeightPercent < 5;
-                          const barHeight = useFixedHeight ? `${Math.max(20, diceCount * 4)}px` : `${barHeightPercent}%`;
+                          const useFixedHeight = degreeCount > 0 && barHeightPercent < 5;
+                          const barHeight = useFixedHeight ? `${Math.max(20, degreeCount * 4)}px` : `${barHeightPercent}%`;
                           
                           return (
                             <div
@@ -317,28 +317,28 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                 style={{
                                   height: barHeight,
                                   backgroundColor: barColor,
-                                  opacity: diceCount > 0 ? 0.85 : 0,
+                                  opacity: degreeCount > 0 ? 0.85 : 0,
                                   zIndex: 1,
                                   transition: 'height 0.3s ease-out, opacity 0.3s ease-out',
                                   pointerEvents: 'none',
-                                  minHeight: diceCount > 0 ? '2px' : '0px',
+                                  minHeight: degreeCount > 0 ? '2px' : '0px',
                                 }}
                               >
-                                {/* DS Count displayed in the bar */}
-                                {diceCount > 0 && (
+                                {/* DS (Degrees of Souffrance) Count displayed in the bar */}
+                                {degreeCount > 0 && (
                                   <div
                                     className="absolute inset-0 flex items-center justify-center"
                                     style={{
                                       color: '#ffffff',
                                       textShadow: '1px 1px 1px rgba(0, 0, 0, 1), -1px -1px 1px rgba(0, 0, 0, 0.9)',
                                       fontWeight: 'bold',
-                                      fontSize: diceCount >= 10 ? '0.7rem' : '0.75rem',
+                                      fontSize: degreeCount >= 10 ? '0.7rem' : '0.75rem',
                                       fontFamily: 'monospace',
                                       zIndex: 2,
                                       pointerEvents: 'none',
                                     }}
                                   >
-                                    {diceCount.toFixed(1)}
+                                    {degreeCount.toFixed(1)}
                                   </div>
                                 )}
                               </div>
@@ -390,7 +390,7 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                       {/* Left Column - Main Attribute with Input */}
                       <div className="flex flex-col items-start gap-2">
                         {/* Input box above the name */}
-                        <DiceInput
+                        <DegreeInput
                           value={state.attributes[atb1]}
                           onChange={(value) => handleAttributeChange(atb1, value)}
                           min={-50}
@@ -440,13 +440,14 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                       </div>
                     </div>
 
-                    {/* Resistance Competence (R[Souffrance]) - Right under aptitude, above actions */}
+                    {/* Compétence de Résistance (R[Souffrance]) - Right under aptitude, above actions */}
+                    {/* These are resistances compétences used to resist damage */}
                     <div className="mb-3 -mx-3">
                       {Object.values(Souffrance).map((souf) => {
                         const soufAttr = getSouffranceAttribute(souf);
                         if (soufAttr === atb1) {
-                          const resistanceDiceCount = manager.getResistanceDiceCount(souf); // Resistance competence dice count
-                          const resistanceLevel = manager.getResistanceLevel(souf); // Resistance competence level (separate from souffrance dice)
+                          const resistanceDegreeCount = manager.getResistanceDegreeCount(souf); // Resistance compétence degree count
+                          const resistanceLevel = manager.getResistanceLevel(souf); // Resistance compétence level (separate from souffrance degrees)
                           const totalMarks = manager.getTotalSouffranceMarks(souf);
                           const isEprouvee = manager.isSouffranceEprouvee(souf); // 100% marks (10 marks)
                           
@@ -456,11 +457,11 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                               ...(isEprouvee ? { overflow: 'visible', position: 'relative', zIndex: 1 } : {})
                             }}>
                               <div className="font-bold text-text-cream mb-1 flex items-center gap-1">
-                                <DiceInput
-                                  value={resistanceDiceCount}
+                                <DegreeInput
+                                  value={resistanceDegreeCount}
                                   onChange={(value) => {
                                     if (godMode) {
-                                      manager.setResistanceDiceCount(souf, value);
+                                      manager.setResistanceDegreeCount(souf, value);
                                       updateState();
                                     }
                                   }}
@@ -549,7 +550,7 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                   <div className="flex items-center w-full" style={{ gap: 0, margin: 0, padding: 0 }}>
                                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: 'auto' }}>{getActionName(action).toUpperCase()}</span>
                                     <div style={{ position: 'relative', flexShrink: 0, marginLeft: 0 }}>
-                                      {/* DiceInput showing total competence levels - always in layout to maintain height */}
+                                      {/* DegreeInput showing total compétence levels - always in layout to maintain height */}
                                       <div
                                         style={{
                                           opacity: hoveredAction === action ? 0 : 1,
@@ -559,10 +560,10 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                           visibility: hoveredAction === action ? 'hidden' : 'visible',
                                         }}
                                       >
-                                        <DiceInput
+                                        <DegreeInput
                                           value={competences.reduce((sum, comp) => sum + manager.getCompetenceLevel(comp), 0)}
                                           onChange={() => {
-                                            // Read-only - shows total competence levels for this action
+                                            // Read-only - shows total compétence levels for this action
                                           }}
                                           min={0}
                                           size="sm"
@@ -596,7 +597,7 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                 const level = manager.getCompetenceLevel(comp);
                                 const totalMarks = manager.getTotalMarks(comp);
                                 const isEprouvee = manager.isCompetenceEprouvee(comp);
-                                const hasDice = compData.diceCount > 0; // Has been realized at least once
+                                const hasDegree = compData.degreeCount > 0; // Has been realized at least once
                                 
                                 return (
                                   <div key={comp} className="text-xs relative">
@@ -632,11 +633,11 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                             title={
                                               <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                                                 <div onClick={(e) => e.stopPropagation()}>
-                                                  <DiceInput
-                                                    value={compData.diceCount}
+                                                  <DegreeInput
+                                                    value={compData.degreeCount}
                                                     onChange={(value) => {
                                                       if (godMode) {
-                                                        manager.setCompetenceDice(comp, value);
+                                                        manager.setCompetenceDegree(comp, value);
                                                         updateState();
                                                       }
                                                     }}
@@ -749,14 +750,14 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                               {compData.masteries.length > 0 && (
                                                 <div className="space-y-1 mb-2">
                                                   {compData.masteries.map((mastery, masteryIdx) => {
-                                                    const maxDice = level;
-                                                    const canUpgrade = mastery.diceCount < maxDice && manager.getMasteryPoints(comp) > 0;
+                                                    const maxDegree = level;
+                                                    const canUpgrade = mastery.degreeCount < maxDegree && manager.getMasteryPoints(comp) > 0;
                                                     
                                                     return (
                                                       <div key={masteryIdx} className="text-xs flex items-center justify-between">
                                                         <span className="flex-1"><span className="mr-1">•</span>{mastery.name}</span>
                                                         <div className="flex items-center gap-1">
-                                                          <span className="text-text-secondary text-xs">{mastery.diceCount}D</span>
+                                                          <span className="text-text-secondary text-xs">{mastery.degreeCount}°</span>
                                                           {canUpgrade && (
                                                             <Tooltip
                                                               content="Upgrade (+1 point)"

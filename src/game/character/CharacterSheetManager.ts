@@ -16,10 +16,12 @@ export interface CharacterSheetState {
   // Aptitudes (8) - calculated from attributes
   aptitudeLevels: Record<Aptitude, number>;
   
-  // Competences (72) - dice count, marks, masteries
+  // Compétences (72) - compétences d'Action (action compétences used to act)
+  // Degree count, marks, masteries
   competences: Record<Competence, CompetenceData>;
   
-  // Souffrances (8) - dice count, marks
+  // Souffrances (8) - accumulating DS (Degrees of Souffrance) at top of character sheet
+  // Also contains resistance compétences (compétences de Résistance) R[Souffrance]
   souffrances: Record<Souffrance, SouffranceData>;
   
   // Experience system
@@ -27,24 +29,24 @@ export interface CharacterSheetState {
 }
 
 export interface CompetenceData {
-  diceCount: number;
+  degreeCount: number; // Degrees of the compétence (not "dice")
   isRevealed: boolean;
   marks: boolean[]; // 100 marks
   eternalMarks: number;
   eternalMarkIndices: number[];
   masteries: MasteryData[];
-  masteryPoints: number; // MT points - earned when gaining non-Niv dice (aside from first)
+  masteryPoints: number; // MT points - earned when gaining non-Niv degrees (aside from first)
 }
 
 export interface MasteryData {
   name: string;
-  diceCount: number;
+  degreeCount: number; // Degrees of the mastery (not "dice")
 }
 
 export interface SouffranceData {
-  diceCount: number; // Dés de Souffrance (DS) - accumulates when damage is taken
-  resistanceDiceCount: number; // Dés de Résistance - only increases when realized (clicked when full)
-  marks: boolean[]; // 100 marks (for resistance competence)
+  degreeCount: number; // Degrés de Souffrance (DS) - accumulates when damage is taken (on top of character sheet)
+  resistanceDegreeCount: number; // Degrés de Résistance - compétence de Résistance, only increases when realized (clicked when full)
+  marks: boolean[]; // 100 marks (for resistance compétence)
   eternalMarks: number;
   eternalMarkIndices: number[];
 }
@@ -81,11 +83,11 @@ export class CharacterSheetManager {
       [Aptitude.DOMINATION]: 0,
     };
 
-    // Initialize all competences
+    // Initialize all compétences d'Action (action compétences)
     const competences: Record<Competence, CompetenceData> = {} as Record<Competence, CompetenceData>;
     Object.values(Competence).forEach((comp) => {
       competences[comp] = {
-        diceCount: 0,
+        degreeCount: 0,
         isRevealed: false,
         marks: new Array(100).fill(false),
         eternalMarks: 0,
@@ -95,12 +97,12 @@ export class CharacterSheetManager {
       };
     });
 
-    // Initialize all souffrances
+    // Initialize all souffrances (with their resistance compétences)
     const souffrances: Record<Souffrance, SouffranceData> = {} as Record<Souffrance, SouffranceData>;
     Object.values(Souffrance).forEach((souf) => {
       souffrances[souf] = {
-        diceCount: 0, // Souffrance dice (DS) - accumulates from damage
-        resistanceDiceCount: 0, // Resistance competence dice - only increases on realization
+        degreeCount: 0, // Souffrance degrees (DS) - accumulates from damage (on top of character sheet)
+        resistanceDegreeCount: 0, // Resistance compétence degrees - compétence de Résistance, only increases on realization
         marks: new Array(100).fill(false),
         eternalMarks: 0,
         eternalMarkIndices: [],
@@ -196,25 +198,30 @@ export class CharacterSheetManager {
     return { ...this.state.competences[competence] };
   }
 
-  setCompetenceDice(competence: Competence, diceCount: number): void {
+  setCompetenceDegree(competence: Competence, degreeCount: number): void {
     const comp = this.state.competences[competence];
-    const oldDiceCount = comp.diceCount;
+    const oldDegreeCount = comp.degreeCount;
     const oldLevel = this.getCompetenceLevel(competence);
     
-    comp.diceCount = Math.max(0, diceCount);
+    comp.degreeCount = Math.max(0, degreeCount);
     
     // Check if we should earn a mastery point
-    // Mastery points (MT) are earned at every non-Niv dice gained, aside from the first one
-    if (diceCount > oldDiceCount) {
+    // Mastery points (MT) are earned at every non-Niv degree gained, aside from the first one
+    if (degreeCount > oldDegreeCount) {
       const newLevel = this.getCompetenceLevel(competence);
       
       // Earn mastery point if:
-      // 1. Level didn't change (non-Niv dice)
-      // 2. It's not the first dice (oldDiceCount > 0)
-      if (newLevel === oldLevel && oldDiceCount > 0) {
+      // 1. Level didn't change (non-Niv degree)
+      // 2. It's not the first degree (oldDegreeCount > 0)
+      if (newLevel === oldLevel && oldDegreeCount > 0) {
         comp.masteryPoints += 1;
       }
     }
+  }
+
+  // Legacy alias for backwards compatibility during migration
+  setCompetenceDice(competence: Competence, degreeCount: number): void {
+    this.setCompetenceDegree(competence, degreeCount);
   }
 
   revealCompetence(competence: Competence): void {
@@ -236,12 +243,12 @@ export class CharacterSheetManager {
   }
 
   getCompetenceLevel(competence: Competence): number {
-    const diceCount = this.state.competences[competence].diceCount;
-    if (diceCount === 0) return 0;
-    if (diceCount <= 2) return 1;
-    if (diceCount <= 5) return 2;
-    if (diceCount <= 9) return 3;
-    if (diceCount <= 14) return 4;
+    const degreeCount = this.state.competences[competence].degreeCount;
+    if (degreeCount === 0) return 0;
+    if (degreeCount <= 2) return 1;
+    if (degreeCount <= 5) return 2;
+    if (degreeCount <= 9) return 3;
+    if (degreeCount <= 14) return 4;
     return 5;
   }
 
@@ -250,7 +257,7 @@ export class CharacterSheetManager {
   }
 
   /**
-   * Check if competence is éprouvée (10 marks total, minus eternal marks)
+   * Check if compétence is éprouvée (10 marks total, minus eternal marks)
    * According to page 63-64: "Dès qu'une CT obtient son maximum de Marques, habituellement 10 Marques, elle est Éprouvée"
    */
   isCompetenceEprouvee(competence: Competence): boolean {
@@ -264,15 +271,15 @@ export class CharacterSheetManager {
     if (!this.isCompetenceEprouvee(competence)) return;
     
     const comp = this.state.competences[competence];
-    const oldDiceCount = comp.diceCount;
+    const oldDegreeCount = comp.degreeCount;
     const oldLevel = this.getCompetenceLevel(competence);
     
-    comp.diceCount += 1;
+    comp.degreeCount += 1;
     
     // Check if we should earn a mastery point
-    // Mastery points (MT) are earned at every non-Niv dice gained, aside from the first one
+    // Mastery points (MT) are earned at every non-Niv degree gained, aside from the first one
     const newLevel = this.getCompetenceLevel(competence);
-    if (newLevel === oldLevel && oldDiceCount > 0) {
+    if (newLevel === oldLevel && oldDegreeCount > 0) {
       comp.masteryPoints += 1;
     }
     
@@ -308,12 +315,18 @@ export class CharacterSheetManager {
     return { ...this.state.souffrances[souffrance] };
   }
 
-  setSouffranceDice(souffrance: Souffrance, diceCount: number): void {
-    this.state.souffrances[souffrance].diceCount = Math.max(0, diceCount);
+  setSouffranceDegree(souffrance: Souffrance, degreeCount: number): void {
+    this.state.souffrances[souffrance].degreeCount = Math.max(0, degreeCount);
+  }
+
+  // Legacy alias for backwards compatibility during migration
+  setSouffranceDice(souffrance: Souffrance, degreeCount: number): void {
+    this.setSouffranceDegree(souffrance, degreeCount);
   }
 
   /**
-   * Add a mark to a souffrance (souffrances act as their own resistance competences)
+   * Add a mark to a souffrance resistance compétence (compétence de Résistance)
+   * These are the R[Souffrance] compétences used to resist damage
    */
   addSouffranceMark(souffrance: Souffrance, isEternal: boolean = false): void {
     const souf = this.state.souffrances[souffrance];
@@ -330,58 +343,70 @@ export class CharacterSheetManager {
   }
 
   /**
-   * Get total marks for a souffrance
+   * Get total marks for a souffrance resistance compétence
    */
   getTotalSouffranceMarks(souffrance: Souffrance): number {
     return this.state.souffrances[souffrance].marks.filter(m => m).length;
   }
 
   /**
-   * Get souffrance level (Niv 0-5) based on dice count
-   * Same calculation as competence level
+   * Get souffrance level (Niv 0-5) based on degree count
+   * Same calculation as compétence level
+   * This is the level of the DS (Degrees of Souffrance) accumulated on top of character sheet
    */
   getSouffranceLevel(souffrance: Souffrance): number {
-    const diceCount = this.state.souffrances[souffrance].diceCount;
-    if (diceCount === 0) return 0;
-    if (diceCount <= 2) return 1;
-    if (diceCount <= 5) return 2;
-    if (diceCount <= 9) return 3;
-    if (diceCount <= 14) return 4;
+    const degreeCount = this.state.souffrances[souffrance].degreeCount;
+    if (degreeCount === 0) return 0;
+    if (degreeCount <= 2) return 1;
+    if (degreeCount <= 5) return 2;
+    if (degreeCount <= 9) return 3;
+    if (degreeCount <= 14) return 4;
     return 5;
   }
 
   /**
-   * Get resistance competence dice count
-   * This is separate from souffrance dice count - only increases on realization
+   * Get resistance compétence degree count (compétence de Résistance R[Souffrance])
+   * This is separate from souffrance degree count - only increases on realization
    */
+  getResistanceDegreeCount(souffrance: Souffrance): number {
+    return this.state.souffrances[souffrance].resistanceDegreeCount;
+  }
+
+  // Legacy alias for backwards compatibility during migration
   getResistanceDiceCount(souffrance: Souffrance): number {
-    return this.state.souffrances[souffrance].resistanceDiceCount;
+    return this.getResistanceDegreeCount(souffrance);
   }
 
   /**
-   * Set resistance competence dice count (normally only editable in God mode)
-   * This is separate from souffrance dice count - only increases on realization normally
+   * Set resistance compétence degree count (normally only editable in God mode)
+   * This is separate from souffrance degree count - only increases on realization normally
    */
-  setResistanceDiceCount(souffrance: Souffrance, diceCount: number): void {
-    this.state.souffrances[souffrance].resistanceDiceCount = Math.max(0, diceCount);
+  setResistanceDegreeCount(souffrance: Souffrance, degreeCount: number): void {
+    this.state.souffrances[souffrance].resistanceDegreeCount = Math.max(0, degreeCount);
+  }
+
+  // Legacy alias for backwards compatibility during migration
+  setResistanceDiceCount(souffrance: Souffrance, degreeCount: number): void {
+    this.setResistanceDegreeCount(souffrance, degreeCount);
   }
 
   /**
-   * Get resistance competence level (Niv 0-5) based on resistance dice count
-   * This is separate from souffrance dice count - only increases on realization
+   * Get resistance compétence level (Niv 0-5) based on resistance degree count
+   * This is separate from souffrance degree count - only increases on realization
+   * This is the level of the compétence de Résistance R[Souffrance]
    */
   getResistanceLevel(souffrance: Souffrance): number {
-    const diceCount = this.state.souffrances[souffrance].resistanceDiceCount;
-    if (diceCount === 0) return 0;
-    if (diceCount <= 2) return 1;
-    if (diceCount <= 5) return 2;
-    if (diceCount <= 9) return 3;
-    if (diceCount <= 14) return 4;
+    const degreeCount = this.state.souffrances[souffrance].resistanceDegreeCount;
+    if (degreeCount === 0) return 0;
+    if (degreeCount <= 2) return 1;
+    if (degreeCount <= 5) return 2;
+    if (degreeCount <= 9) return 3;
+    if (degreeCount <= 14) return 4;
     return 5;
   }
 
   /**
-   * Check if souffrance is éprouvée (10 marks total, minus eternal marks)
+   * Check if souffrance resistance compétence is éprouvée (10 marks total, minus eternal marks)
    */
   isSouffranceEprouvee(souffrance: Souffrance): boolean {
     const souf = this.state.souffrances[souffrance];
@@ -391,18 +416,18 @@ export class CharacterSheetManager {
   }
 
   /**
-   * Realize a souffrance resistance competence (gain +1 resistance dice when 10 marks reached, like competences)
-   * This increases the resistance competence dice, NOT the souffrance dice
+   * Realize a souffrance resistance compétence (gain +1 resistance degree when 10 marks reached, like compétences)
+   * This increases the resistance compétence degree, NOT the souffrance degree
    */
   realizeSouffrance(souffrance: Souffrance): void {
     if (!this.isSouffranceEprouvee(souffrance)) return;
     
     const souf = this.state.souffrances[souffrance];
-    const oldResistanceDiceCount = souf.resistanceDiceCount;
+    const oldResistanceDegreeCount = souf.resistanceDegreeCount;
     const oldLevel = this.getResistanceLevel(souffrance);
     
-    // +1 dice to resistance competence (NOT souffrance dice)
-    souf.resistanceDiceCount += 1;
+    // +1 degree to resistance compétence (NOT souffrance degree)
+    souf.resistanceDegreeCount += 1;
     
     // Clear non-eternal marks
     for (let i = 0; i < 100; i++) {
@@ -411,7 +436,7 @@ export class CharacterSheetManager {
       }
     }
     
-    // Gain free marks = current resistance level (same as competence realization)
+    // Gain free marks = current resistance level (same as compétence realization)
     const level = this.getResistanceLevel(souffrance);
     this.state.freeMarks += level;
   }
@@ -425,8 +450,8 @@ export class CharacterSheetManager {
 
   /**
    * Unlock a mastery by spending a mastery point
-   * Unlocks with +1 dice automatically
-   * @param competence The competence
+   * Unlocks with +1 degree automatically
+   * @param competence The compétence
    * @param masteryName The name of the mastery to unlock
    * @returns true if successful, false if insufficient points or invalid mastery
    */
@@ -445,11 +470,11 @@ export class CharacterSheetManager {
       return false;
     }
     
-    // Verify the mastery is valid for this competence
+    // Verify the mastery is valid for this compétence
     const availableMasteries = getMasteries(competence);
     if (!availableMasteries.includes(masteryName)) {
       if (process.env.NODE_ENV === 'development') {
-        console.warn('Cannot unlock mastery: Invalid mastery for competence', {
+        console.warn('Cannot unlock mastery: Invalid mastery for compétence', {
           competence,
           masteryName,
           available: availableMasteries
@@ -470,14 +495,14 @@ export class CharacterSheetManager {
       return false;
     }
     
-    // Create a new competence object with updated masteries and points
+    // Create a new compétence object with updated masteries and points
     // This ensures React detects the change
     this.state.competences[competence] = {
       ...comp,
       masteryPoints: comp.masteryPoints - 1,
       masteries: [...comp.masteries, {
         name: masteryName,
-        diceCount: 1, // Start with +1 dice when unlocked
+        degreeCount: 1, // Start with +1 degree when unlocked
       }]
     };
     
@@ -495,8 +520,8 @@ export class CharacterSheetManager {
 
   /**
    * Upgrade an existing mastery by spending a mastery point
-   * Increases the mastery's dice count by 1 (up to competence level)
-   * @param competence The competence
+   * Increases the mastery's degree count by 1 (up to compétence level)
+   * @param competence The compétence
    * @param masteryName The name of the mastery to upgrade
    * @returns true if successful, false if insufficient points or invalid mastery
    */
@@ -514,15 +539,15 @@ export class CharacterSheetManager {
       return false;
     }
     
-    // Check if we can upgrade (dice count must be less than competence level)
-    const maxDice = this.getCompetenceLevel(competence);
-    if (mastery.diceCount >= maxDice) {
+    // Check if we can upgrade (degree count must be less than compétence level)
+    const maxDegree = this.getCompetenceLevel(competence);
+    if (mastery.degreeCount >= maxDegree) {
       return false;
     }
     
-    // Spend a mastery point and increase dice count
+    // Spend a mastery point and increase degree count
     comp.masteryPoints -= 1;
-    mastery.diceCount += 1;
+    mastery.degreeCount += 1;
     
     return true;
   }
