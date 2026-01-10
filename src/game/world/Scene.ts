@@ -396,11 +396,20 @@ export class Scene {
       const isOnPlatform = isWithinBounds && isOnPlatformHeight;
 
       if (isOnPlatform && this.healthSystem) {
+        // Character is on platform - mark competences as active
+        // When walking on a harmful platform, mark PAS (walking) as active
+        // In a real combat/action scenario, you would also mark other active competences like:
+        // - Running: PAS
+        // - Jumping: SAUT
+        // - Attacking: ARME, DESARME, etc.
+        const activeTracker = this.healthSystem.getActiveCompetencesTracker();
+        activeTracker.markActive(Competence.PAS, currentTime); // Mark walking as active
+        
         // Character is on platform - apply damage every second
         if (currentTime - platform.lastDamageTime >= this.damageInterval) {
           // Environmental damage: stepping on a harmful platform
           // This represents 1 failure on a check, which causes 1 DS of suffering
-          // Use PAS (walking) as the "used competence" since this is environmental damage
+          // The active competences tracker now has PAS marked, so XP will be distributed accordingly
           const characterSheetManager = this.healthSystem.getCharacterSheetManager();
           const beforeDegree = characterSheetManager.getSouffrance(platform.souffrance).degreeCount;
           const applied = this.healthSystem.applySouffranceFromFailure(

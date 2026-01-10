@@ -324,11 +324,45 @@ From `CharacterSheetManager.ts`:
 - **Marks**: Tracked per competence (100 marks for video game, vs 10 in TTRPG)
   - **Design Decision**: The TTRPG uses 10 marks to be éprouvée, but the video game uses 100 marks for smoother progression and more granular feedback
   - **Eternal Marks**: Never cleared, reduce mark requirement
+  - **Partial Marks**: Fractional marks (0.0-0.99) accumulate until >= 1.0, then convert to full mark
 - **Realization**: When 100 marks (minus eternal) are reached:
   - +1 dice to competence
   - Clear non-eternal marks
   - Gain free marks = current level
   - +1 to linked attribute
+
+#### Multi-Competence XP Distribution (Video Game Adaptation)
+
+**IMPORTANT: CTs are marked as "active" WHEN THEY ARE USED IN GAMEPLAY** (e.g., swinging weapon → [Armé], running → [Pas], jumping → [Saut], talking → [Négociation], tracking → [Vision]), **NOT just when failures occur**. The structure is ready for this, but actual marking during gameplay actions is not yet implemented.
+
+**TTRPG Rule**: Each failure = 1 mark on the competence used
+
+**Video Game Adaptation**: 
+- **3 marks per failure** distributed among **all active competences** (those within their XP timeframes)
+- **XP Timeframe Mechanism**: Each CT has its own independent 2-second XP timeframe (default: 2000ms)
+  - When a CT is used (marked active), it can gain XP for 2 seconds
+  - **If the CT is used again within that 2 seconds, the timer RESETS** (extends to another 2 seconds from that point)
+  - Example: Jumping uses [Saut] → active for 2s. Jump again after 1s → [Saut]'s XP timeframe resets to another 2s
+- Distribution rules:
+  - **1 CT active**: 3 marks per failure to that CT
+  - **2 CTs active**: 1.5 marks per failure each (3 marks total per failure)
+  - **3 CTs active**: 1 mark per failure each (3 marks total per failure)
+  - **More than 3 CTs active**: Prioritize those with **lowest degree count** (up to 3 CTs receive XP)
+- **Critical Failure**: 5 marks per failure (instead of 3), distributed the same way
+- **Active Competences Tracking**: `ActiveCompetencesTracker` class tracks competences within their XP timeframes
+  - CTs should be marked active **when used in gameplay**: `activeTracker.markActive(Competence.PAS)` when running, `markActive(Competence.ARME)` when swinging, etc.
+  - Marking a CT as active **resets its XP timeframe** (can gain XP for another 2 seconds)
+  - Multiple CTs can be active simultaneously, each with their own independent 2-second XP timeframe (e.g., swinging weapon while running = [Armé] + [Pas])
+  - The event log shows **all active CTs** when XP is distributed (even if none are active yet)
+  - Example: If you're running ([Pas]), jumping ([Saut]), and attacking ([Armé]) when you fail, all three receive XP (as long as each is within its own 2-second XP timeframe)
+
+**Example**:
+- Character swings weapon while running → [Armé] and [Pas] are marked as active
+- Character then fails a check (7 failures occur)
+- Active competences: [Pas], [Armé] (2 CTs active within timeframe)
+- Distribution: 7 failures × 1.5 marks per CT = 10.5 marks each to [Pas] and [Armé]
+- Total: 21 marks distributed (7 × 3 marks per failure)
+- Event log shows: "Active CTs: [Pas], [Armé]. Gained 21 marks distributed - 10.5 marks per CT"
 
 ---
 

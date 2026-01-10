@@ -7,6 +7,7 @@ import { PhysicsWorld } from '../physics/PhysicsWorld';
 import { CharacterController } from '../physics/CharacterController';
 import { CharacterSheetManager } from '../character/CharacterSheetManager';
 import { SouffranceHealthSystem } from '../character/SouffranceHealthSystem';
+import { ActiveCompetencesTracker } from '../character/ActiveCompetencesTracker';
 import { GAME_CONFIG } from '@/lib/constants';
 import { Debug } from '../utils/debug';
 
@@ -52,7 +53,10 @@ export class Game {
       // Initialize character sheet manager and health system
       Debug.log('Game', 'Initializing character systems...');
       this.characterSheetManager = new CharacterSheetManager();
-      this.healthSystem = new SouffranceHealthSystem(this.characterSheetManager);
+      // Create active competences tracker for multi-competence XP distribution
+      // Each CT has its own independent 2-second XP timeframe that resets when the CT is used again
+      const activeCompetencesTracker = new ActiveCompetencesTracker(2000); // 2 second XP timeframe per CT
+      this.healthSystem = new SouffranceHealthSystem(this.characterSheetManager, activeCompetencesTracker);
       Debug.log('Game', 'Character systems initialized');
 
       // Initialize character controller
@@ -178,6 +182,13 @@ export class Game {
    */
   getCharacterSheetManager(): CharacterSheetManager {
     return this.characterSheetManager;
+  }
+
+  /**
+   * Get health system (for UI integration and active competences tracking)
+   */
+  getHealthSystem(): SouffranceHealthSystem {
+    return this.healthSystem;
   }
 
   /**

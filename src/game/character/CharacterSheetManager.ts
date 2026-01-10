@@ -32,6 +32,7 @@ export interface CompetenceData {
   degreeCount: number; // Degrees of the compétence (not "dice")
   isRevealed: boolean;
   marks: boolean[]; // 100 marks
+  partialMarks: number; // Fractional marks (0.0-0.99, accumulates until >= 1.0, then converts to full mark)
   eternalMarks: number;
   eternalMarkIndices: number[];
   masteries: MasteryData[];
@@ -90,6 +91,7 @@ export class CharacterSheetManager {
         degreeCount: 0,
         isRevealed: false,
         marks: new Array(100).fill(false),
+        partialMarks: 0.0, // Fractional marks accumulator
         eternalMarks: 0,
         eternalMarkIndices: [],
         masteries: [],
@@ -127,6 +129,7 @@ export class CharacterSheetManager {
         ...comp,
         masteries: [...comp.masteries],
         marks: [...comp.marks],
+        partialMarks: comp.partialMarks, // Copy partial marks
         eternalMarkIndices: [...comp.eternalMarkIndices],
       };
     });
@@ -198,6 +201,10 @@ export class CharacterSheetManager {
     return { ...this.state.competences[competence] };
   }
 
+  getCompetenceDegree(competence: Competence): number {
+    return this.state.competences[competence].degreeCount;
+  }
+
   setCompetenceDegree(competence: Competence, degreeCount: number): void {
     const comp = this.state.competences[competence];
     const oldDegreeCount = comp.degreeCount;
@@ -240,6 +247,85 @@ export class CharacterSheetManager {
         return;
       }
     }
+  }
+
+  /**
+   * Add fractional marks to a competence (for video game XP distribution)
+   * When partial marks accumulate to >= 1.0, convert to full mark
+   * @param competence The competence to add marks to
+   * @param amount Fractional amount (e.g., 1.5, 0.5, 3.0)
+   * @param isEternal Whether these are eternal marks
+   */
+  addPartialMarks(competence: Competence, amount: number, isEternal: boolean = false): void {
+    const comp = this.state.competences[competence];
+    
+    // Add to partial marks accumulator
+    comp.partialMarks += amount;
+    
+    // Convert full marks when partial >= 1.0
+    while (comp.partialMarks >= 1.0) {
+      comp.partialMarks -= 1.0;
+      this.addCompetenceMark(competence, isEternal);
+    }
+  }
+
+  /**
+   * Get partial marks for a competence (for display)
+   */
+  getPartialMarks(competence: Competence): number {
+    return this.state.competences[competence].partialMarks;
+  }
+
+  /**
+   * Distribute XP marks across multiple competences (video game adaptation)
+   * Rules:
+   * - Maximum 3 marks per failure, distributed among active competences
+   * - If 1 CT used: 3 marks to that CT
+   * - If 2 CTs used: 1.5 marks each (3 marks total)
+   * - If 3 CTs used: 1 mark each (3 marks total)
+   * - If more than 3 CTs: prioritize those with lowest degree count
+   * 
+   * @param activeCompetences Array of competences that were active during the failure
+   * @param failures Number of failures (will be multiplied by 3 for total marks)
+   * @param isEternal Whether these are eternal marks
+   */
+  distributeMarksToActiveCompetences(
+    activeCompetences: Competence[],
+    failures: number,
+    isEternal: boolean = false
+  ): void {
+    if (activeCompetences.length === 0) return;
+    if (failures <= 0) return;
+
+    // Total marks per failure = 3
+    const totalMarksPerFailure = 3;
+    const totalMarks = failures * totalMarksPerFailure;
+
+    // Sort by degree count (lowest first) for priority when more than 3 competences
+    const sortedCompetences = [...activeCompetences].sort((a, b) => {
+      return this.getCompetenceDegree(a) - this.getCompetenceDegree(b);
+    });
+
+    // Take up to 3 competences (prioritized by lowest degree)
+    const selectedCompetences = sortedCompetences.slice(0, 3);
+    const numCompetences = selectedCompetences.length;
+
+    // Calculate marks per competence based on number of competences used
+    let marksPerCompetence: number;
+    if (numCompetences === 1) {
+      marksPerCompetence = 3.0; // 3 marks for 1 CT
+    } else if (numCompetences === 2) {
+      marksPerCompetence = 1.5; // 1.5 marks each for 2 CTs
+    } else {
+      marksPerCompetence = 1.0; // 1 mark each for 3 CTs
+    }
+
+    // Distribute marks (multiplied by failures)
+    const marksPerCompetenceTotal = marksPerCompetence * failures;
+
+    selectedCompetences.forEach(competence => {
+      this.addPartialMarks(competence, marksPerCompetenceTotal, isEternal);
+    });
   }
 
   getCompetenceLevel(competence: Competence): number {

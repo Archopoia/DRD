@@ -1,6 +1,7 @@
 import { Souffrance, getSouffranceName, getSouffranceAttribute, getResistanceCompetenceName } from './data/SouffranceData';
 import { Competence, getCompetenceName } from './data/CompetenceData';
 import { CharacterSheetManager } from './CharacterSheetManager';
+import { ActiveCompetencesTracker } from './ActiveCompetencesTracker';
 import { Debug } from '../utils/debug';
 import { getEventLog, EventType } from '../utils/EventLog';
 
@@ -51,11 +52,20 @@ export enum SequeleType {
  */
 export class SouffranceHealthSystem {
   private characterSheetManager: CharacterSheetManager;
+  private activeCompetencesTracker: ActiveCompetencesTracker;
   private lastHealthState: HealthState;
 
-  constructor(characterSheetManager: CharacterSheetManager) {
+  constructor(characterSheetManager: CharacterSheetManager, activeCompetencesTracker?: ActiveCompetencesTracker) {
     this.characterSheetManager = characterSheetManager;
+    this.activeCompetencesTracker = activeCompetencesTracker || new ActiveCompetencesTracker(2000); // Default 2 second XP timeframe per CT
     this.lastHealthState = this.getHealthState();
+  }
+
+  /**
+   * Get the active competences tracker (for marking competences as active from gameplay)
+   */
+  getActiveCompetencesTracker(): ActiveCompetencesTracker {
+    return this.activeCompetencesTracker;
   }
 
   /**
@@ -180,18 +190,65 @@ export class SouffranceHealthSystem {
     const souffranceName = getSouffranceName(souffrance);
     const resistanceName = getResistanceCompetenceName(souffrance);
     
-    // Mark 1: Compétence d'Action used - ALL failures give marks
-    // According to page 63: "Pour chaque Échec obtenu lorsque vous vous éprouverez d'une Épreuve Possible, attribuez-vous 1 Marque à la CT utilisée"
-    for (let i = 0; i < failures; i++) {
-      this.characterSheetManager.addCompetenceMark(usedCompetence, false);
-    }
+    // Mark 1: Compétence d'Action used - VIDEO GAME ADAPTATION
+    // Distribute 3 marks per failure among all active competences (up to 3 competences)
+    // Rules: 1 CT = 3 marks, 2 CTs = 1.5 marks each, 3 CTs = 1 mark each
+    // Priority: If more than 3 CTs active, prioritize those with lowest degree count
+    
+    // Mark the used competence as active FIRST (before getting active list)
+    this.activeCompetencesTracker.markActive(usedCompetence);
+    
+    // Get all active competences (now includes the one we just marked)
+    const activeCompetences = this.activeCompetencesTracker.getActiveCompetences();
+    
+    // Distribute marks among active competences
+    this.characterSheetManager.distributeMarksToActiveCompetences(activeCompetences, failures, false);
+    
     if (failures > 0) {
+      // Show ALL active competences (should always include at least usedCompetence)
+      const allActiveNames = activeCompetences.length > 0
+        ? activeCompetences.map(c => getCompetenceName(c)).join(', ')
+        : getCompetenceName(usedCompetence); // Fallback if somehow empty
+      
+      // Get the competences that actually received XP (up to 3, prioritized by lowest degree)
+      const sortedCompetences = [...activeCompetences].sort((a, b) => {
+        return this.characterSheetManager.getCompetenceDegree(a) - this.characterSheetManager.getCompetenceDegree(b);
+      });
+      const selectedCompetences = sortedCompetences.slice(0, 3);
+      const numCompetences = selectedCompetences.length;
+      const marksPerCT = numCompetences === 1 ? 3.0 : (numCompetences === 2 ? 1.5 : 1.0);
+      const totalMarksPerFailure = 3.0;
+      
+      const selectedNames = numCompetences > 0
+        ? selectedCompetences.map(c => getCompetenceName(c)).join(', ')
+        : allActiveNames; // Fallback
+      
+      // Create detailed message showing all active CTs and which ones received XP
+      let message = '';
+      if (activeCompetences.length === 1) {
+        // Only one active CT (just the used one, no others active)
+        message = `Active CTs: ${allActiveNames}. Gained ${(totalMarksPerFailure * failures).toFixed(1)} marks - ${(marksPerCT * failures).toFixed(1)} marks per CT`;
+      } else if (activeCompetences.length <= 3) {
+        // 2-3 active CTs, all receive XP
+        message = `Active CTs: ${allActiveNames}. Gained ${(totalMarksPerFailure * failures).toFixed(1)} marks distributed - ${(marksPerCT * failures).toFixed(1)} marks per CT`;
+      } else {
+        // More than 3 active CTs, show which were selected (prioritized by lowest degree)
+        message = `Active CTs: ${allActiveNames} (${activeCompetences.length} total). Selected: ${selectedNames} (lowest degree). Gained ${(totalMarksPerFailure * failures).toFixed(1)} marks distributed - ${(marksPerCT * failures).toFixed(1)} marks per CT`;
+      }
+      
       eventLog.addEvent(
         EventType.EXPERIENCE_GAIN,
-        `Gained ${failures} mark${failures > 1 ? 's' : ''} on ${getCompetenceName(usedCompetence)} (${failures} failure${failures > 1 ? 's' : ''} on check)`,
-        { competence: usedCompetence, marks: failures }
+        message,
+        { 
+          activeCompetences: activeCompetences, // All active competences
+          selectedCompetences: selectedCompetences, // Competences that received XP
+          competences: selectedCompetences, // For backward compatibility
+          marks: totalMarksPerFailure * failures, 
+          marksPerCT: marksPerCT * failures,
+          failures: failures 
+        }
       );
-      Debug.log('SouffranceHealthSystem', `Gained ${failures} marks on used compétence d'Action: ${usedCompetence}`);
+      Debug.log('SouffranceHealthSystem', `Active CTs: [${allActiveNames}]. Distributed ${totalMarksPerFailure * failures} marks (${marksPerCT * failures} per CT) among ${numCompetences} selected compétences: ${selectedNames}`);
     }
 
     // Mark 2: Compétence de Résistance - only actual damage gives marks
@@ -254,11 +311,12 @@ export class SouffranceHealthSystem {
   }
 
   /**
-   * Apply critical failure (5 marks + more severe suffering)
+   * Apply critical failure (5 marks per failure + more severe suffering)
    * According to page 63: "Lors d'un Échec Critique vous obtiendrez 5 M d'un coup"
+   * VIDEO GAME ADAPTATION: 5 marks per failure, distributed among active competences
    * 
    * @param souffrance The type of souffrance to apply
-   * @param failures The number of failures on the check (but for critical failure, marks are 5 regardless)
+   * @param failures The number of failures on the check (but for critical failure, marks are 5 per failure regardless)
    * @param usedCompetence The compétence d'Action that was being used
    * @returns The actual amount of DS applied
    */
@@ -270,20 +328,121 @@ export class SouffranceHealthSystem {
     Debug.log('SouffranceHealthSystem', `Critical failure! Applying ${failures} failures worth of ${getSouffranceName(souffrance)}`);
     
     const eventLog = getEventLog();
+    const souffranceName = getSouffranceName(souffrance);
     
-    // Critical failure: 5 marks on the compétence d'Action, regardless of number of failures
-    // According to page 63: "Lors d'un Échec Critique vous obtiendrez 5 M d'un coup (quel qu'en soit le nombre d'Échecs par rapport au Niv d'Épreuve)"
-    for (let i = 0; i < 5; i++) {
-      this.characterSheetManager.addCompetenceMark(usedCompetence, false);
+    // Critical failure: 5 marks PER FAILURE distributed among active competences
+    // According to page 63: "Lors d'un Échec Critique vous obtiendrez 5 M d'un coup"
+    // VIDEO GAME ADAPTATION: Critical failure = 5 marks per failure (vs normal 3 marks per failure)
+    
+    // Mark the used competence as active FIRST
+    this.activeCompetencesTracker.markActive(usedCompetence);
+    
+    // Get all active competences (now includes the one we just marked)
+    const activeCompetences = this.activeCompetencesTracker.getActiveCompetences();
+    
+    // Distribute 5 marks per failure (instead of 3) among active competences
+    // Same distribution rules: 1 CT = 5 marks per failure, 2 CTs = 2.5 each, 3 CTs = 1.67 each
+    // Sort and select competences (prioritize lowest degree)
+    const sortedCompetences = [...activeCompetences].sort((a, b) => {
+      return this.characterSheetManager.getCompetenceDegree(a) - this.characterSheetManager.getCompetenceDegree(b);
+    });
+    const selectedCompetences = sortedCompetences.slice(0, 3);
+    const numCompetences = selectedCompetences.length;
+    let marksPerCT: number;
+    if (numCompetences === 1) {
+      marksPerCT = 5.0; // 5 marks per failure for 1 CT
+    } else if (numCompetences === 2) {
+      marksPerCT = 2.5; // 2.5 marks per failure each for 2 CTs
+    } else {
+      marksPerCT = 5.0 / 3.0; // ~1.67 marks per failure each for 3 CTs
     }
+    
+    // Distribute marks
+    selectedCompetences.forEach(competence => {
+      this.characterSheetManager.addPartialMarks(competence, marksPerCT * failures, false);
+    });
+    
+    // Show ALL active competences in event log (should always include at least usedCompetence)
+    const allActiveNames = activeCompetences.length > 0
+      ? activeCompetences.map(c => getCompetenceName(c)).join(', ')
+      : getCompetenceName(usedCompetence); // Fallback if somehow empty
+    const selectedNames = selectedCompetences.length > 0
+      ? selectedCompetences.map(c => getCompetenceName(c)).join(', ')
+      : allActiveNames; // Fallback
+    
+    const totalMarks = marksPerCT * numCompetences * failures;
+    
+    // Create detailed message showing all active CTs
+    let message = '';
+    if (activeCompetences.length === 1) {
+      // Only one active CT (just the used one, no others active)
+      message = `Critical failure! Active CTs: ${allActiveNames}. Gained ${totalMarks.toFixed(1)} marks - ${(marksPerCT * failures).toFixed(1)} marks per CT`;
+    } else if (activeCompetences.length <= 3) {
+      // 2-3 active CTs, all receive XP
+      message = `Critical failure! Active CTs: ${allActiveNames}. Gained ${totalMarks.toFixed(1)} marks distributed - ${(marksPerCT * failures).toFixed(1)} marks per CT`;
+    } else {
+      // More than 3 active CTs, show which were selected (prioritized by lowest degree)
+      message = `Critical failure! Active CTs: ${allActiveNames} (${activeCompetences.length} total). Selected: ${selectedNames} (lowest degree). Gained ${totalMarks.toFixed(1)} marks distributed - ${(marksPerCT * failures).toFixed(1)} marks per CT`;
+    }
+    
     eventLog.addEvent(
       EventType.EXPERIENCE_GAIN,
-      `Critical failure! Gained 5 marks on ${getCompetenceName(usedCompetence)}`,
-      { competence: usedCompetence, marks: 5, critical: true }
+      message,
+      { 
+        activeCompetences: activeCompetences,
+        selectedCompetences: selectedCompetences,
+        competences: selectedCompetences,
+        marks: totalMarks, 
+        failures: failures, 
+        critical: true 
+      }
     );
+    Debug.log('SouffranceHealthSystem', `Critical failure! Active CTs: [${allActiveNames}]. Distributed ${totalMarks.toFixed(1)} marks among ${numCompetences} selected compétences: ${selectedNames}`);
     
-    // Apply suffering (the failures still cause suffering as normal)
-    return this.applySouffranceFromFailure(souffrance, failures, usedCompetence);
+    // Apply suffering (but don't call applySouffranceFromFailure as it would give marks again)
+    // Just apply the suffering damage directly
+    const degreeAmount = failures;
+    const resistanceLevel = this.characterSheetManager.getResistanceLevel(souffrance);
+    const absorbedAmount = Math.min(resistanceLevel, degreeAmount);
+    const actualDamage = degreeAmount - absorbedAmount;
+
+    if (actualDamage > 0) {
+      const currentDice = this.characterSheetManager.getSouffrance(souffrance).degreeCount;
+      const newDiceCount = Math.round((currentDice + actualDamage) * 10) / 10;
+      this.characterSheetManager.setSouffranceDice(souffrance, newDiceCount);
+      
+      // Gain marks on resistance competence (actual damage gives marks)
+      for (let i = 0; i < actualDamage; i++) {
+        this.characterSheetManager.addSouffranceMark(souffrance, false);
+      }
+      const resistanceName = getResistanceCompetenceName(souffrance);
+      eventLog.addEvent(
+        EventType.EXPERIENCE_GAIN,
+        `Gained ${actualDamage} mark${actualDamage > 1 ? 's' : ''} on ${resistanceName} (${actualDamage} DS after resistance, ${absorbedAmount}/${degreeAmount} absorbed)`,
+        {
+          resistanceCompetence: resistanceName,
+          marks: actualDamage,
+          actualDamage: actualDamage,
+          absorbed: absorbedAmount,
+          total: degreeAmount,
+        }
+      );
+      
+      const currentDiceAfter = this.characterSheetManager.getSouffrance(souffrance).degreeCount;
+      eventLog.addEvent(
+        EventType.SOUFFRANCE_DAMAGE,
+        `+${actualDamage.toFixed(1)} DS ${souffranceName} (${currentDiceAfter.toFixed(1)} DS total) - Critical failure`,
+        {
+          souffrance: souffrance,
+          damage: actualDamage,
+          totalDice: currentDiceAfter,
+        }
+      );
+      
+      this.checkHealthStateChange();
+    }
+
+    return actualDamage;
   }
 
 
