@@ -122,5 +122,26 @@ export class ActiveCompetencesTracker {
   getXpTimeframe(): number {
     return this.xpTimeframe;
   }
+
+  /**
+   * Get all active competences with their remaining time (for UI display)
+   * @param currentTime Current timestamp (defaults to now)
+   * @returns Array of objects with competence and remaining time in milliseconds
+   */
+  getActiveCompetencesWithRemainingTime(currentTime: number = Date.now()): Array<{ competence: Competence; remainingTime: number }> {
+    this.cleanupOld(currentTime);
+    const result: Array<{ competence: Competence; remainingTime: number }> = [];
+    
+    for (const [competence, timestamp] of this.activeCompetences.entries()) {
+      const elapsed = currentTime - timestamp;
+      const remainingTime = Math.max(0, this.xpTimeframe - elapsed);
+      result.push({ competence, remainingTime });
+    }
+    
+    // Sort by remaining time (most time remaining first)
+    result.sort((a, b) => b.remainingTime - a.remainingTime);
+    
+    return result;
+  }
 }
 

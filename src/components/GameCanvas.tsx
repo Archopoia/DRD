@@ -5,6 +5,7 @@ import { Debug } from '@/game/utils/debug';
 import CharacterSheet from './CharacterSheet';
 import EventLog from './ui/EventLog';
 import Console from './ui/Console';
+import ActiveCompetencesDisplay from './ui/ActiveCompetencesDisplay';
 
 /**
  * React component that wraps the Three.js game canvas
@@ -17,7 +18,8 @@ export default function GameCanvas() {
   const [showCharacterSheet, setShowCharacterSheet] = useState<boolean>(false);
   const [showConsole, setShowConsole] = useState<boolean>(false);
   const [characterSheetManager, setCharacterSheetManager] = useState<any>(null);
-  const [godMode, setGodMode] = useState<boolean>(false);
+  const [godMode, setGodMode] = useState<boolean>(true); // Default to true (god mode on by default)
+  const [activeCTs, setActiveCTs] = useState<Array<{ competence: any; remainingTime: number }>>([]);
 
   // Handle console open/close - disable controls when console is open
   useEffect(() => {
@@ -92,17 +94,32 @@ export default function GameCanvas() {
           }
         }, 1000);
 
-        // Initial save - create the log file with all current logs
-        Debug.saveLogs(false).catch(() => {
-          // Silently fail on initial save - not critical
-        });
-
         // Auto-save logs every second (append mode)
         const logSaveInterval = setInterval(() => {
           Debug.saveLogs(true).catch(() => {
             // Silently fail on periodic saves - not critical
           });
         }, 1000);
+
+        // Update active CTs display (update more frequently for smooth countdown)
+        const activeCTsInterval = setInterval(() => {
+          if (gameRef.current) {
+            try {
+              const tracker = gameRef.current.getActiveCompetencesTracker();
+              if (tracker) {
+                const activeCTsWithTime = tracker.getActiveCompetencesWithRemainingTime();
+                setActiveCTs(activeCTsWithTime);
+              }
+            } catch (error) {
+              // Silently fail if tracker is not available yet
+            }
+          }
+        }, 100); // Update 10 times per second for smooth countdown
+
+        // Initial save - create the log file with all current logs
+        Debug.saveLogs(false).catch(() => {
+          // Silently fail on initial save - not critical
+        });
 
         Debug.log('GameCanvas', 'Game initialized successfully');
 
@@ -111,6 +128,7 @@ export default function GameCanvas() {
           Debug.log('GameCanvas', 'Cleaning up game...');
           clearInterval(fpsInterval);
           clearInterval(logSaveInterval);
+          clearInterval(activeCTsInterval);
           if (gameRef.current) {
             gameRef.current.dispose();
             gameRef.current = null;
@@ -244,6 +262,9 @@ export default function GameCanvas() {
         godMode={godMode}
       />
       <EventLog maxVisible={10} />
+      {godMode && (
+        <ActiveCompetencesDisplay activeCompetencesWithTime={activeCTs} />
+      )}
       <Console
         isOpen={showConsole}
         onClose={() => setShowConsole(false)}

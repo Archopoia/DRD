@@ -69,12 +69,14 @@ export class Game {
       const capsuleBottomOffset = capsuleHalfHeight + GAME_CONFIG.CHARACTER_CONTROLLER.RADIUS;
       const initialY = capsuleBottomOffset + 0.5; // Add 0.5 units above the floor for safety
       const initialPosition = { x: 0, y: initialY, z: 0 };
-      this.characterController = new CharacterController(this.physicsWorld, initialPosition);
+      // Use the same tracker instance for character controller and camera
+      this.characterController = new CharacterController(this.physicsWorld, initialPosition, activeCompetencesTracker);
       Debug.log('Game', 'Character controller initialized');
 
       // Initialize camera (requires character controller)
       Debug.log('Game', 'Initializing camera...');
-      this.camera = new FPSCamera(canvas, this.characterController);
+      // Use the same tracker instance that was created above
+      this.camera = new FPSCamera(canvas, this.characterController, activeCompetencesTracker);
       Debug.log('Game', 'Camera initialized');
 
       // Initialize scene (requires physics world)
@@ -189,6 +191,13 @@ export class Game {
    */
   getHealthSystem(): SouffranceHealthSystem {
     return this.healthSystem;
+  }
+
+  /**
+   * Get active competences tracker (for UI display)
+   */
+  getActiveCompetencesTracker(): ActiveCompetencesTracker {
+    return this.healthSystem.getActiveCompetencesTracker();
   }
 
   /**

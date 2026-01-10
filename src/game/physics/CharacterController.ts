@@ -3,6 +3,8 @@ import RAPIER from '@dimforge/rapier3d';
 import { PhysicsWorld } from './PhysicsWorld';
 import { GAME_CONFIG } from '@/lib/constants';
 import { Debug } from '../utils/debug';
+import { ActiveCompetencesTracker } from '../character/ActiveCompetencesTracker';
+import { Competence } from '../character/data/CompetenceData';
 
 /**
  * Character controller using a kinematic capsule body for FPS movement
@@ -11,6 +13,7 @@ import { Debug } from '../utils/debug';
 export class CharacterController {
   private rigidBody: RAPIER.RigidBody;
   private physicsWorld: PhysicsWorld;
+  private activeCompetencesTracker?: ActiveCompetencesTracker;
   private velocity: THREE.Vector3;
   private verticalVelocity: number = 0; // Track vertical velocity for jumping/falling
   private isGrounded: boolean = false;
@@ -19,12 +22,13 @@ export class CharacterController {
   private capsuleRadius: number;
   private halfHeight: number;
 
-  constructor(physicsWorld: PhysicsWorld, position: { x: number; y: number; z: number }) {
+  constructor(physicsWorld: PhysicsWorld, position: { x: number; y: number; z: number }, activeCompetencesTracker?: ActiveCompetencesTracker) {
     Debug.startMeasure('CharacterController.constructor');
     Debug.log('CharacterController', 'Initializing character controller...');
 
     try {
       this.physicsWorld = physicsWorld;
+      this.activeCompetencesTracker = activeCompetencesTracker;
       this.velocity = new THREE.Vector3();
 
       // Get capsule dimensions from config
@@ -250,6 +254,11 @@ export class CharacterController {
                 // Apply impulse at the contact point (where character touches block)
                 // This creates realistic rotation when pushing on edges
                 blockInfo.body.applyImpulseAtPoint(pushForce, blockInfo.contactPoint, true);
+                
+                // Mark POID as active when successfully pushing a block
+                if (this.activeCompetencesTracker) {
+                  this.activeCompetencesTracker.markActive(Competence.POID);
+                }
               }
             }
             
@@ -284,6 +293,11 @@ export class CharacterController {
                     
                     // Apply force at contact point for realistic rotation
                     blockInfo.body.applyImpulseAtPoint(pushForce, blockInfo.contactPoint, true);
+                    
+                    // Mark POID as active when successfully pushing a block
+                    if (this.activeCompetencesTracker) {
+                      this.activeCompetencesTracker.markActive(Competence.POID);
+                    }
                   }
                 }
                 // Don't move into the block - stay at current position
@@ -315,6 +329,11 @@ export class CharacterController {
                     
                     // Apply force at contact point for realistic rotation
                     blockInfo.body.applyImpulseAtPoint(pushForce, blockInfo.contactPoint, true);
+                    
+                    // Mark POID as active when successfully pushing a block
+                    if (this.activeCompetencesTracker) {
+                      this.activeCompetencesTracker.markActive(Competence.POID);
+                    }
                   }
                 }
                 // Don't move into the block - stay at current position

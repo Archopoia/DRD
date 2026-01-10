@@ -3,6 +3,8 @@ import { GAME_CONFIG } from '@/lib/constants';
 import type { CameraControls, MouseState } from '../utils/types';
 import { Debug } from '../utils/debug';
 import { CharacterController } from '../physics/CharacterController';
+import { ActiveCompetencesTracker } from '../character/ActiveCompetencesTracker';
+import { Competence } from '../character/data/CompetenceData';
 
 /**
  * First-person camera controller with mouse look and WASD movement
@@ -10,6 +12,7 @@ import { CharacterController } from '../physics/CharacterController';
 export class FPSCamera {
   public camera: THREE.PerspectiveCamera;
   private characterController: CharacterController;
+  private activeCompetencesTracker?: ActiveCompetencesTracker;
   private controls: CameraControls = {
     moveForward: false,
     moveBackward: false,
@@ -26,11 +29,12 @@ export class FPSCamera {
   private direction: THREE.Vector3;
   private controlsEnabled: boolean = true;
 
-  constructor(canvas: HTMLCanvasElement, characterController: CharacterController) {
+  constructor(canvas: HTMLCanvasElement, characterController: CharacterController, activeCompetencesTracker?: ActiveCompetencesTracker) {
     Debug.log('FPSCamera', 'Initializing camera...');
     
     try {
       this.characterController = characterController;
+      this.activeCompetencesTracker = activeCompetencesTracker;
       
       this.camera = new THREE.PerspectiveCamera(
         GAME_CONFIG.FOV,
@@ -80,8 +84,11 @@ export class FPSCamera {
           this.controls.run = true;
           break;
         case 'Space':
-          // Jump
+          // Jump - mark SAUT as active
           this.characterController.jump();
+          if (this.activeCompetencesTracker) {
+            this.activeCompetencesTracker.markActive(Competence.SAUT);
+          }
           break;
       }
     };
@@ -219,6 +226,11 @@ export class FPSCamera {
     moveDirection.applyQuaternion(this.camera.quaternion);
     moveDirection.y = 0; // Keep movement on horizontal plane
     moveDirection.normalize();
+
+    // Mark PAS as active when moving (walking/running)
+    if (this.direction.length() > 0 && this.activeCompetencesTracker) {
+      this.activeCompetencesTracker.markActive(Competence.PAS);
+    }
 
     // Move character controller (pass run state)
     this.characterController.move(moveDirection, deltaTime, this.controls.run);
