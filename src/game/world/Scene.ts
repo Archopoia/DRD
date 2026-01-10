@@ -115,13 +115,12 @@ export class Scene {
     );
     this.physicsBodies.set(ceiling, ceilingBody);
 
-    // Walls
-    const wallMaterial = this.renderer.createRetroStandardMaterial(0x5a5a5a);
-
-    // Back wall
+    // Walls - Each with a different muted town color
+    // Back wall - Muted stone gray
+    const backWallMaterial = this.renderer.createRetroStandardMaterial(0x6b6b5f);
     const backWall = new THREE.Mesh(
       new THREE.PlaneGeometry(roomSize, wallHeight),
-      wallMaterial
+      backWallMaterial
     );
     backWall.position.set(0, wallHeight / 2, -roomSize / 2);
     this.scene.add(backWall);
@@ -134,10 +133,11 @@ export class Scene {
     );
     this.physicsBodies.set(backWall, backWallBody);
 
-    // Front wall (with opening)
+    // Front wall (with opening) - Muted warm beige
+    const frontWallLeftMaterial = this.renderer.createRetroStandardMaterial(0x7d7365);
     const frontWallLeft = new THREE.Mesh(
       new THREE.PlaneGeometry(roomSize / 2 - 1, wallHeight),
-      wallMaterial
+      frontWallLeftMaterial
     );
     frontWallLeft.position.set(-roomSize / 4 - 0.5, wallHeight / 2, roomSize / 2);
     this.scene.add(frontWallLeft);
@@ -150,9 +150,11 @@ export class Scene {
     );
     this.physicsBodies.set(frontWallLeft, frontWallLeftBody);
 
+    // Front wall right - Muted terracotta
+    const frontWallRightMaterial = this.renderer.createRetroStandardMaterial(0x8b6f5e);
     const frontWallRight = new THREE.Mesh(
       new THREE.PlaneGeometry(roomSize / 2 - 1, wallHeight),
-      wallMaterial
+      frontWallRightMaterial
     );
     frontWallRight.position.set(roomSize / 4 + 0.5, wallHeight / 2, roomSize / 2);
     this.scene.add(frontWallRight);
@@ -165,10 +167,11 @@ export class Scene {
     );
     this.physicsBodies.set(frontWallRight, frontWallRightBody);
 
-    // Left wall
+    // Left wall - Muted sage green
+    const leftWallMaterial = this.renderer.createRetroStandardMaterial(0x6b7568);
     const leftWall = new THREE.Mesh(
       new THREE.PlaneGeometry(roomSize, wallHeight),
-      wallMaterial
+      leftWallMaterial
     );
     leftWall.rotation.y = Math.PI / 2;
     leftWall.position.set(-roomSize / 2, wallHeight / 2, 0);
@@ -182,10 +185,11 @@ export class Scene {
     );
     this.physicsBodies.set(leftWall, leftWallBody);
 
-    // Right wall
+    // Right wall - Muted dusty blue-gray
+    const rightWallMaterial = this.renderer.createRetroStandardMaterial(0x6b7078);
     const rightWall = new THREE.Mesh(
       new THREE.PlaneGeometry(roomSize, wallHeight),
-      wallMaterial
+      rightWallMaterial
     );
     rightWall.rotation.y = Math.PI / 2;
     rightWall.position.set(roomSize / 2, wallHeight / 2, 0);
