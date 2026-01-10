@@ -41,7 +41,17 @@ export const GAME_CONFIG = {
     JUMP_FORCE: 5.0,
     // Ground detection distance
     GROUND_DETECTION_DISTANCE: 0.1,
+    // Climbing settings (GRIMPE)
+    CLIMB_SPEED: 2.0, // Vertical climbing speed
+    CLIMB_REACH_DISTANCE: 0.5, // How close to a surface to start climbing
+    CLIMB_MIN_ANGLE: Math.PI / 3, // Minimum angle from vertical (60 degrees) to be climbable
+    // Dodge settings (ESQUIVE)
+    DODGE_SPEED: 10.0, // Dodge velocity magnitude
+    DODGE_DURATION: 0.3, // Dodge duration in seconds
   },
+  
+  // Camera settings (aiming/zooming - VISEE)
+  AIM_FOV: 30, // Field of view when aiming (zoomed in)
   
   // Retro shader settings
   COLOR_BITS: 4, // Color quantization bits

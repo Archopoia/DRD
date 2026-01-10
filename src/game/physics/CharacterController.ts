@@ -21,6 +21,15 @@ export class CharacterController {
   private capsuleHeight: number;
   private capsuleRadius: number;
   private halfHeight: number;
+  
+  // Climbing state (GRIMPE)
+  private isClimbing: boolean = false;
+  private climbableSurface: RAPIER.Vector3 | null = null; // Normal of climbable surface (stored for reference)
+  
+  // Dodge state (ESQUIVE)
+  private isDodging: boolean = false;
+  private dodgeVelocity: THREE.Vector3 = new THREE.Vector3();
+  private dodgeTimeRemaining: number = 0;
 
   constructor(physicsWorld: PhysicsWorld, position: { x: number; y: number; z: number }, activeCompetencesTracker?: ActiveCompetencesTracker) {
     Debug.startMeasure('CharacterController.constructor');
@@ -61,12 +70,193 @@ export class CharacterController {
   }
 
   /**
-   * Move the character in the given direction with collision detection
+   * Check for climbable surfaces in front of the character
+   * Returns true if a climbable surface is found, false otherwise
    */
-  move(direction: THREE.Vector3, deltaTime: number, run: boolean = false): void {
+  private checkClimbableSurface(direction: THREE.Vector3): boolean {
     try {
       const currentPos = this.rigidBody.translation();
       const world = this.physicsWorld.world;
+      
+      // Normalize direction
+      const dirLength = Math.sqrt(direction.x * direction.x + direction.z * direction.z);
+      if (dirLength < 0.01) return false; // No direction
+      
+      // Calculate position slightly forward from character
+      const reachDist = GAME_CONFIG.CHARACTER_CONTROLLER.CLIMB_REACH_DISTANCE;
+      const forwardPos = new RAPIER.Vector3(
+        currentPos.x + (direction.x / dirLength) * reachDist,
+        currentPos.y,
+        currentPos.z + (direction.z / dirLength) * reachDist
+      );
+      
+      // Use intersection query to check for surfaces at this position
+      const shape = new RAPIER.Capsule(this.halfHeight * 0.5, this.capsuleRadius * 0.9);
+      const shapeRot = this.rigidBody.rotation();
+      
+      let foundClimbableSurface = false;
+      
+      world.intersectionsWithShape(
+        forwardPos,
+        shapeRot,
+        shape,
+        (collider) => {
+          // Exclude our own collider
+          const colliderBody = collider.parent();
+          if (colliderBody && colliderBody.handle !== this.rigidBody.handle) {
+            // If we find any collision in front, assume it's climbable
+            // (for now - we can refine this later to check surface angle)
+            foundClimbableSurface = true;
+            return false; // Stop on first hit
+          }
+          return true; // Continue query
+        },
+        undefined, // filter
+        undefined // groups
+      );
+      
+      return foundClimbableSurface;
+    } catch (error) {
+      Debug.error('CharacterController', 'Error checking climbable surface', error as Error);
+      return false;
+    }
+  }
+
+  /**
+   * Start climbing a surface
+   */
+  startClimbing(): void {
+    if (!this.isClimbing) {
+      this.isClimbing = true;
+      this.climbableSurface = new RAPIER.Vector3(0, 1, 0); // Default up normal
+      this.verticalVelocity = 0; // Stop falling
+      
+      // Mark GRIMPE as active
+      if (this.activeCompetencesTracker) {
+        this.activeCompetencesTracker.markActive(Competence.GRIMPE);
+      }
+      
+      Debug.log('CharacterController', 'Started climbing');
+    }
+  }
+
+  /**
+   * Stop climbing
+   */
+  stopClimbing(): void {
+    if (this.isClimbing) {
+      this.isClimbing = false;
+      this.climbableSurface = null;
+      Debug.log('CharacterController', 'Stopped climbing');
+    }
+  }
+
+  /**
+   * Check if currently climbing
+   */
+  isClimbingCheck(): boolean {
+    return this.isClimbing;
+  }
+
+  /**
+   * Perform a dodge in the given direction
+   */
+  dodge(direction: THREE.Vector3): void {
+    if (!this.isDodging && direction.length() > 0) {
+      this.isDodging = true;
+      this.dodgeTimeRemaining = GAME_CONFIG.CHARACTER_CONTROLLER.DODGE_DURATION;
+      
+      // Normalize direction and scale by dodge speed
+      const normalizedDir = direction.clone().normalize();
+      this.dodgeVelocity = normalizedDir.multiplyScalar(GAME_CONFIG.CHARACTER_CONTROLLER.DODGE_SPEED);
+      
+      // Mark ESQUIVE as active
+      if (this.activeCompetencesTracker) {
+        this.activeCompetencesTracker.markActive(Competence.ESQUIVE);
+      }
+      
+      Debug.log('CharacterController', 'Dodging in direction', direction);
+    }
+  }
+
+  /**
+   * Move the character in the given direction with collision detection
+   */
+  move(direction: THREE.Vector3, deltaTime: number, run: boolean = false, wantsToClimb: boolean = false): void {
+    try {
+      const currentPos = this.rigidBody.translation();
+      const world = this.physicsWorld.world;
+
+      // Handle dodge movement first (if dodging, dodge takes priority)
+      if (this.isDodging) {
+        this.dodgeTimeRemaining -= deltaTime;
+        
+        if (this.dodgeTimeRemaining > 0) {
+          // Apply dodge velocity
+          const dodgeMovement = this.dodgeVelocity.clone().multiplyScalar(deltaTime);
+          const dodgeTarget = new RAPIER.Vector3(
+            currentPos.x + dodgeMovement.x,
+            currentPos.y,
+            currentPos.z + dodgeMovement.z
+          );
+          
+          // Check for collisions during dodge (simplified - just move)
+          // We allow dodge to go through small obstacles but stop on walls
+          this.rigidBody.setNextKinematicTranslation(dodgeTarget);
+          
+          // Mark ESQUIVE as active during dodge
+          if (this.activeCompetencesTracker) {
+            this.activeCompetencesTracker.markActive(Competence.ESQUIVE);
+          }
+          
+          return; // Dodge movement takes priority
+        } else {
+          // Dodge finished
+          this.isDodging = false;
+          this.dodgeVelocity.set(0, 0, 0);
+        }
+      }
+
+      // Handle climbing (GRIMPE)
+      if (wantsToClimb && direction.length() > 0) {
+        const hasClimbableSurface = this.checkClimbableSurface(direction);
+        
+        if (hasClimbableSurface) {
+          // Start or continue climbing
+          if (!this.isClimbing) {
+            this.startClimbing();
+          }
+          
+          // Apply climbing movement (vertical)
+          const climbSpeed = GAME_CONFIG.CHARACTER_CONTROLLER.CLIMB_SPEED;
+          const verticalMovement = climbSpeed * deltaTime;
+          const climbTarget = new RAPIER.Vector3(
+            currentPos.x,
+            currentPos.y + verticalMovement,
+            currentPos.z
+          );
+          
+          // Mark GRIMPE as active while climbing
+          if (this.activeCompetencesTracker) {
+            this.activeCompetencesTracker.markActive(Competence.GRIMPE);
+          }
+          
+          // Move up while climbing (we'll check collisions later)
+          this.rigidBody.setNextKinematicTranslation(climbTarget);
+          this.verticalVelocity = 0; // Prevent gravity while climbing
+          return; // Climbing takes priority over normal movement
+        } else {
+          // No climbable surface - stop climbing if we were
+          if (this.isClimbing) {
+            this.stopClimbing();
+          }
+        }
+      } else {
+        // Not trying to climb - stop climbing if we were
+        if (this.isClimbing) {
+          this.stopClimbing();
+        }
+      }
 
       // Calculate horizontal movement
       let moveX = 0;
@@ -411,27 +601,29 @@ export class CharacterController {
       this.checkGrounded();
 
       // Handle jumping
-      if (this.wantsToJump && this.isGrounded) {
+      if (this.wantsToJump && this.isGrounded && !this.isClimbing) {
         // Set initial jump velocity
         this.verticalVelocity = GAME_CONFIG.CHARACTER_CONTROLLER.JUMP_FORCE;
         this.wantsToJump = false;
       }
 
       // Mark ACROBATIE as active when airborne (acrobatics/air control)
-      if (!this.isGrounded && this.activeCompetencesTracker) {
+      // Don't mark while climbing (GRIMPE takes priority)
+      if (!this.isGrounded && !this.isClimbing && this.activeCompetencesTracker) {
         this.activeCompetencesTracker.markActive(Competence.ACROBATIE);
       }
 
-      // Apply gravity to vertical velocity
-      if (!this.isGrounded) {
+      // Apply gravity to vertical velocity (not while climbing)
+      if (!this.isGrounded && !this.isClimbing) {
         const gravity = GAME_CONFIG.PHYSICS.GRAVITY.y;
         this.verticalVelocity += gravity * deltaTime;
-      } else {
+      } else if (this.isGrounded) {
         // Reset vertical velocity when grounded
         if (this.verticalVelocity < 0) {
           this.verticalVelocity = 0;
         }
       }
+      // While climbing, verticalVelocity is already set to 0
     } catch (error) {
       Debug.error('CharacterController', 'Error updating character controller', error as Error);
     }

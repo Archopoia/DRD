@@ -1,4 +1,5 @@
-import { Action } from './ActionData';
+import { Action, getActionAptitude } from './ActionData';
+import { Aptitude } from './AptitudeData';
 
 /**
  * Competence data definitions
@@ -331,5 +332,33 @@ export function getCompetenceName(competence: Competence): string {
 
 export function getCompetenceAction(competence: Competence): Action {
   return COMPETENCE_ACTION[competence] || Action.FRAPPER;
+}
+
+/**
+ * Get the aptitude that a competence belongs to
+ */
+export function getCompetenceAptitude(competence: Competence): Aptitude {
+  const action = getCompetenceAction(competence);
+  return getActionAptitude(action);
+}
+
+/**
+ * Get emoji for a competence (only for implemented CTs)
+ */
+export function getCompetenceEmoji(competence: Competence): string {
+  const emojis: Partial<Record<Competence, string>> = {
+    // Implemented CTs with emojis
+    [Competence.PAS]: '🚶',           // Walking/running
+    [Competence.SAUT]: '🦘',          // Jumping
+    [Competence.POID]: '💪',          // Pushing blocks
+    [Competence.VISION]: '👁️',       // Looking around
+    [Competence.ACROBATIE]: '🤸',     // Airborne/air control
+    [Competence.EQUILIBRE]: '⚖️',     // Balance
+    [Competence.FLUIDITE]: '🌊',      // Swift movements
+    [Competence.GRIMPE]: '🧗',        // Climbing
+    [Competence.ESQUIVE]: '💨',       // Dodging
+    [Competence.VISEE]: '🎯',         // Aiming/zooming
+  };
+  return emojis[competence] || '';
 }
 

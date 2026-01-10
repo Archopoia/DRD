@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Competence, getCompetenceName } from '@/game/character/data/CompetenceData';
+import { Competence, getCompetenceName, getCompetenceAptitude, getCompetenceEmoji } from '@/game/character/data/CompetenceData';
+import { Aptitude } from '@/game/character/data/AptitudeData';
 
 interface ActiveCT {
   competence: Competence;
@@ -32,6 +33,22 @@ export default function ActiveCompetencesDisplay({ activeCompetencesWithTime }: 
     return 'text-red-400';
   };
 
+  // Get dark, desaturated, subtle background color for each aptitude
+  const getAptitudeBackgroundColor = (aptitude: Aptitude): string => {
+    // Dark, desaturated, subtle colors for each of the 8 aptitudes
+    const colors: Record<Aptitude, string> = {
+      [Aptitude.PUISSANCE]: 'rgba(120, 40, 40, 0.4)',      // Dark reddish-brown
+      [Aptitude.AISANCE]: 'rgba(80, 100, 120, 0.4)',       // Dark blue-gray
+      [Aptitude.PRECISION]: 'rgba(100, 100, 80, 0.4)',     // Dark olive-gray
+      [Aptitude.ATHLETISME]: 'rgba(60, 120, 80, 0.4)',     // Dark green-gray
+      [Aptitude.CHARISME]: 'rgba(120, 80, 120, 0.4)',      // Dark purple-gray
+      [Aptitude.DETECTION]: 'rgba(80, 120, 100, 0.4)',     // Dark teal-gray
+      [Aptitude.REFLEXION]: 'rgba(100, 100, 120, 0.4)',    // Dark indigo-gray
+      [Aptitude.DOMINATION]: 'rgba(80, 60, 100, 0.4)',     // Dark violet-gray
+    };
+    return colors[aptitude] || 'rgba(80, 80, 80, 0.4)';
+  };
+
   // Don't render if no active competences
   if (activeCompetencesWithTime.length === 0) {
     return null;
@@ -51,19 +68,30 @@ export default function ActiveCompetencesDisplay({ activeCompetencesWithTime }: 
       <div className="space-y-1">
         {activeCompetencesWithTime.map((item) => {
           const competenceName = getCompetenceName(item.competence);
+          const competenceEmoji = getCompetenceEmoji(item.competence);
           const timeColor = getTimeColor(item.remainingTime, timeframeMs);
+          const aptitude = getCompetenceAptitude(item.competence);
+          const aptitudeBgColor = getAptitudeBackgroundColor(aptitude);
           
           return (
             <div
               key={item.competence}
-              className={`px-3 py-1.5 bg-gray-900/90 border border-gray-700/50 rounded transition-all duration-100 pointer-events-auto ${timeColor}`}
+              className={`px-3 py-1.5 border border-gray-700/50 rounded transition-all duration-100 pointer-events-auto ${timeColor}`}
               style={{
+                backgroundColor: aptitudeBgColor,
                 textShadow: '1px 1px 2px rgba(0, 0, 0, 0.9)',
                 boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
               }}
             >
               <div className="flex items-center justify-between gap-3">
-                <span className="text-sm font-medium">{competenceName}</span>
+                <div className="flex items-center gap-2">
+                  {competenceEmoji && (
+                    <span className="text-base" style={{ filter: 'drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.9))' }}>
+                      {competenceEmoji}
+                    </span>
+                  )}
+                  <span className="text-sm font-medium">{competenceName}</span>
+                </div>
                 <span className={`text-xs font-mono ${timeColor}`}>
                   {formatTime(item.remainingTime)}s
                 </span>
