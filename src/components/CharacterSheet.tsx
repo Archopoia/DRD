@@ -19,6 +19,7 @@ interface CharacterSheetProps {
   isOpen: boolean;
   onClose: () => void;
   manager?: CharacterSheetManager; // Optional: if provided, use this manager instead of creating a new one
+  godMode?: boolean; // God mode allows editing normally disabled fields
 }
 
 /**
@@ -35,7 +36,7 @@ function useCharacterSheet(manager: CharacterSheetManager) {
   return { state, updateState };
 }
 
-export default function CharacterSheet({ isOpen, onClose, manager: externalManager }: CharacterSheetProps) {
+export default function CharacterSheet({ isOpen, onClose, manager: externalManager, godMode = false }: CharacterSheetProps) {
   const [internalManager] = useState(() => new CharacterSheetManager());
   const manager = externalManager || internalManager;
   const { state, updateState } = useCharacterSheet(manager);
@@ -192,11 +193,21 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
               )`
             }}
           />
-          <h2 className="font-medieval text-3xl font-bold text-text-cream relative z-10 tracking-wide" style={{
-            textShadow: '0 1px black, 0 2px rgb(19, 19, 19), 0 3px rgb(30, 30, 30), 0 4px rgb(50, 50, 50), 0 5px rgb(70, 70, 70), 0 6px #555'
-          }}>
-            Feuille de Personnage
-          </h2>
+          <div className="flex items-center gap-4">
+            <h2 className="font-medieval text-3xl font-bold text-text-cream relative z-10 tracking-wide" style={{
+              textShadow: '0 1px black, 0 2px rgb(19, 19, 19), 0 3px rgb(30, 30, 30), 0 4px rgb(50, 50, 50), 0 5px rgb(70, 70, 70), 0 6px #555'
+            }}>
+              Feuille de Personnage
+            </h2>
+            {godMode && (
+              <span className="font-medieval text-sm font-bold text-yellow-400 relative z-10 px-2 py-1 border border-yellow-400 rounded animate-pulse" style={{
+                textShadow: '0 0 8px rgba(255, 215, 0, 0.8), 0 1px 2px rgba(0, 0, 0, 0.8)',
+                boxShadow: '0 0 10px rgba(255, 215, 0, 0.5), inset 0 0 5px rgba(255, 215, 0, 0.3)'
+              }}>
+                ⚡ GOD MODE ⚡
+              </span>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="px-4 py-2 bg-red-theme text-text-cream border-2 border-border-dark rounded font-medieval font-semibold transition-all duration-300 relative z-10 hover:bg-hover-bg hover:text-text-dark hover:-translate-y-0.5"
@@ -447,13 +458,15 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                               <div className="font-bold text-text-cream mb-1 flex items-center gap-1">
                                 <DiceInput
                                   value={resistanceDiceCount}
-                                  onChange={() => {
-                                    // Disabled - can't edit directly
-                                    // Realization happens via progress bar click when marks are full
+                                  onChange={(value) => {
+                                    if (godMode) {
+                                      manager.setResistanceDiceCount(souf, value);
+                                      updateState();
+                                    }
                                   }}
                                   min={0}
                                   size="sm"
-                                  disabled={true}
+                                  disabled={!godMode}
                                 />
                                 <span>{getResistanceCompetenceName(souf)}</span>
                               </div>
@@ -548,7 +561,9 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                       >
                                         <DiceInput
                                           value={competences.reduce((sum, comp) => sum + manager.getCompetenceLevel(comp), 0)}
-                                          onChange={() => {}}
+                                          onChange={() => {
+                                            // Read-only - shows total competence levels for this action
+                                          }}
                                           min={0}
                                           size="sm"
                                           disabled={true}
@@ -619,13 +634,15 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                                 <div onClick={(e) => e.stopPropagation()}>
                                                   <DiceInput
                                                     value={compData.diceCount}
-                                                    onChange={() => {
-                                                      // Disabled - can't edit directly
-                                                      // Realization happens via progress bar click when marks are full
+                                                    onChange={(value) => {
+                                                      if (godMode) {
+                                                        manager.setCompetenceDice(comp, value);
+                                                        updateState();
+                                                      }
                                                     }}
                                                     min={0}
                                                     size="sm"
-                                                    disabled={true}
+                                                    disabled={!godMode}
                                                   />
                                                 </div>
                                                 <span className="text-xs">{getCompetenceName(comp)}</span>

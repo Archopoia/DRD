@@ -11,6 +11,8 @@ interface ConsoleProps {
   isOpen: boolean;
   onClose: () => void;
   manager?: CharacterSheetManager;
+  godMode: boolean;
+  setGodMode: (enabled: boolean) => void;
 }
 
 interface ConsoleMessage {
@@ -24,7 +26,7 @@ interface ConsoleMessage {
  * Allows typing commands to affect game variables
  * Press Tab to toggle
  */
-export default function Console({ isOpen, onClose, manager }: ConsoleProps) {
+export default function Console({ isOpen, onClose, manager, godMode, setGodMode }: ConsoleProps) {
   const [input, setInput] = useState('');
   const [history, setHistory] = useState<ConsoleMessage[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -84,6 +86,10 @@ export default function Console({ isOpen, onClose, manager }: ConsoleProps) {
           break;
         case 'reveal':
           result = handleReveal(args, manager);
+          break;
+        case 'godmode':
+        case 'god':
+          result = handleGodMode(args, godMode, setGodMode);
           break;
         case 'help':
           result = getHelpText();
@@ -377,6 +383,26 @@ function handleReveal(args: string[], manager?: CharacterSheetManager): string {
   return `Revealed ${getCompetenceName(competence)}`;
 }
 
+function handleGodMode(args: string[], godMode: boolean, setGodMode: (enabled: boolean) => void): string {
+  if (args.length === 0) {
+    // Toggle if no argument
+    const newState = !godMode;
+    setGodMode(newState);
+    return `God mode ${newState ? 'ENABLED' : 'DISABLED'}. All CS fields are now ${newState ? 'editable' : 'locked'}.`;
+  }
+  
+  const arg = args[0].toLowerCase();
+  if (arg === 'on' || arg === '1' || arg === 'true' || arg === 'enable') {
+    setGodMode(true);
+    return 'God mode ENABLED. All CS fields are now editable.';
+  } else if (arg === 'off' || arg === '0' || arg === 'false' || arg === 'disable') {
+    setGodMode(false);
+    return 'God mode DISABLED. CS fields are now locked.';
+  } else {
+    return 'Error: Usage: godmode [on|off]. Use without arguments to toggle.';
+  }
+}
+
 function getHelpText(): string {
   return `Available commands:
   gainXP <competence> <amount> [eternal]  - Add marks to a competence
@@ -384,6 +410,7 @@ function getHelpText(): string {
   addFreeMarks <amount>                    - Add free marks
   setCompetence <competence> <diceCount>   - Set competence dice count
   reveal <competence>                      - Reveal a hidden competence
+  godmode [on|off]                         - Toggle God mode (enables editing all CS fields)
   help                                     - Show this help
 
 Examples:
@@ -392,6 +419,7 @@ Examples:
   setAttribute FOR 20
   addFreeMarks 50
   setCompetence VISION 5
-  reveal INVESTIGATION`;
+  reveal INVESTIGATION
+  godmode on`;
 }
 

@@ -17,6 +17,7 @@ export default function GameCanvas() {
   const [showCharacterSheet, setShowCharacterSheet] = useState<boolean>(false);
   const [showConsole, setShowConsole] = useState<boolean>(false);
   const [characterSheetManager, setCharacterSheetManager] = useState<any>(null);
+  const [godMode, setGodMode] = useState<boolean>(false);
 
   // Handle console open/close - disable controls when console is open
   useEffect(() => {
@@ -240,12 +241,15 @@ export default function GameCanvas() {
         isOpen={showCharacterSheet}
         onClose={() => setShowCharacterSheet(false)}
         manager={characterSheetManager}
+        godMode={godMode}
       />
       <EventLog maxVisible={10} />
       <Console
         isOpen={showConsole}
         onClose={() => setShowConsole(false)}
         manager={characterSheetManager}
+        godMode={godMode}
+        setGodMode={setGodMode}
       />
     </>
   );

@@ -352,6 +352,14 @@ export class CharacterSheetManager {
   }
 
   /**
+   * Set resistance competence dice count (normally only editable in God mode)
+   * This is separate from souffrance dice count - only increases on realization normally
+   */
+  setResistanceDiceCount(souffrance: Souffrance, diceCount: number): void {
+    this.state.souffrances[souffrance].resistanceDiceCount = Math.max(0, diceCount);
+  }
+
+  /**
    * Get resistance competence level (Niv 0-5) based on resistance dice count
    * This is separate from souffrance dice count - only increases on realization
    */
