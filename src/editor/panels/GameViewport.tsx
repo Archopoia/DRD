@@ -460,32 +460,87 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
           });
           
           currentObject.position.copy(startTransform.position).add(movement);
+          
+          // Force matrix update
+          currentObject.updateMatrix();
+          currentObject.updateMatrixWorld(true);
         }
 
       } else if (currentMode === 'rotate') {
-        // Rotate mode - calculate angle from mouse movement
+        // Rotate mode - calculate angle from total mouse movement since drag start
         if (startTransform.rotation) {
-          // Use combined mouse delta for rotation
-          const angle = (mouseDeltaX + mouseDeltaY) * 0.015; // Radians
+          // Calculate total rotation angle from start position
+          const totalAngle = (mouseDeltaX + mouseDeltaY) * 0.015; // Radians
           
           logTransform(`Rotate calculation`, {
             mouseDeltaX,
             mouseDeltaY,
-            angle,
-            angleDegrees: (angle * 180 / Math.PI).toFixed(2),
+            totalAngle,
+            totalAngleDegrees: (totalAngle * 180 / Math.PI).toFixed(2),
             axis: currentAxis,
             axisDirection: { x: axisDirection.x, y: axisDirection.y, z: axisDirection.z },
             startRotation: startTransform.rotation,
+            currentRotationBefore: currentObject.rotation.clone(),
           });
           
-          // Reset to start rotation
-          currentObject.rotation.copy(startTransform.rotation);
+          // Store start quaternion if not already stored
+          if (!currentObject.userData._gizmoStartQuaternion) {
+            currentObject.userData._gizmoStartQuaternion = new THREE.Quaternion().setFromEuler(startTransform.rotation);
+            logTransform(`Stored start quaternion`, {
+              startQuaternion: currentObject.userData._gizmoStartQuaternion.clone(),
+              startRotation: startTransform.rotation,
+            });
+          }
+          const startQuaternion = currentObject.userData._gizmoStartQuaternion;
           
-          // Rotate around the world axis
-          currentObject.rotateOnWorldAxis(axisDirection, angle);
+          // Create rotation quaternion for the total angle around world axis  
+          const rotationQuaternion = new THREE.Quaternion().setFromAxisAngle(axisDirection, totalAngle);
+          
+          // Combine rotations: startQuaternion * rotationQuaternion
+          // In Three.js, multiply() applies right operand first, then left operand
+          // So: startQuaternion.multiply(rotationQuaternion) = rotationQuaternion applied first, then startQuaternion
+          // We want: startQuaternion applied first, then rotate around axis
+          // Solution: use premultiply which applies left operand first
+          // Or: rotationQuaternion.multiply(startQuaternion) = startQuaternion first, then rotationQuaternion ✓
+          const finalQuaternion = rotationQuaternion.clone().multiply(startQuaternion);
+          
+          logTransform(`Quaternion calculation`, {
+            startQuaternion: startQuaternion.clone(),
+            rotationQuaternion: rotationQuaternion.clone(),
+            finalQuaternion: finalQuaternion.clone(),
+            totalAngle,
+            totalAngleDegrees: (totalAngle * 180 / Math.PI).toFixed(2),
+            axisDirection: axisDirection.clone(),
+          });
+          
+          // Apply to object quaternion directly
+          currentObject.quaternion.copy(finalQuaternion);
+          
+          // Update Euler angles from quaternion (for Inspector display)
+          currentObject.rotation.setFromQuaternion(currentObject.quaternion);
+          
+          // Force matrix update - critical for visual updates!
+          currentObject.updateMatrix();
+          currentObject.updateMatrixWorld(true);
+          
+          logTransform(`Rotation applied and matrices updated`, {
+            objectQuaternion: currentObject.quaternion.clone(),
+            objectRotation: currentObject.rotation.clone(),
+            objectRotationDegrees: {
+              x: (currentObject.rotation.x * 180 / Math.PI).toFixed(2),
+              y: (currentObject.rotation.y * 180 / Math.PI).toFixed(2),
+              z: (currentObject.rotation.z * 180 / Math.PI).toFixed(2),
+            },
+          });
           
           logTransform(`Rotate applied`, {
+            finalQuaternion: currentObject.quaternion.clone(),
             newRotation: currentObject.rotation.clone(),
+            newRotationDegrees: {
+              x: (currentObject.rotation.x * 180 / Math.PI).toFixed(2),
+              y: (currentObject.rotation.y * 180 / Math.PI).toFixed(2),
+              z: (currentObject.rotation.z * 180 / Math.PI).toFixed(2),
+            },
           });
         }
 
@@ -517,6 +572,10 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
           if (currentObject.scale.y < 0.01) currentObject.scale.y = 0.01;
           if (currentObject.scale.z < 0.01) currentObject.scale.z = 0.01;
           
+          // Force matrix update
+          currentObject.updateMatrix();
+          currentObject.updateMatrixWorld(true);
+          
           logTransform(`Scale applied`, {
             scaleFactor,
             mouseDelta,
@@ -537,11 +596,21 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
     };
 
     const handleGizmoDragEnd = () => {
+      // Clean up temporary rotation data
+      if (currentObject.userData._gizmoStartQuaternion) {
+        delete currentObject.userData._gizmoStartQuaternion;
+      }
+      
       logGizmo(`Gizmo drag ended`, {
         mode: currentMode,
         axis: currentAxis,
         finalPosition: currentObject.position.clone(),
         finalRotation: currentObject.rotation.clone(),
+        finalRotationDegrees: {
+          x: (currentObject.rotation.x * 180 / Math.PI).toFixed(2),
+          y: (currentObject.rotation.y * 180 / Math.PI).toFixed(2),
+          z: (currentObject.rotation.z * 180 / Math.PI).toFixed(2),
+        },
         finalScale: currentObject.scale.clone(),
       });
       
