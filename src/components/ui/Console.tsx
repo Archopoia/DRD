@@ -274,7 +274,7 @@ function handleGainXP(args: string[], manager?: CharacterSheetManager): string {
   const totalMarks = manager.getTotalMarks(competence);
   const level = manager.getCompetenceLevel(competence);
   const comp = manager.getCompetence(competence);
-  const requiredMarks = 10 - comp.eternalMarks;
+  const requiredMarks = 100 - comp.eternalMarks; // Video game uses 100 marks (TTRPG uses 10)
   const eternalText = isEternal ? ' (eternal)' : '';
 
   return `Added ${amount} mark${amount > 1 ? 's' : ''}${eternalText} to ${getCompetenceName(competence)} compétence. Total: ${totalMarks}/${requiredMarks} (Level ${level})`;

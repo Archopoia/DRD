@@ -321,9 +321,10 @@ From `CharacterSheetManager.ts`:
 
 ### Experience System
 
-- **Marks**: Tracked per competence (10 marks array)
-- **Eternal Marks**: Never cleared, reduce mark requirement
-- **Realization**: When 10 marks (minus eternal) are reached:
+- **Marks**: Tracked per competence (100 marks for video game, vs 10 in TTRPG)
+  - **Design Decision**: The TTRPG uses 10 marks to be éprouvée, but the video game uses 100 marks for smoother progression and more granular feedback
+  - **Eternal Marks**: Never cleared, reduce mark requirement
+- **Realization**: When 100 marks (minus eternal) are reached:
   - +1 dice to competence
   - Clear non-eternal marks
   - Gain free marks = current level

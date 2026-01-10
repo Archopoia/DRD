@@ -257,13 +257,13 @@ export class CharacterSheetManager {
   }
 
   /**
-   * Check if compétence is éprouvée (10 marks total, minus eternal marks)
-   * According to page 63-64: "Dès qu'une CT obtient son maximum de Marques, habituellement 10 Marques, elle est Éprouvée"
+   * Check if compétence is éprouvée (100 marks total, minus eternal marks)
+   * Note: TTRPG uses 10 marks, but video game uses 100 marks for smoother progression
    */
   isCompetenceEprouvee(competence: Competence): boolean {
     const comp = this.state.competences[competence];
     const totalMarks = this.getTotalMarks(competence);
-    const requiredMarks = 10 - comp.eternalMarks;
+    const requiredMarks = 100 - comp.eternalMarks;
     return totalMarks >= requiredMarks;
   }
 
@@ -406,17 +406,19 @@ export class CharacterSheetManager {
   }
 
   /**
-   * Check if souffrance resistance compétence is éprouvée (10 marks total, minus eternal marks)
+   * Check if souffrance resistance compétence is éprouvée (100 marks total, minus eternal marks)
+   * Note: TTRPG uses 10 marks, but video game uses 100 marks for smoother progression
    */
   isSouffranceEprouvee(souffrance: Souffrance): boolean {
     const souf = this.state.souffrances[souffrance];
     const totalMarks = this.getTotalSouffranceMarks(souffrance);
-    const requiredMarks = 10 - souf.eternalMarks;
+    const requiredMarks = 100 - souf.eternalMarks;
     return totalMarks >= requiredMarks;
   }
 
   /**
-   * Realize a souffrance resistance compétence (gain +1 resistance degree when 10 marks reached, like compétences)
+   * Realize a souffrance resistance compétence (gain +1 resistance degree when 100 marks reached, like compétences)
+   * Note: TTRPG uses 10 marks, but video game uses 100 marks for smoother progression
    * This increases the resistance compétence degree, NOT the souffrance degree
    */
   realizeSouffrance(souffrance: Souffrance): void {

@@ -247,6 +247,19 @@ The health bars provide immediate visual feedback:
 
 **Last Updated:** 2026-01-10
 
+## Video Game Design Decisions
+
+### Marks Required for Realization (100 vs 10)
+
+**Important**: The TTRPG rules specify **10 marks** to éprouver a competence (Page 63-64). However, the video game implementation uses **100 marks** instead.
+
+**Rationale**:
+- **Smoother progression**: 100 marks provides more granular feedback and a smoother progression curve in a video game context
+- **Better UX**: Players see more incremental progress, making the system feel more responsive
+- **Consistent scaling**: All competences (regular and resistance) use 100 marks uniformly
+
+This is a deliberate design decision for the video game adaptation and does not change the core mechanics - the ratio remains the same (10x more marks = 10x longer progression), but with better granularity.
+
 ## Corrections (2026-01-10)
 
 Updated XP mark gain system to match TTRPG rules:

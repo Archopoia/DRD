@@ -9,7 +9,7 @@ interface ProgressBarProps {
   className?: string;
   label?: string;
   level?: number;
-  isFull?: boolean; // When marks reach 100% (10 marks), show pulsing/shining effect
+  isFull?: boolean; // When marks reach 100% (100 marks for video game), show pulsing/shining effect
   onClick?: () => void; // Click handler for realization
   showRealizeLabel?: boolean; // Show "RÉALISER" instead of level name when full
 }
@@ -25,19 +25,24 @@ export default function ProgressBar({
   className = '',
   label,
   level,
-  isFull = false, // When marks reach 100% (10 marks), show pulsing/shining effect
+  isFull = false, // When marks reach 100% (100 marks for video game), show pulsing/shining effect
   onClick,
   showRealizeLabel = false, // Show "RÉALISER" instead of level name when full
 }: ProgressBarProps) {
   const [isRealizing, setIsRealizing] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const [charPositions, setCharPositions] = useState<number[]>([]);
   const [containerWidth, setContainerWidth] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const charRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const percentage = Math.min((value / max) * 100, 100);
+  const percentageRounded = Math.round(percentage);
   
   // Determine the label to show
-  const displayLabel = showRealizeLabel && isFull ? 'RÉALISER' : (label || '');
+  // On hover (if not at 100%), show percentage instead of level name
+  const displayLabel = isHovered && !isFull
+    ? `${percentageRounded}%`
+    : (showRealizeLabel && isFull ? 'RÉALISER' : (label || ''));
   const isClickable = isFull && onClick;
   
   // Reset realizing state when value changes (after realization clears marks)
@@ -180,6 +185,8 @@ export default function ProgressBar({
       } ${isClickable ? 'cursor-pointer' : ''}`}
       style={isFull ? { overflow: 'visible', position: 'relative', zIndex: 1 } : {}}
       onClick={handleClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <div
         className={`h-full transition-all duration-200 relative ${fillColor} ${
