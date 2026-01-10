@@ -84,6 +84,8 @@ export class Game {
       this.scene = new Scene(this.renderer, this.physicsWorld);
       // Connect character systems to scene for platform detection
       this.scene.setCharacterSystems(this.characterController, this.healthSystem);
+      // Set scene reference for VISION detection (camera needs to detect objects)
+      this.camera.setScene(this.scene.scene);
       Debug.log('Game', 'Scene initialized');
 
       // Setup game loop

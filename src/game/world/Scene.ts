@@ -283,9 +283,10 @@ export class Scene {
     const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
     const boxMaterial = this.renderer.createRetroStandardMaterial(0x8a4a4a);
 
-    // Box 1
+    // Box 1 - Mark as detectable for VISION
     const box1 = new THREE.Mesh(boxGeometry, boxMaterial);
     box1.position.set(-2, 0.5, -2);
+    box1.userData.detectable = true; // Mark as detectable for VISION (discoveries, secrets, traps, etc.)
     this.scene.add(box1);
 
     // Create dynamic physics body for box1
@@ -297,9 +298,10 @@ export class Scene {
     );
     this.physicsBodies.set(box1, box1Body);
 
-    // Box 2
+    // Box 2 - Mark as detectable for VISION
     const box2 = new THREE.Mesh(boxGeometry, boxMaterial);
     box2.position.set(2, 0.5, -2);
+    box2.userData.detectable = true; // Mark as detectable for VISION
     this.scene.add(box2);
 
     // Create dynamic physics body for box2
@@ -311,10 +313,11 @@ export class Scene {
     );
     this.physicsBodies.set(box2, box2Body);
 
-    // Box 3 (taller)
+    // Box 3 (taller) - Mark as detectable for VISION
     const tallBoxGeometry = new THREE.BoxGeometry(1, 2, 1);
     const box3 = new THREE.Mesh(tallBoxGeometry, boxMaterial);
     box3.position.set(0, 1, -3);
+    box3.userData.detectable = true; // Mark as detectable for VISION
     this.scene.add(box3);
 
     // Create dynamic physics body for box3

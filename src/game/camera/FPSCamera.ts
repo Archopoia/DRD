@@ -34,6 +34,13 @@ export class FPSCamera {
   private isAiming: boolean = false;
   private defaultFOV: number = GAME_CONFIG.FOV;
   
+  // Track camera rotation history for FLUIDITE (120 degrees within 0.2s max)
+  private rotationHistory: Array<{ degrees: number; timestamp: number }> = []; // Rotation deltas with timestamps
+  
+  // Track detected objects for VISION (only mark when seeing something new)
+  private seenObjects: Set<THREE.Object3D> = new Set(); // Objects that have been seen before
+  private scene?: THREE.Scene; // Reference to scene for object detection
+  
 
   constructor(canvas: HTMLCanvasElement, characterController: CharacterController, activeCompetencesTracker?: ActiveCompetencesTracker) {
     Debug.log('FPSCamera', 'Initializing camera...');
@@ -54,6 +61,9 @@ export class FPSCamera {
       this.camera.position.set(initialPos.x, initialPos.y, initialPos.z);
       this.euler = new THREE.Euler(0, 0, 0, 'YXZ');
       this.direction = new THREE.Vector3();
+      
+      // Initialize rotation tracking for FLUIDITE (120 degrees in 0.2s)
+      this.rotationHistory = [];
 
       this.setupEventListeners(canvas);
       Debug.log('FPSCamera', 'Camera initialized');
@@ -256,23 +266,54 @@ export class FPSCamera {
     const sensitivity = GAME_CONFIG.MOUSE_SENSITIVITY;
     this.euler.setFromQuaternion(this.camera.quaternion);
 
-    // Mark VISION as active when looking around (camera rotation)
-    if ((this.mouseState.deltaX !== 0 || this.mouseState.deltaY !== 0) && this.activeCompetencesTracker) {
-      this.activeCompetencesTracker.markActive(Competence.VISION);
+    // Calculate rotation changes for FLUIDITE (120-degree shift within 0.2s max)
+    // Track rotation within a rolling 0.2-second window
+    const currentTime = Date.now();
+    const windowDuration = 200; // 0.2 seconds in milliseconds
+    
+    // Remove rotation data older than 0.2 seconds
+    this.rotationHistory = this.rotationHistory.filter(
+      entry => currentTime - entry.timestamp < windowDuration
+    );
+    
+    if (this.mouseState.deltaX !== 0 || this.mouseState.deltaY !== 0) {
+      // Convert mouse pixel movement to rotation angle changes (in radians)
+      const yawDeltaRad = -this.mouseState.deltaX * sensitivity; // Yaw rotation in radians
+      const pitchDeltaRad = -this.mouseState.deltaY * sensitivity; // Pitch rotation in radians
       
-      // Mark FLUIDITE as active for swift camera movements (max speed rotation)
-      // Calculate rotation speed magnitude
-      const rotationMagnitude = Math.sqrt(
-        (this.mouseState.deltaX * this.mouseState.deltaX) + 
-        (this.mouseState.deltaY * this.mouseState.deltaY)
+      // Calculate angular distance (in radians) - combine yaw and pitch changes
+      // This gives us the total angular distance rotated in this frame
+      const angularDistanceRad = Math.sqrt(yawDeltaRad * yawDeltaRad + pitchDeltaRad * pitchDeltaRad);
+      
+      // Convert to degrees and add to rotation history with timestamp
+      const angularDistanceDegrees = angularDistanceRad * (180 / Math.PI);
+      if (angularDistanceDegrees > 0) {
+        this.rotationHistory.push({
+          degrees: angularDistanceDegrees,
+          timestamp: currentTime
+        });
+      }
+      
+      // Calculate total rotation within the 0.2-second window
+      const totalRotationInWindow = this.rotationHistory.reduce(
+        (sum, entry) => sum + entry.degrees, 
+        0
       );
       
-      // Convert to speed (pixels per frame), threshold: > 10 pixels per frame = swift movement
-      // This corresponds to fast camera sweeps
-      if (rotationMagnitude > 10 && deltaTime > 0 && this.activeCompetencesTracker) {
+      // Mark FLUIDITE as active when rotation >= 120 degrees within 0.2 seconds
+      if (totalRotationInWindow >= 120 && this.activeCompetencesTracker) {
         this.activeCompetencesTracker.markActive(Competence.FLUIDITE);
+        // Clear rotation history after triggering to prevent immediate re-triggering
+        // But keep recent entries (last 50ms) to allow continuation of rapid rotation
+        const recentThreshold = currentTime - 50; // Keep last 50ms
+        this.rotationHistory = this.rotationHistory.filter(
+          entry => entry.timestamp >= recentThreshold
+        );
       }
     }
+    
+    // Check for new objects near center of screen for VISION (only when seeing something new)
+    this.checkCenterViewForNewObjects();
     
     // Mark VISEE as active while aiming (zoomed in)
     if (this.isAiming && this.activeCompetencesTracker) {
@@ -336,24 +377,18 @@ export class FPSCamera {
         this.activeCompetencesTracker.markActive(Competence.EQUILIBRE);
       }
       
-      // FLUIDITE - Movement fluidity: only when swift camera movements OR 3+ movement actions at once
-      // Count active movement inputs: direction keys (WASD)
-      const movementKeysCount = 
-        (this.controls.moveForward ? 1 : 0) +
-        (this.controls.moveBackward ? 1 : 0) +
-        (this.controls.moveLeft ? 1 : 0) +
-        (this.controls.moveRight ? 1 : 0);
+      // FLUIDITE - Movement fluidity: only when movement (WASD as single input) + other actions
+      // WASD keys count as a single movement input (any combination = 1)
+      const hasMovement = this.direction.length() > 0; // Any WASD key(s) pressed = 1 movement input
       
-      // Check if 3+ movement actions are active simultaneously:
-      // - 3+ direction keys (WASD combinations like W+A+D or S+W+D)
-      // - OR 2 direction keys + running (W+A+Shift or similar)
-      // - OR 2 direction keys + jumping (W+A+Space - jumping while moving in multiple directions)
-      const hasMultipleActions = movementKeysCount >= 3 || // 3+ direction keys at once
-                                 (movementKeysCount >= 2 && this.controls.run) || // 2 directions + running
-                                 (movementKeysCount >= 2 && !isGrounded); // 2 directions + jumping (airborne)
+      // Check if movement + other actions are active simultaneously:
+      // Movement (WASD as one) + running + jumping = 3 inputs (fluid movement combo)
+      // Movement (WASD as one) + running = 2 inputs (not enough)
+      // Movement (WASD as one) + jumping = 2 inputs (not enough)
+      const hasMultipleActions = hasMovement && this.controls.run && !isGrounded; // Movement + running + jumping (3 inputs)
       
-      // FLUIDITE is also marked during swift camera movements in updateRotation()
-      // This handles the movement-based FLUIDITE activation
+      // FLUIDITE for movement combos - only when doing truly complex movement with 3+ different input types
+      // Camera-based FLUIDITE is handled in updateRotation() with stricter thresholds
       if (hasMultipleActions && this.activeCompetencesTracker) {
         this.activeCompetencesTracker.markActive(Competence.FLUIDITE);
       }
@@ -424,6 +459,55 @@ export class FPSCamera {
    */
   areControlsEnabled(): boolean {
     return this.controlsEnabled;
+  }
+
+  /**
+   * Set scene reference for VISION detection
+   */
+  setScene(scene: THREE.Scene): void {
+    this.scene = scene;
+  }
+
+  /**
+   * Check for new objects near center of screen for VISION detection
+   */
+  private checkCenterViewForNewObjects(): void {
+    if (!this.scene || !this.activeCompetencesTracker || !this.mouseState.locked) return;
+
+    // Raycast from camera center forward
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera); // Center of screen (0, 0)
+    
+    // Find all intersected objects
+    const intersects = raycaster.intersectObjects(this.scene.children, true);
+    
+    if (intersects.length > 0) {
+      // Check each intersection
+      for (const intersection of intersects) {
+        const object = intersection.object;
+        
+        // Skip if it's been seen before
+        if (this.seenObjects.has(object)) continue;
+        
+        // Only consider objects within reasonable distance (close enough to "discover")
+        const maxDistance = 15; // Maximum distance to detect new objects
+        if (intersection.distance > maxDistance) continue;
+        
+        // Check if this is a detectable object (mesh with geometry and detectable flag)
+        // Objects should have userData.detectable = true to trigger VISION
+        // This allows for discoveries, secrets, traps, red cubes, etc. to trigger VISION
+        if (object instanceof THREE.Mesh && object.visible && object.userData.detectable === true) {
+          // Mark as seen and activate VISION
+          this.seenObjects.add(object);
+          
+          // Mark VISION as active when seeing a new detectable object
+          this.activeCompetencesTracker.markActive(Competence.VISION);
+          
+          Debug.log('FPSCamera', `VISION: New detectable object found - ${object.name || 'unnamed'} at distance ${intersection.distance.toFixed(2)}`);
+          break; // Only trigger once per frame for the first new object
+        }
+      }
+    }
   }
 
   /**
