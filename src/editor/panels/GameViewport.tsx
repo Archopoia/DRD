@@ -431,9 +431,20 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
       
       // Get the axis direction in local space
       const axisDirection = new THREE.Vector3();
-      if (currentAxis === 'x') axisDirection.set(1, 0, 0);
-      else if (currentAxis === 'y') axisDirection.set(0, 1, 0);
-      else if (currentAxis === 'z') axisDirection.set(0, 0, 1);
+      
+      // For rotation mode, swap blue and green axes:
+      // Blue gizmo (z) should control Y axis (what green currently does)
+      // Green gizmo (y) should control Z axis (what blue currently does)
+      if (currentMode === 'rotate') {
+        if (currentAxis === 'x') axisDirection.set(1, 0, 0);
+        else if (currentAxis === 'y') axisDirection.set(0, 0, 1); // Green controls Z axis
+        else if (currentAxis === 'z') axisDirection.set(0, 1, 0); // Blue controls Y axis
+      } else {
+        // For translate and scale, use normal axis mapping
+        if (currentAxis === 'x') axisDirection.set(1, 0, 0);
+        else if (currentAxis === 'y') axisDirection.set(0, 1, 0);
+        else if (currentAxis === 'z') axisDirection.set(0, 0, 1);
+      }
       
       const axisDirectionLocal = axisDirection.clone();
       
@@ -459,7 +470,13 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
           const sensitivity = 0.015 * Math.max(0.5, Math.min(2.0, distance / 10));
           
           // Project mouse movement onto axis (use combined delta for better feel)
-          const mouseDelta = mouseDeltaX + mouseDeltaY;
+          let mouseDelta = mouseDeltaX + mouseDeltaY;
+          
+          // Invert direction for blue gizmo (z-axis)
+          if (currentAxis === 'z') {
+            mouseDelta = -mouseDelta;
+          }
+          
           const movement = axisDirection.clone().multiplyScalar(mouseDelta * sensitivity);
           
           logTransform(`Translate calculation`, {
@@ -485,7 +502,12 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
         // Rotate mode - calculate angle from total mouse movement since drag start
         if (startTransform.rotation) {
           // Calculate total rotation angle from start position
-          const totalAngle = (mouseDeltaX + mouseDeltaY) * 0.015; // Radians
+          let totalAngle = (mouseDeltaX + mouseDeltaY) * 0.015; // Radians
+          
+          // Invert controls only for red (x-axis) rotating gizmo
+          if (currentAxis === 'x') {
+            totalAngle = -totalAngle;
+          }
           
           logTransform(`Rotate calculation`, {
             mouseDeltaX,
@@ -560,7 +582,13 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
           const sensitivity = 0.01 * Math.max(0.5, Math.min(2.0, distance / 10));
           
           // Calculate scale factor from mouse movement
-          const mouseDelta = mouseDeltaX + mouseDeltaY;
+          let mouseDelta = mouseDeltaX + mouseDeltaY;
+          
+          // Invert direction for blue gizmo (z-axis)
+          if (currentAxis === 'z') {
+            mouseDelta = -mouseDelta;
+          }
+          
           const scaleFactor = 1 + (mouseDelta * sensitivity);
           
           // Reset to start scale
