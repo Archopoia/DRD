@@ -210,6 +210,22 @@ export class Game {
   }
 
   /**
+   * Get Scene instance (for physics body access)
+   */
+  getSceneInstance(): Scene {
+    return this.scene;
+  }
+
+  /**
+   * Update physics body for a mesh (for editor gizmo dragging)
+   */
+  updatePhysicsBodyForMesh(mesh: THREE.Mesh): void {
+    if (this.scene) {
+      this.scene.updatePhysicsBodyFromMesh(mesh);
+    }
+  }
+
+  /**
    * Get renderer (for editor - creating materials)
    */
   getRenderer(): RetroRenderer {

@@ -4,13 +4,14 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { GAME_CONFIG } from '@/lib/constants';
 import { TransformGizmo, TransformMode } from '@/editor/gizmos/TransformGizmo';
-import { logGizmo, logTransform } from '@/editor/utils/debugLogger';
+import { logGizmo, logTransform, logGeneral } from '@/editor/utils/debugLogger';
 
 interface GameViewportProps {
   scene: THREE.Scene | null;
   selectedObject: THREE.Object3D | null;
   selectedObjects: Set<THREE.Object3D>;
   transformMode: TransformMode;
+  gameInstance?: any; // Game instance to access Scene for physics body updates
   onSelectObject: (object: THREE.Object3D | null, multiSelect?: boolean) => void;
   onObjectChange?: (object: THREE.Object3D) => void;
 }
@@ -18,7 +19,7 @@ interface GameViewportProps {
 /**
  * Game Viewport - Shows the 3D scene with editor camera and object selection
  */
-export default function GameViewport({ scene, selectedObject, selectedObjects, transformMode, onSelectObject, onObjectChange }: GameViewportProps) {
+export default function GameViewport({ scene, selectedObject, selectedObjects, transformMode, gameInstance, onSelectObject, onObjectChange }: GameViewportProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -285,6 +286,16 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
                 objectScale: selectedObject.scale.clone(),
               });
               
+              // Mark object as editor-controlled BEFORE starting drag
+              // This prevents physics from overwriting our changes in the game loop
+              if (selectedObject instanceof THREE.Mesh) {
+                selectedObject.userData._editorControlled = true;
+                logTransform(`Marked object as editor-controlled`, {
+                  objectName: selectedObject.name || '(unnamed)',
+                  objectType: selectedObject.type,
+                });
+              }
+              
               setIsDraggingGizmo(true);
               setDraggingAxis(axis);
               dragStartMouseRef.current = new THREE.Vector2(e.clientX, e.clientY);
@@ -299,6 +310,7 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
                 startPosition: dragStartObjectTransformRef.current.position,
                 startRotation: dragStartObjectTransformRef.current.rotation,
                 startScale: dragStartObjectTransformRef.current.scale,
+                isEditorControlled: selectedObject.userData._editorControlled,
               });
               
               return; // Don't process object selection
@@ -464,6 +476,9 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
           // Force matrix update
           currentObject.updateMatrix();
           currentObject.updateMatrixWorld(true);
+          
+          // Update physics body if this object has one (for red boxes, etc.)
+          updatePhysicsBodyIfExists(currentObject);
         }
 
       } else if (currentMode === 'rotate') {
@@ -523,20 +538,13 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
           currentObject.updateMatrix();
           currentObject.updateMatrixWorld(true);
           
+          // Update physics body if this object has one (for red boxes, etc.)
+          updatePhysicsBodyIfExists(currentObject);
+          
           logTransform(`Rotation applied and matrices updated`, {
             objectQuaternion: currentObject.quaternion.clone(),
             objectRotation: currentObject.rotation.clone(),
             objectRotationDegrees: {
-              x: (currentObject.rotation.x * 180 / Math.PI).toFixed(2),
-              y: (currentObject.rotation.y * 180 / Math.PI).toFixed(2),
-              z: (currentObject.rotation.z * 180 / Math.PI).toFixed(2),
-            },
-          });
-          
-          logTransform(`Rotate applied`, {
-            finalQuaternion: currentObject.quaternion.clone(),
-            newRotation: currentObject.rotation.clone(),
-            newRotationDegrees: {
               x: (currentObject.rotation.x * 180 / Math.PI).toFixed(2),
               y: (currentObject.rotation.y * 180 / Math.PI).toFixed(2),
               z: (currentObject.rotation.z * 180 / Math.PI).toFixed(2),
@@ -576,6 +584,9 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
           currentObject.updateMatrix();
           currentObject.updateMatrixWorld(true);
           
+          // Update physics body if this object has one (for red boxes, etc.)
+          updatePhysicsBodyIfExists(currentObject);
+          
           logTransform(`Scale applied`, {
             scaleFactor,
             mouseDelta,
@@ -595,11 +606,55 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
       }
     };
 
+    // Helper function to update physics body if object has one
+    const updatePhysicsBodyIfExists = (object: THREE.Object3D) => {
+      if (!gameInstance || !(object instanceof THREE.Mesh)) {
+        if (!gameInstance) {
+          logGeneral(`Cannot update physics body: no gameInstance`, { objectName: object?.name || '(unnamed)' });
+        }
+        return;
+      }
+      
+      try {
+        // Use Game's method to update physics body
+        if (typeof gameInstance.updatePhysicsBodyForMesh === 'function') {
+          // Object is already marked as editor-controlled at drag start
+          // Update physics body from mesh
+          gameInstance.updatePhysicsBodyForMesh(object);
+          
+          logTransform(`Physics body updated successfully`, {
+            objectName: object.name || '(unnamed)',
+            objectType: object.type,
+            position: object.position.clone(),
+            rotation: object.rotation.clone(),
+            quaternion: object.quaternion.clone(),
+            hasPhysicsBody: true,
+          });
+        } else {
+          logGeneral(`updatePhysicsBodyForMesh method not available on gameInstance`, {
+            objectName: object.name || '(unnamed)',
+            hasGameInstance: !!gameInstance,
+            gameInstanceMethods: Object.keys(gameInstance || {}),
+          });
+        }
+      } catch (error) {
+        logGeneral(`Failed to update physics body`, { 
+          error: error instanceof Error ? error.message : String(error), 
+          errorStack: error instanceof Error ? error.stack : undefined,
+          objectName: object.name || '(unnamed)',
+          objectType: object.type,
+        });
+      }
+    };
+
     const handleGizmoDragEnd = () => {
       // Clean up temporary rotation data
       if (currentObject.userData._gizmoStartQuaternion) {
         delete currentObject.userData._gizmoStartQuaternion;
       }
+      
+      // Final physics body update
+      updatePhysicsBodyIfExists(currentObject);
       
       logGizmo(`Gizmo drag ended`, {
         mode: currentMode,
@@ -612,12 +667,16 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
           z: (currentObject.rotation.z * 180 / Math.PI).toFixed(2),
         },
         finalScale: currentObject.scale.clone(),
+        isEditorControlled: currentObject.userData._editorControlled,
       });
       
       setIsDraggingGizmo(false);
       setDraggingAxis(null);
       dragStartMouseRef.current = null;
       dragStartObjectTransformRef.current = null;
+      
+      // Note: We keep _editorControlled flag set so physics doesn't overwrite after drag ends
+      // It will be cleared when object is deselected or when editor is closed
     };
 
     document.addEventListener('mousemove', handleGizmoDrag);
@@ -627,7 +686,7 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
       document.removeEventListener('mousemove', handleGizmoDrag);
       document.removeEventListener('mouseup', handleGizmoDragEnd);
     };
-  }, [isDraggingGizmo, draggingAxis, selectedObject, transformMode, onObjectChange]);
+  }, [isDraggingGizmo, draggingAxis, selectedObject, transformMode, onObjectChange, gameInstance]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!containerRef.current || !editorCameraRef.current || !scene) return;

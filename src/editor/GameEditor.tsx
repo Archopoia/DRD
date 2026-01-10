@@ -95,11 +95,34 @@ export default function GameEditor({
     }
   }, [gameInstance, isOpen]);
 
+  // Clear editor-controlled flags when editor closes or objects are deselected
+  useEffect(() => {
+    if (!isOpen) {
+      // Editor closed - clear all editor-controlled flags
+      if (scene) {
+        scene.traverse((object) => {
+          if (object instanceof THREE.Mesh && object.userData._editorControlled) {
+            delete object.userData._editorControlled;
+          }
+        });
+      }
+      // Clear selections
+      setSelectedObjects(new Set());
+      setSelectedObject(null);
+    }
+  }, [isOpen, scene]);
+
   // Handle object changes (when Inspector modifies an object)
   const handleObjectChange = useCallback((object: THREE.Object3D) => {
+    // Update physics body if object has one (for editor-created objects modified via Inspector)
+    if (gameInstance && object instanceof THREE.Mesh && gameInstance.updatePhysicsBodyForMesh) {
+      object.userData._editorControlled = true;
+      gameInstance.updatePhysicsBodyForMesh(object);
+    }
+    
     // Force hierarchy refresh
     setHierarchyKey(prev => prev + 1);
-  }, []);
+  }, [gameInstance]);
 
   // Handle object deletion
   const handleDeleteObject = useCallback((object: THREE.Object3D) => {
@@ -377,6 +400,12 @@ export default function GameEditor({
                       setSelectedObjects(new Set([object]));
                       setSelectedObject(object);
                     } else {
+                      // Clear selection - release editor control from previously selected objects
+                      selectedObjects.forEach((obj) => {
+                        if (obj instanceof THREE.Mesh) {
+                          delete obj.userData._editorControlled;
+                        }
+                      });
                       setSelectedObjects(new Set());
                       setSelectedObject(null);
                     }
@@ -424,6 +453,7 @@ export default function GameEditor({
             selectedObject={selectedObject}
             selectedObjects={selectedObjects}
             transformMode={transformMode}
+            gameInstance={gameInstance}
             onSelectObject={(object, multiSelect) => {
               if (multiSelect) {
                 // Multi-select mode - toggle object in selection set

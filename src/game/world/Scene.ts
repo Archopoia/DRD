@@ -331,13 +331,69 @@ export class Scene {
   }
 
   /**
+   * Get physics body for a mesh (if it has one)
+   */
+  getPhysicsBody(mesh: THREE.Mesh): RAPIER.RigidBody | null {
+    return this.physicsBodies.get(mesh) || null;
+  }
+
+  /**
+   * Update physics body position/rotation/scale from mesh (for editor)
+   */
+  updatePhysicsBodyFromMesh(mesh: THREE.Mesh): void {
+    const body = this.physicsBodies.get(mesh);
+    if (!body) {
+      // No physics body for this mesh - that's fine for editor-created objects
+      Debug.log('Scene', `No physics body found for mesh: ${mesh.name || '(unnamed)'}`, {
+        meshName: mesh.name || '(unnamed)',
+        meshType: mesh.type,
+        physicsBodiesCount: this.physicsBodies.size,
+      });
+      return;
+    }
+
+    try {
+      // Update physics body position from mesh (use RAPIER.Vector3, not plain object)
+      body.setTranslation(
+        new RAPIER.Vector3(mesh.position.x, mesh.position.y, mesh.position.z),
+        true // wake up the body
+      );
+
+      // Update physics body rotation from mesh quaternion (use RAPIER.Quaternion, not plain object)
+      body.setRotation(
+        new RAPIER.Quaternion(mesh.quaternion.x, mesh.quaternion.y, mesh.quaternion.z, mesh.quaternion.w),
+        true // wake up the body
+      );
+
+      Debug.log('Scene', `Updated physics body for mesh: ${mesh.name || '(unnamed)'}`, {
+        meshName: mesh.name || '(unnamed)',
+        newPosition: { x: mesh.position.x, y: mesh.position.y, z: mesh.position.z },
+        newRotation: { x: mesh.quaternion.x, y: mesh.quaternion.y, z: mesh.quaternion.z, w: mesh.quaternion.w },
+        bodyType: body.bodyType(),
+        hasPhysicsBody: true,
+      });
+    } catch (error) {
+      Debug.error('Scene', `Failed to update physics body for mesh: ${mesh.name || '(unnamed)'}`, error as Error);
+    }
+
+    // For scale, we'd need to update the collider shape, but that's more complex
+    // For now, just update position and rotation
+  }
+
+  /**
    * Update dynamic object positions to sync with physics
    * Also check for character standing on souffrance platforms
    */
   update(deltaTime: number): void {
     try {
       // Sync dynamic object positions with physics bodies
+      // BUT: Skip objects that are being edited in the editor (marked in userData)
       this.physicsBodies.forEach((body, mesh) => {
+        // Skip if this object is being edited in the editor
+        if (mesh.userData._editorControlled) {
+          return;
+        }
+
         // Only sync dynamic bodies (static bodies don't move)
         if (body.bodyType() === RAPIER.RigidBodyType.Dynamic) {
           const translation = body.translation();
