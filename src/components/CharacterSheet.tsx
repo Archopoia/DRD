@@ -449,7 +449,7 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                           const resistanceDegreeCount = manager.getResistanceDegreeCount(souf); // Resistance compétence degree count
                           const resistanceLevel = manager.getResistanceLevel(souf); // Resistance compétence level (separate from souffrance degrees)
                           const totalMarks = manager.getTotalSouffranceMarks(souf);
-                          const isEprouvee = manager.isSouffranceEprouvee(souf); // 100% marks (10 marks)
+                          const isEprouvee = manager.isSouffranceEprouvee(souf); // 100% marks (100 marks for video game)
                           
                           return (
                             <div key={souf} className={`text-xs bg-red-theme-alpha border-2 border-border-dark rounded p-2 ${isEprouvee ? 'overflow-visible' : ''}`} style={{
@@ -475,7 +475,7 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                 <span className="text-xs font-medieval font-semibold text-text-cream whitespace-nowrap">N{resistanceLevel}</span>
                                 <ProgressBar 
                                   value={totalMarks} 
-                                  max={10} 
+                                  max={100} 
                                   height="sm" 
                                   label={getLevelName(resistanceLevel)} 
                                   level={resistanceLevel}
@@ -654,7 +654,7 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                                 <span className="text-xs font-medieval font-semibold text-text-dark whitespace-nowrap">N{level}</span>
                                                 <ProgressBar 
                                                   value={totalMarks} 
-                                                  max={10} 
+                                                  max={100} 
                                                   height="sm" 
                                                   label={getLevelName(level)} 
                                                   level={level}
