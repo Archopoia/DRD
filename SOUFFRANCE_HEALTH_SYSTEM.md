@@ -43,20 +43,27 @@ Each individual souffrance type has levels:
 
 ## Experience Link: How Suffering Grants Marks
 
-**Core Rule**: When you use a competence and **fail**, you:
-1. **Suffer** (gain DS in one of the 8 types)
-2. **Gain 1 mark** on the competence you were using
-3. If you **resist** (via resistance competence), you gain marks on the resistance competence too
+**Core Rule** (Page 63 & 72): When you use a competence and **fail**, you:
+1. **Gain 1 mark per failure** on the competence you used (Page 63: "Pour chaque Échec obtenu... attribuez-vous 1 Marque à la CT utilisée")
+2. **Each failure causes suffering** (typically 1 DS per failure)
+3. **After resistance absorbs some suffering**, the actual damage gives marks on the resistance competence (Page 72: "Chaque Échec déterminé comme une Souffrance ET outrepassant votre Résistance liée... en Marque d'expérience dans la CT y ayant résisté")
 
 ### Resistance System
 
-Each Souffrance has a **Resistance Competence**:
+Each Souffrance has a **Resistance Competence** (R[Souffrance], e.g., R[Blessures]):
 
-**Resistance Calculation:**
+**Resistance Calculation** (Page 72):
 - Resistance level = Competence Level (Niv) of resistance competence
-- Each level of resistance absorbs 1 DS passively
-- Example: If you have [Robustesse] Niv 2 and take 5 DS of Blessures, 2 are absorbed, 3 go through
-- The resistance competence gains marks equal to the amount absorbed
+- Resistance absorbs DS **equal to its level** (flat absorption, not percentage)
+- Example: If you have R[Blessures] Niv 2 and take 7 DS of Blessures, 2 are absorbed, 5 go through
+- The resistance competence gains marks equal to the **actual damage taken** (after resistance), not the absorbed amount
+
+**Example:**
+- Walk [Pas] vs DC +5, roll -2 = **7 failures**
+- **7 marks** on [Pas] (the competence used)
+- **7 failures** = 7 Blessures (before resistance)
+- R[Blessures] Niv 2 absorbs 2 Blessures → **5 actual Blessures**
+- **5 marks** on R[Blessures] (equal to actual damage)
 
 ## Implementation
 
@@ -80,45 +87,48 @@ Each Souffrance has a **Resistance Competence**:
 ```typescript
 applySouffranceFromFailure(
   souffrance: Souffrance,
-  diceAmount: number,
+  failures: number,  // Number of failures on the competence check
   usedCompetence: Competence
-): number
+): number  // Returns actual DS applied (after resistance)
 ```
 
 **What it does:**
-1. Calculates resistance from resistance competence
-2. Absorbs damage equal to resistance level
-3. Applies remaining damage as DS
-4. Gains 1 mark on the used competence (for the failure)
-5. Gains marks on resistance competence (equal to absorbed amount)
+1. Each failure = 1 mark on the used competence
+2. Each failure = 1 DS of suffering (before resistance)
+3. Calculates resistance from resistance competence (absorbs DS equal to resistance level)
+4. Applies remaining damage as DS
+5. Gains marks on resistance competence equal to **actual damage taken** (after resistance)
 
 **Example:**
 ```typescript
-// Character uses [Armé] and fails, takes 5 DS of Blessures
-// Character has [Robustesse] Niv 2
+// Character uses [Pas] (walking) vs DC +5, rolls -2 = 7 failures
+// Character has R[Blessures] Niv 2
 healthSystem.applySouffranceFromFailure(
   Souffrance.BLESSURES,
-  5,
-  Competence.ARME
+  7,  // 7 failures
+  Competence.PAS
 );
 // Result:
-// - 2 DS absorbed by resistance (Robustesse Niv 2)
-// - 3 DS applied to Blessures
-// - 1 mark gained on [Armé] (for the failure)
-// - 2 marks gained on [Robustesse] (for absorbing 2 DS)
+// - 7 marks gained on [Pas] (1 per failure)
+// - 7 failures = 7 Blessures (before resistance)
+// - 2 DS absorbed by R[Blessures] Niv 2
+// - 5 DS applied to Blessures (actual damage)
+// - 5 marks gained on R[Blessures] (equal to actual damage)
 ```
 
 #### `SouffranceHealthSystem.applyCriticalFailure()`
 ```typescript
 applyCriticalFailure(
   souffrance: Souffrance,
-  diceAmount: number,
+  failures: number,  // Number of failures (but marks are 5 regardless for critical)
   usedCompetence: Competence
-): number
+): number  // Returns actual DS applied (after resistance)
 ```
 
 **What it does:**
-- Same as normal failure, but gains **5 marks** instead of 1 on the used competence
+- **5 marks** on the used competence (regardless of number of failures) - Page 63: "Lors d'un Échec Critique vous obtiendrez 5 M d'un coup"
+- Suffering is still calculated from the number of failures
+- Resistance and marks on resistance competence work the same as normal failure
 
 ### Health State Calculations
 
@@ -175,29 +185,31 @@ Call this method whenever a character:
 
 **Example in combat:**
 ```typescript
-// Character attacks with [Armé]
+// Character attacks with [Armé] vs DC +3, rolls -1 = 4 failures
 const result = rollCombatCheck(competence: Competence.ARME, difficulty: 3);
 if (result.success === false) {
+  const failures = result.failures; // e.g., 4 failures
   // Determine souffrance type (usually based on context)
   // Physical combat failure → Blessures
-  const damageDice = calculateFailureDamage(result);
   healthSystem.applySouffranceFromFailure(
     Souffrance.BLESSURES,
-    damageDice,
+    failures,  // Number of failures (4 failures = 4 marks on [Armé], 4 DS before resistance)
     Competence.ARME
   );
+  // Result: 4 marks on [Armé], actual Blessures after resistance, marks on R[Blessures]
 }
 ```
 
 **Example in social interaction:**
 ```typescript
-// Character negotiates with [Négociation]
+// Character negotiates with [Négociation] vs DC +2, rolls 0 = 2 failures
 const result = rollSocialCheck(competence: Competence.NEGOCIATION, difficulty: 2);
 if (result.success === false) {
+  const failures = result.failures; // e.g., 2 failures
   // Social failure → Rancœurs (resentment)
   healthSystem.applySouffranceFromFailure(
     Souffrance.RANCOEURS,
-    2, // Moderate failure = 2 DS
+    failures,  // Number of failures (2 failures = 2 marks on [Négociation], 2 DS before resistance)
     Competence.NEGOCIATION
   );
 }
@@ -220,8 +232,8 @@ This system embodies the TTRPG's core philosophy:
 
 > **"Suffering is how you learn and grow"**
 
-- Every failure teaches you (marks on used competence)
-- Resistance makes you stronger (marks on resistance competence)
+- Every failure teaches you (1 mark per failure on used competence)
+- The more you suffer, the more you learn (actual damage = marks on resistance competence)
 - Health is multifaceted (8 different types, not just HP)
 - High suffering changes behavior (Rage, Unconscious, etc.)
 - Death is meaningful (26+ DS = true consequences)
@@ -233,6 +245,14 @@ The health bars provide immediate visual feedback:
 
 ---
 
-**Last Updated:** 2026-01-08
+**Last Updated:** 2026-01-10
+
+## Corrections (2026-01-10)
+
+Updated XP mark gain system to match TTRPG rules:
+- **Each failure** on competence check = **1 mark** on the competence used (not just 1 mark total)
+- Suffering = number of failures (typically 1 DS per failure)
+- Resistance absorbs DS equal to resistance level (flat, not percentage)
+- Marks on resistance competence = **actual damage taken** (after resistance), not absorbed amount
 
 

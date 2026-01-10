@@ -131,101 +131,93 @@ export class SouffranceHealthSystem {
    * Apply souffrance from a competence failure
    * This is the main method that links suffering to experience
    * 
+   * According to rules (page 63 & 72):
+   * - Each failure on the competence check = 1 mark on the competence used
+   * - Each failure also causes suffering (1 DS per failure, typically)
+   * - After resistance absorbs some suffering, the actual damage that goes through = marks on resistance competence
+   * 
+   * Example: Walk [Pas] vs DC +5, roll -2 = 7 failures
+   * - 7 marks on [Pas] (the competence used)
+   * - 7 failures = 7 Blessures
+   * - R[Blessures] Niv +2 absorbs 2 Blessures
+   * - 5 actual Blessures = 5 marks on R[Blessures]
+   * 
    * @param souffrance The type of souffrance to apply
-   * @param diceAmount The amount of DS to apply (before resistance)
+   * @param failures The number of failures on the competence check (each failure = 1 mark on used competence, and typically 1 DS of suffering)
    * @param usedCompetence The competence that was being used when the failure occurred
    * @returns The actual amount of DS applied (after resistance)
    */
   applySouffranceFromFailure(
     souffrance: Souffrance,
-    diceAmount: number,
+    failures: number,
     usedCompetence: Competence
   ): number {
-    if (diceAmount <= 0) {
+    if (failures <= 0) {
       return 0;
     }
 
-    Debug.log('SouffranceHealthSystem', `Applying ${diceAmount} DS of ${getSouffranceName(souffrance)} (resisted by ${getResistanceCompetenceName(souffrance)}) from failure using ${usedCompetence}`);
+    // Each failure typically equals 1 DS of suffering
+    // The suffering amount equals the number of failures (unless specified otherwise by the Révélateur)
+    const diceAmount = failures;
+
+    Debug.log('SouffranceHealthSystem', `Applying ${diceAmount} DS of ${getSouffranceName(souffrance)} (from ${failures} failures) (resisted by ${getResistanceCompetenceName(souffrance)}) from failure using ${usedCompetence}`);
 
     // Calculate resistance
     // The souffrance has a separate resistance competence
     // Resistance level = resistance competence level (Niv from resistance dice count, not souffrance dice)
     const resistanceLevel = this.characterSheetManager.getResistanceLevel(souffrance);
     
-    // Resistance is much weaker - only absorbs a small fraction per level
-    // At Niv 1: absorbs 0.1 DS (10%), Niv 2: 0.2 DS (20%), etc.
-    // Resistance becomes more effective at higher levels, but never fully negates damage
-    const absorbedAmountRaw = Math.min(diceAmount * 0.1 * resistanceLevel, diceAmount * 0.5); // Max 50% absorption even at high levels
-    const absorbedAmount = Math.round(absorbedAmountRaw * 10) / 10; // Round to 1 decimal
-    const actualDamageRaw = Math.max(0, diceAmount - absorbedAmount);
-    const actualDamage = Math.round(actualDamageRaw * 10) / 10; // Round to 1 decimal
+    // Resistance absorbs a number of DS equal to the resistance level
+    // According to page 72: "Vous absorberez passivement un nombre de Souffrances égal à votre Niv de CT de Résistance liée au mal"
+    // So if R[Blessures] is Niv 2, it absorbs 2 DS
+    const absorbedAmount = Math.min(resistanceLevel, diceAmount);
+    const actualDamage = diceAmount - absorbedAmount;
 
-    Debug.log('SouffranceHealthSystem', `Applying ${diceAmount.toFixed(1)} DS of ${getSouffranceName(souffrance)}, ${getResistanceCompetenceName(souffrance)} Niv ${resistanceLevel} absorbed ${absorbedAmount.toFixed(1)}, actual damage ${actualDamage.toFixed(1)}`);
+    Debug.log('SouffranceHealthSystem', `Applying ${diceAmount} DS of ${getSouffranceName(souffrance)}, ${getResistanceCompetenceName(souffrance)} Niv ${resistanceLevel} absorbed ${absorbedAmount}, actual damage ${actualDamage}`);
 
-    // Apply the actual damage (after resistance)
-    if (actualDamage > 0) {
-      const currentDice = this.characterSheetManager.getSouffrance(souffrance).diceCount;
-      const newDiceCount = Math.round((currentDice + actualDamage) * 10) / 10; // Round to 1 decimal
-      this.characterSheetManager.setSouffranceDice(souffrance, newDiceCount);
-      
-      // Check for health state changes
-      this.checkHealthStateChange();
-    }
-
-    // Gain experience marks and log events
+    // Gain experience marks FIRST (before applying damage)
     const eventLog = getEventLog();
     const souffranceName = getSouffranceName(souffrance);
     const resistanceName = getResistanceCompetenceName(souffrance);
-    const currentDiceAfter = this.characterSheetManager.getSouffrance(souffrance).diceCount;
     
-    // Mark 1: Competence used (1 mark for failure)
-    // According to rules: "1 Marque par Échec dans une Épreuve Possible"
-    this.characterSheetManager.addCompetenceMark(usedCompetence, false);
-    eventLog.addEvent(
-      EventType.EXPERIENCE_GAIN,
-      `Gained 1 mark on ${getCompetenceName(usedCompetence)} (used while suffering)`,
-      { competence: usedCompetence, marks: 1 }
-    );
-    Debug.log('SouffranceHealthSystem', `Gained 1 mark on used competence: ${usedCompetence}`);
+    // Mark 1: Competence used - ALL failures give marks
+    // According to page 63: "Pour chaque Échec obtenu lorsque vous vous éprouverez d'une Épreuve Possible, attribuez-vous 1 Marque à la CT utilisée"
+    for (let i = 0; i < failures; i++) {
+      this.characterSheetManager.addCompetenceMark(usedCompetence, false);
+    }
+    if (failures > 0) {
+      eventLog.addEvent(
+        EventType.EXPERIENCE_GAIN,
+        `Gained ${failures} mark${failures > 1 ? 's' : ''} on ${getCompetenceName(usedCompetence)} (${failures} failure${failures > 1 ? 's' : ''} on check)`,
+        { competence: usedCompetence, marks: failures }
+      );
+      Debug.log('SouffranceHealthSystem', `Gained ${failures} marks on used competence: ${usedCompetence}`);
+    }
 
-    // Mark 2: Souffrance resistance (marks = actual damage taken, minimum 1)
-    // According to rules: "Chaque Échec déterminé comme une Souffrance ET outrepassant votre Résistance liée, s'accumule en Dé NÉGATIFS liés à cette Souffrance ET en Marque d'expérience dans la CT y ayant résisté"
-    // The resistance competence gains marks based on the actual damage taken (the suffering experienced)
-    // Always gain at least 1 mark when suffering occurs (even if all damage is resisted)
-    if (actualDamage > 0 || diceAmount > 0) {
-      // Gain marks based on actual damage taken, minimum 1 mark
-      const marksToAdd = Math.max(1, Math.ceil(actualDamage > 0 ? actualDamage : diceAmount * 0.1));
-      for (let i = 0; i < marksToAdd; i++) {
+    // Mark 2: Souffrance resistance - only actual damage gives marks
+    // According to page 72: "Chaque Échec déterminé comme une Souffrance ET outrepassant votre Résistance liée, s'accumule en Dé NÉGATIFS liés à cette Souffrance ET en Marque d'expérience dans la CT y ayant résisté"
+    // The resistance competence gains marks equal to the actual damage taken (after resistance absorption)
+    if (actualDamage > 0) {
+      for (let i = 0; i < actualDamage; i++) {
         this.characterSheetManager.addSouffranceMark(souffrance, false);
       }
       eventLog.addEvent(
         EventType.EXPERIENCE_GAIN,
-        `Gained ${marksToAdd} mark${marksToAdd > 1 ? 's' : ''} on ${resistanceName} (suffered ${actualDamage > 0 ? actualDamage.toFixed(1) : 'resisted'} DS)`,
+        `Gained ${actualDamage} mark${actualDamage > 1 ? 's' : ''} on ${resistanceName} (${actualDamage} DS after resistance, ${absorbedAmount}/${diceAmount} absorbed)`,
         {
           resistanceCompetence: resistanceName,
-          marks: marksToAdd,
+          marks: actualDamage,
           actualDamage: actualDamage,
+          absorbed: absorbedAmount,
+          total: diceAmount,
         }
       );
-      Debug.log('SouffranceHealthSystem', `Gained ${marksToAdd} marks on ${resistanceName}`);
-    }
-    
-    // Log damage event if damage was applied
-    if (actualDamage > 0) {
-      eventLog.addEvent(
-        EventType.SOUFFRANCE_DAMAGE,
-        `+${actualDamage.toFixed(1)} DS ${souffranceName} (${currentDiceAfter.toFixed(1)} DS total)${usedCompetence === Competence.PAS ? ' - Stepping on platform' : ''}`,
-        {
-          souffrance: souffrance,
-          damage: actualDamage,
-          totalDice: currentDiceAfter,
-        }
-      );
-    } else if (absorbedAmount >= diceAmount * 0.9) {
-      // Only log resistance if most damage was resisted (90%+)
+      Debug.log('SouffranceHealthSystem', `Gained ${actualDamage} marks on ${resistanceName} (actual damage after ${absorbedAmount} absorbed)`);
+    } else if (absorbedAmount > 0) {
+      // If all damage was resisted, still log it (but no marks gained since no actual damage)
       eventLog.addEvent(
         EventType.SOUFFRANCE_RESISTED,
-        `${resistanceName} resisted ${souffranceName} damage (${absorbedAmount.toFixed(1)}/${diceAmount.toFixed(1)} DS absorbed)`,
+        `${resistanceName} fully resisted ${souffranceName} (${absorbedAmount}/${diceAmount} DS absorbed)`,
         {
           souffrance: souffrance,
           resisted: true,
@@ -235,33 +227,63 @@ export class SouffranceHealthSystem {
       );
     }
 
+    // Apply the actual damage (after resistance)
+    if (actualDamage > 0) {
+      const currentDice = this.characterSheetManager.getSouffrance(souffrance).diceCount;
+      const newDiceCount = Math.round((currentDice + actualDamage) * 10) / 10; // Round to 1 decimal
+      this.characterSheetManager.setSouffranceDice(souffrance, newDiceCount);
+      
+      const currentDiceAfter = this.characterSheetManager.getSouffrance(souffrance).diceCount;
+      
+      // Log damage event
+      eventLog.addEvent(
+        EventType.SOUFFRANCE_DAMAGE,
+        `+${actualDamage.toFixed(1)} DS ${souffranceName} (${currentDiceAfter.toFixed(1)} DS total)${usedCompetence === Competence.PAS ? ' - Stepping on platform' : ''}`,
+        {
+          souffrance: souffrance,
+          damage: actualDamage,
+          totalDice: currentDiceAfter,
+        }
+      );
+      
+      // Check for health state changes
+      this.checkHealthStateChange();
+    }
+
     return actualDamage;
   }
 
   /**
    * Apply critical failure (5 marks + more severe suffering)
+   * According to page 63: "Lors d'un Échec Critique vous obtiendrez 5 M d'un coup"
+   * 
    * @param souffrance The type of souffrance to apply
-   * @param diceAmount The amount of DS to apply
+   * @param failures The number of failures on the check (but for critical failure, marks are 5 regardless)
    * @param usedCompetence The competence that was being used
    * @returns The actual amount of DS applied
    */
   applyCriticalFailure(
     souffrance: Souffrance,
-    diceAmount: number,
+    failures: number,
     usedCompetence: Competence
   ): number {
-    Debug.log('SouffranceHealthSystem', `Critical failure! Applying ${diceAmount} DS of ${getSouffranceName(souffrance)}`);
+    Debug.log('SouffranceHealthSystem', `Critical failure! Applying ${failures} failures worth of ${getSouffranceName(souffrance)}`);
     
-    // Critical failure: 5 marks instead of 1
-    // First apply normal marks (1 for failure)
-    // Then add 4 more marks for critical failure (total 5)
-    this.characterSheetManager.addCompetenceMark(usedCompetence, false);
-    for (let i = 0; i < 4; i++) {
+    const eventLog = getEventLog();
+    
+    // Critical failure: 5 marks on the competence, regardless of number of failures
+    // According to page 63: "Lors d'un Échec Critique vous obtiendrez 5 M d'un coup (quel qu'en soit le nombre d'Échecs par rapport au Niv d'Épreuve)"
+    for (let i = 0; i < 5; i++) {
       this.characterSheetManager.addCompetenceMark(usedCompetence, false);
     }
+    eventLog.addEvent(
+      EventType.EXPERIENCE_GAIN,
+      `Critical failure! Gained 5 marks on ${getCompetenceName(usedCompetence)}`,
+      { competence: usedCompetence, marks: 5, critical: true }
+    );
     
-    // Apply suffering (usually more severe for critical failures)
-    return this.applySouffranceFromFailure(souffrance, diceAmount, usedCompetence);
+    // Apply suffering (the failures still cause suffering as normal)
+    return this.applySouffranceFromFailure(souffrance, failures, usedCompetence);
   }
 
 

@@ -398,14 +398,14 @@ export class Scene {
       if (isOnPlatform) {
         // Character is on platform - apply damage every second
         if (currentTime - platform.lastDamageTime >= this.damageInterval) {
-          // Apply +1 DS of this souffrance type
-          // Use a dummy competence for testing (since this is environmental damage, not from a failed action)
-          // We'll use a generic competence like PAS (walking) as the "used competence"
+          // Environmental damage: stepping on a harmful platform
+          // This represents 1 failure on a check, which causes 1 DS of suffering
+          // Use PAS (walking) as the "used competence" since this is environmental damage
           const beforeDice = this.healthSystem['characterSheetManager'].getSouffrance(platform.souffrance).diceCount;
           const applied = this.healthSystem.applySouffranceFromFailure(
             platform.souffrance,
-            1, // +1 DS
-            Competence.PAS // Dummy competence for testing
+            1, // 1 failure (which equals 1 DS of suffering before resistance)
+            Competence.PAS // Used competence (walking, since this is environmental damage)
           );
           const afterDiceRaw = this.healthSystem['characterSheetManager'].getSouffrance(platform.souffrance).diceCount;
           const afterDice = Math.round(afterDiceRaw * 10) / 10; // Round to 1 decimal
