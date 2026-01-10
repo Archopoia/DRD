@@ -175,7 +175,7 @@ export default function SceneHierarchy({ scene, selectedObject, selectedObjects,
   };
 
   return (
-    <div className="h-full overflow-auto bg-gray-800">
+    <div className="h-full overflow-y-auto overflow-x-hidden bg-gray-800">
       <div className="p-2">
         {tree.length === 0 ? (
           <div className="text-gray-500 text-xs font-mono py-4 text-center">

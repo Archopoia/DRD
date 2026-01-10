@@ -5,17 +5,26 @@ import { CharacterSheetManager } from '@/game/character/CharacterSheetManager';
 import { Competence, getCompetenceName } from '@/game/character/data/CompetenceData';
 import { Attribute, getAttributeName } from '@/game/character/data/AttributeData';
 import { Aptitude, getAptitudeName } from '@/game/character/data/AptitudeData';
+import Prefabs from './Prefabs';
+import { PrefabManager } from '@/game/ecs/prefab/PrefabManager';
+import { EntityManager } from '@/game/ecs/EntityManager';
+import { EntityFactory } from '@/game/ecs/factories/EntityFactory';
+import { Entity } from '@/game/ecs/Entity';
 
 interface AssetsProps {
   manager?: CharacterSheetManager;
+  prefabManager?: PrefabManager | null;
+  entityManager?: EntityManager | null;
+  entityFactory?: EntityFactory | null;
+  onPrefabInstantiated?: (entity: Entity) => void;
 }
 
-type AssetTab = 'competences' | 'attributes' | 'aptitudes';
+type AssetTab = 'competences' | 'attributes' | 'aptitudes' | 'prefabs';
 
 /**
- * Assets Panel - Shows game resources like competences, attributes, and aptitudes
+ * Assets Panel - Shows game resources like competences, attributes, aptitudes, and prefabs
  */
-export default function Assets({ manager }: AssetsProps) {
+export default function Assets({ manager, prefabManager, entityManager, entityFactory, onPrefabInstantiated }: AssetsProps) {
   const [activeTab, setActiveTab] = useState<AssetTab>('competences');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -104,10 +113,20 @@ export default function Assets({ manager }: AssetsProps) {
         >
           Aptitudes ({filteredAptitudes.length})
         </button>
+        <button
+          onClick={() => setActiveTab('prefabs')}
+          className={`px-4 py-2 text-xs font-mono flex-1 ${
+            activeTab === 'prefabs'
+              ? 'bg-gray-700 text-white border-b-2 border-blue-500'
+              : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+          }`}
+        >
+          Prefabs
+        </button>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-2">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 min-h-0">
         {activeTab === 'competences' && (
           <div className="space-y-1">
             {filteredCompetences.length === 0 ? (
@@ -190,6 +209,15 @@ export default function Assets({ manager }: AssetsProps) {
               })
             )}
           </div>
+        )}
+
+        {activeTab === 'prefabs' && (
+          <Prefabs
+            prefabManager={prefabManager}
+            entityManager={entityManager}
+            entityFactory={entityFactory}
+            onPrefabInstantiated={onPrefabInstantiated}
+          />
         )}
       </div>
     </div>

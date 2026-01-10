@@ -14,12 +14,13 @@ interface GameViewportProps {
   gameInstance?: any; // Game instance to access Scene for physics body updates
   onSelectObject: (object: THREE.Object3D | null, multiSelect?: boolean) => void;
   onObjectChange?: (object: THREE.Object3D) => void;
+  onTransformModeChange?: (mode: TransformMode) => void;
 }
 
 /**
  * Game Viewport - Shows the 3D scene with editor camera and object selection
  */
-export default function GameViewport({ scene, selectedObject, selectedObjects, transformMode, gameInstance, onSelectObject, onObjectChange }: GameViewportProps) {
+export default function GameViewport({ scene, selectedObject, selectedObjects, transformMode, gameInstance, onSelectObject, onObjectChange, onTransformModeChange }: GameViewportProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -29,7 +30,7 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
   const mouseRef = useRef<THREE.Vector2>(new THREE.Vector2());
   const [isPanning, setIsPanning] = useState(false);
   const [isRotating, setIsRotating] = useState(false);
-  const [zoomSpeed, setZoomSpeed] = useState(0.001); // Default zoom speed
+  const [zoomSpeed, setZoomSpeed] = useState(0.01); // Default zoom speed (10x faster)
   const lastMousePosRef = useRef({ x: 0, y: 0 });
   const orbitDistanceRef = useRef(10);
   const orbitAngleRef = useRef({ horizontal: Math.PI / 4, vertical: Math.PI / 3 });
@@ -765,10 +766,10 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
     
     if (e.ctrlKey || e.metaKey) {
       // Ctrl+scroll: Adjust zoom speed
-      const speedDelta = e.deltaY * 0.0001; // Smaller increments for speed adjustment
+      const speedDelta = e.deltaY * 0.001; // 10x larger increments for speed adjustment
       setZoomSpeed(prev => {
-        const newSpeed = Math.max(0.0001, Math.min(0.01, prev - speedDelta));
-        return parseFloat(newSpeed.toFixed(5)); // Round to 5 decimal places
+        const newSpeed = Math.max(0.001, Math.min(0.1, prev - speedDelta));
+        return parseFloat(newSpeed.toFixed(4)); // Round to 4 decimal places
       });
     } else {
       // Normal scroll: Zoom using current zoom speed
@@ -836,23 +837,76 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
       onContextMenu={(e) => e.preventDefault()}
       style={{ cursor: isRotating ? 'grabbing' : isPanning ? 'grabbing' : 'default' }}
     >
-      {/* Viewport overlay info */}
-      <div className="absolute top-2 left-2 bg-gray-800/80 border border-gray-700 rounded px-2 py-1 text-xs font-mono text-gray-300 pointer-events-none">
-        <div className="mb-1">
-          {!scene ? 'No scene' : 
-           isDraggingGizmo ? `Dragging ${draggingAxis?.toUpperCase()} (${transformMode})` :
-           isRotating ? 'Orbiting (Right-click)' :
-           isPanning ? 'Panning (Middle-click)' :
-           'Left: Select | Ctrl+Left: Multi-select | Right: Orbit | Middle: Pan'}
+      {/* Transform Tools - Floating vertical panel (left side) */}
+      {selectedObject && onTransformModeChange && (
+        <div className="absolute left-2 top-1/2 -translate-y-1/2 bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-lg p-1.5 flex flex-col gap-1.5 z-20 shadow-xl">
+          <button
+            onClick={() => onTransformModeChange('translate')}
+            className={`w-9 h-9 flex items-center justify-center rounded transition-all ${
+              transformMode === 'translate'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'text-gray-400 hover:text-white hover:bg-gray-700/80'
+            }`}
+            title="Move (W)"
+          >
+            {/* Move icon - arrows in 4 directions */}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="9 3 12 6 15 3"/>
+              <polyline points="9 21 12 18 15 21"/>
+              <polyline points="3 9 6 12 3 15"/>
+              <polyline points="21 9 18 12 21 15"/>
+            </svg>
+          </button>
+          <button
+            onClick={() => onTransformModeChange('rotate')}
+            className={`w-9 h-9 flex items-center justify-center rounded transition-all ${
+              transformMode === 'rotate'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'text-gray-400 hover:text-white hover:bg-gray-700/80'
+            }`}
+            title="Rotate (E)"
+          >
+            {/* Rotate icon - circular arrows */}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 2v6"/>
+              <path d="M12 16v6"/>
+              <path d="M4.93 4.93l4.24 4.24"/>
+              <path d="M14.83 14.83l4.24 4.24"/>
+              <path d="M2 12h6"/>
+              <path d="M16 12h6"/>
+              <path d="M4.93 19.07l4.24-4.24"/>
+              <path d="M14.83 9.17l4.24-4.24"/>
+            </svg>
+          </button>
+          <button
+            onClick={() => onTransformModeChange('scale')}
+            className={`w-9 h-9 flex items-center justify-center rounded transition-all ${
+              transformMode === 'scale'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'text-gray-400 hover:text-white hover:bg-gray-700/80'
+            }`}
+            title="Scale (R)"
+          >
+            {/* Scale icon - corners expanding */}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+            </svg>
+          </button>
         </div>
-        {selectedObject && (
-          <div className="text-gray-400 text-xs mt-1">
-            Transform: {transformMode} (W/Move, E/Rotate, R/Scale)
-          </div>
-        )}
-        <div className="text-gray-400 text-xs mt-1">
-          Scroll: Zoom | Ctrl+Scroll: Zoom Speed ({zoomSpeed.toFixed(4)})
-        </div>
+      )}
+
+      {/* Viewport overlay info - Compact version */}
+      <div className="absolute top-2 right-2 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded px-2 py-1 text-xs font-mono text-gray-300 pointer-events-none">
+        {!scene ? 'No scene' : 
+         isDraggingGizmo ? `Dragging ${draggingAxis?.toUpperCase()}` :
+         isRotating ? 'Orbiting' :
+         isPanning ? 'Panning' :
+         `Left: Select | Right: Orbit | Middle: Pan | Scroll: Zoom (${zoomSpeed.toFixed(3)})`}
       </div>
       
       {selectedObjects.size > 0 && (

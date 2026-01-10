@@ -10,6 +10,12 @@ import { SouffranceHealthSystem } from '../character/SouffranceHealthSystem';
 import { ActiveCompetencesTracker } from '../character/ActiveCompetencesTracker';
 import { GAME_CONFIG } from '@/lib/constants';
 import { Debug } from '../utils/debug';
+import { EntityManager } from '../ecs/EntityManager';
+import { EntityFactory } from '../ecs/factories/EntityFactory';
+import { PrefabManager } from '../ecs/prefab/PrefabManager';
+import { SceneStorage } from '../ecs/storage/SceneStorage';
+import { SceneSerializer } from '../ecs/serialization/SceneSerializer';
+import { Entity } from '../ecs/Entity';
 
 /**
  * Main game class that orchestrates all game systems
@@ -27,6 +33,10 @@ export class Game {
   private fps: number = 0;
   private characterSheetManager: CharacterSheetManager;
   private healthSystem: SouffranceHealthSystem;
+  private entityManager: EntityManager | null = null;
+  private entityFactory: EntityFactory | null = null;
+  private prefabManager: PrefabManager | null = null;
+  private sceneStorage: SceneStorage | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     Debug.startMeasure('Game.constructor');
@@ -88,6 +98,18 @@ export class Game {
       this.camera.setScene(this.scene.scene);
       Debug.log('Game', 'Scene initialized');
 
+      // Initialize ECS system
+      Debug.log('Game', 'Initializing ECS system...');
+      this.entityManager = new EntityManager(this.scene.scene, this.renderer, this.physicsWorld);
+      this.entityFactory = new EntityFactory(this.entityManager, this.renderer, this.physicsWorld);
+      this.prefabManager = new PrefabManager();
+      this.sceneStorage = new SceneStorage();
+      // Initialize storage asynchronously
+      this.sceneStorage.initialize().catch(err => {
+        Debug.warn('Game', 'Failed to initialize scene storage', err);
+      });
+      Debug.log('Game', 'ECS system initialized');
+
       // Setup game loop
       Debug.log('Game', 'Setting up game loop...');
       this.gameLoop = new GameLoop(
@@ -145,6 +167,11 @@ export class Game {
 
       // Sync dynamic objects with physics
       this.scene.update(deltaTime);
+
+      // Update ECS entities
+      if (this.entityManager) {
+        this.entityManager.update(deltaTime);
+      }
       
       // Calculate FPS every second
       this.frameCount++;
@@ -233,60 +260,108 @@ export class Game {
   }
 
   /**
-   * Add an object to the scene (for editor)
+   * Add an object to the scene (for editor) - Now uses ECS EntityFactory
    */
   addObjectToScene(type: 'box' | 'sphere' | 'plane' | 'light' | 'group'): THREE.Object3D | null {
     try {
-      let newObject: THREE.Object3D;
-
-      switch (type) {
-        case 'box': {
-          const geometry = new THREE.BoxGeometry(1, 1, 1);
-          const material = this.renderer.createRetroStandardMaterial(0x8a4a4a);
-          newObject = new THREE.Mesh(geometry, material);
-          newObject.name = 'Box';
-          newObject.position.set(0, 1, 0);
-          break;
-        }
-        case 'sphere': {
-          const geometry = new THREE.SphereGeometry(0.5, 16, 16);
-          const material = this.renderer.createRetroStandardMaterial(0x4a8a4a);
-          newObject = new THREE.Mesh(geometry, material);
-          newObject.name = 'Sphere';
-          newObject.position.set(0, 1, 0);
-          break;
-        }
-        case 'plane': {
-          const geometry = new THREE.PlaneGeometry(2, 2);
-          const material = this.renderer.createRetroStandardMaterial(0x4a4a8a);
-          newObject = new THREE.Mesh(geometry, material);
-          newObject.name = 'Plane';
-          newObject.rotation.x = -Math.PI / 2;
-          newObject.position.set(0, 0, 0);
-          break;
-        }
-        case 'light': {
-          newObject = new THREE.PointLight(0xffffff, 1, 10);
-          newObject.name = 'PointLight';
-          newObject.position.set(0, 3, 0);
-          break;
-        }
-        case 'group': {
-          newObject = new THREE.Group();
-          newObject.name = 'Group';
-          break;
-        }
-        default:
-          Debug.warn('Game', `Unknown object type: ${type}`);
-          return null;
+      if (!this.entityFactory || !this.entityManager) {
+        Debug.error('Game', 'ECS system not initialized');
+        return null;
       }
 
-      this.scene.scene.add(newObject);
-      Debug.log('Game', `Added ${type} object to scene: ${newObject.name}`);
-      return newObject;
+      // Use EntityFactory to create entity
+      const entity = this.entityFactory.createByType(type, {
+        withPhysics: type !== 'light' && type !== 'group', // Add physics to meshes
+        physicsType: 'dynamic',
+      });
+
+      // Get the Three.js object from the entity
+      const object3D = this.entityManager.getObject3D(entity);
+      if (object3D) {
+        Debug.log('Game', `Added ${type} entity to scene: ${entity.name} (${entity.id})`);
+        return object3D;
+      }
+
+      Debug.warn('Game', `Failed to get Object3D from entity: ${entity.name}`);
+      return null;
     } catch (error) {
       Debug.error('Game', `Failed to add ${type} object to scene`, error as Error);
       return null;
+    }
+  }
+
+  /**
+   * Get EntityManager (for editor/ECS access)
+   */
+  getEntityManager(): EntityManager | null {
+    return this.entityManager;
+  }
+
+  /**
+   * Get EntityFactory (for creating entities)
+   */
+  getEntityFactory(): EntityFactory | null {
+    return this.entityFactory;
+  }
+
+  /**
+   * Get PrefabManager (for prefab operations)
+   */
+  getPrefabManager(): PrefabManager | null {
+    return this.prefabManager;
+  }
+
+  /**
+   * Get SceneStorage (for save/load operations)
+   */
+  getSceneStorage(): SceneStorage | null {
+    return this.sceneStorage;
+  }
+
+  /**
+   * Save current scene
+   */
+  async saveScene(sceneName: string = 'Scene', author?: string): Promise<string | null> {
+    if (!this.entityManager || !this.sceneStorage) {
+      Debug.error('Game', 'ECS system or storage not initialized');
+      return null;
+    }
+
+    try {
+      const serialized = SceneSerializer.serialize(this.entityManager, sceneName, author);
+      const id = await this.sceneStorage.saveScene(serialized);
+      Debug.log('Game', `Scene saved: ${sceneName} (${id})`);
+      return id;
+    } catch (error) {
+      Debug.error('Game', 'Failed to save scene', error as Error);
+      return null;
+    }
+  }
+
+  /**
+   * Load scene from storage
+   */
+  async loadScene(sceneId: string): Promise<boolean> {
+    if (!this.entityManager || !this.sceneStorage) {
+      Debug.error('Game', 'ECS system or storage not initialized');
+      return false;
+    }
+
+    try {
+      const serialized = await this.sceneStorage.loadScene(sceneId);
+      if (!serialized) {
+        Debug.error('Game', `Scene not found: ${sceneId}`);
+        return false;
+      }
+
+      // Clear existing entities (optional - could merge instead)
+      // For now, we'll just deserialize into the existing manager
+      SceneSerializer.deserialize(this.entityManager, serialized, this.renderer, this.physicsWorld);
+      Debug.log('Game', `Scene loaded: ${serialized.metadata.name}`);
+      return true;
+    } catch (error) {
+      Debug.error('Game', 'Failed to load scene', error as Error);
+      return false;
     }
   }
 

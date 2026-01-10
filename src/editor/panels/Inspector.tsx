@@ -190,7 +190,7 @@ export default function Inspector({ object, manager, onObjectChange }: Inspector
   }
 
   return (
-    <div className="p-4 overflow-auto">
+    <div className="h-full overflow-y-auto overflow-x-hidden p-4">
       <div className="space-y-3">
         {/* Name */}
         <div className="mb-3 border-b border-gray-700 pb-3">
