@@ -409,23 +409,31 @@ export default function SceneHierarchy({ scene, selectedObject, selectedObjects,
           onContextMenu={(e) => handleContextMenu(node.object, e)}
         >
           {/* Expand/Collapse button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleExpand(node.object);
-            }}
-            className={`w-4 h-4 mr-1 flex items-center justify-center text-gray-500 hover:text-white ${!hasChildren ? 'invisible' : ''}`}
-          >
-            {isExpanded ? (
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="6 9 12 15 18 9"/>
+          {hasChildren ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleExpand(node.object);
+              }}
+              className="w-4 h-4 mr-1 flex items-center justify-center text-gray-500 hover:text-white"
+            >
+              {isExpanded ? (
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              ) : (
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              )}
+            </button>
+          ) : (
+            <div className="w-4 h-4 mr-1 flex items-center justify-center">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2">
+                <polyline points="15 18 9 12 15 6"/>
               </svg>
-            ) : (
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="9 18 15 12 9 6"/>
-              </svg>
-            )}
-          </button>
+            </div>
+          )}
 
           {/* Icon */}
           <span className="mr-1.5 flex-shrink-0">{getObjectIcon(node.object)}</span>

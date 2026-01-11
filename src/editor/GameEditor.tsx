@@ -325,14 +325,16 @@ export default function GameEditor({
       // Ctrl+Z to undo
       else if ((event.ctrlKey || event.metaKey) && event.code === 'KeyZ' && !event.shiftKey) {
         event.preventDefault();
+        event.stopPropagation();
         historyManager.undo();
       }
       // Ctrl+Y or Ctrl+Shift+Z to redo
       else if (
-        ((event.ctrlKey || event.metaKey) && event.code === 'KeyY') ||
+        ((event.ctrlKey || event.metaKey) && event.code === 'KeyY' && !event.shiftKey) ||
         ((event.ctrlKey || event.metaKey) && event.code === 'KeyZ' && event.shiftKey)
       ) {
         event.preventDefault();
+        event.stopPropagation();
         historyManager.redo();
       }
       // Transform mode shortcuts
@@ -350,9 +352,9 @@ export default function GameEditor({
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown, true); // Use capture phase to intercept before browser
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', handleKeyDown, true);
     };
   }, [isOpen, onClose, selectedObject, scene, handleDeleteObject, handleDuplicateObject, handleSaveClick, historyManager]);
 
