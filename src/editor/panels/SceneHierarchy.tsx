@@ -53,7 +53,7 @@ export default function SceneHierarchy({ scene, selectedObject, selectedObjects,
 
       object.children.forEach(child => {
         // Filter out editor-specific objects (gizmos, etc.)
-        if (!child.userData._isEditorObject) {
+        if (!child.userData._isEditorObject && !child.userData.isGizmo) {
           node.children.push(buildTree(child));
         }
       });
@@ -63,7 +63,7 @@ export default function SceneHierarchy({ scene, selectedObject, selectedObjects,
 
     const sceneTree: TreeNode[] = [];
     scene.children.forEach(child => {
-      if (!child.userData._isEditorObject) {
+      if (!child.userData._isEditorObject && !child.userData.isGizmo) {
         sceneTree.push(buildTree(child));
       }
     });

@@ -57,10 +57,12 @@ export class TransformGizmo {
     this.gizmoGroup = new THREE.Group();
     this.gizmoGroup.name = 'TransformGizmo';
     this.gizmoGroup.userData.isGizmo = true;
+    this.gizmoGroup.userData._isEditorObject = true; // Mark as editor object to exclude from hierarchy
     
     // Mark all children as gizmo parts for proper exclusion from selection
     const markAsGizmo = (obj: THREE.Object3D) => {
       obj.userData.isGizmo = true;
+      obj.userData._isEditorObject = true; // Also mark as editor object for hierarchy filtering
       obj.children.forEach(child => markAsGizmo(child));
     };
 
