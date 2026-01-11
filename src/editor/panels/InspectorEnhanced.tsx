@@ -9,11 +9,14 @@ import { MeshRendererComponent } from '@/game/ecs/components/MeshRendererCompone
 import { PhysicsComponent } from '@/game/ecs/components/PhysicsComponent';
 import { LightComponent } from '@/game/ecs/components/LightComponent';
 import { CharacterSheetManager } from '@/game/character/CharacterSheetManager';
+import { HistoryManager } from '../history/HistoryManager';
+import { createTransformObjectAction, createPropertyChangeAction } from '../history/actions/EditorActions';
 
 interface InspectorEnhancedProps {
   object: THREE.Object3D | null;
   entityManager?: EntityManager | null;
   manager?: CharacterSheetManager;
+  historyManager?: HistoryManager | null;
   onObjectChange?: (object: THREE.Object3D) => void;
 }
 
@@ -21,7 +24,7 @@ interface InspectorEnhancedProps {
  * Enhanced Inspector Panel - Shows properties of selected object or entity
  * Supports both legacy Three.js objects and new ECS entities
  */
-export default function InspectorEnhanced({ object, entityManager, manager, onObjectChange }: InspectorEnhancedProps) {
+export default function InspectorEnhanced({ object, entityManager, manager, historyManager, onObjectChange }: InspectorEnhancedProps) {
   const [entity, setEntity] = useState<Entity | null>(null);
   const [isEntity, setIsEntity] = useState(false);
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -34,15 +37,18 @@ export default function InspectorEnhanced({ object, entityManager, manager, onOb
       return;
     }
 
-    const entityId = object.userData?.entityId;
+    const entityId = object.userData.entityId;
     if (entityId) {
       const foundEntity = entityManager.getEntity(entityId);
-      setEntity(foundEntity);
-      setIsEntity(!!foundEntity);
-    } else {
-      setEntity(null);
-      setIsEntity(false);
+      if (foundEntity) {
+        setEntity(foundEntity);
+        setIsEntity(true);
+        return;
+      }
     }
+
+    setEntity(null);
+    setIsEntity(false);
   }, [object, entityManager]);
 
   // Transform properties (shared by both legacy and entity)
@@ -59,6 +65,19 @@ export default function InspectorEnhanced({ object, entityManager, manager, onOb
   const [lightType, setLightType] = useState<'point' | 'directional' | 'spot' | 'ambient'>('point');
   const [lightIntensity, setLightIntensity] = useState(1.0);
   const [lightColor, setLightColor] = useState(0xffffff);
+
+  // Store previous values for history tracking
+  const previousValuesRef = useRef<{
+    position?: { x: number; y: number; z: number };
+    rotation?: { x: number; y: number; z: number };
+    scale?: { x: number; y: number; z: number };
+    name?: string;
+    visible?: boolean;
+    meshColor?: number;
+    lightColor?: number;
+    lightIntensity?: number;
+    mass?: number;
+  }>({});
 
   // Update state when object/entity changes
   useEffect(() => {
@@ -125,17 +144,71 @@ export default function InspectorEnhanced({ object, entityManager, manager, onOb
       });
       setVisible(object.visible);
     }
-  }, [object, entity, isEntity, entityManager]);
+
+    // Store previous values for history tracking (only when object changes)
+    previousValuesRef.current = {
+      position: isEntity && entity && entityManager
+        ? (entityManager.getComponent<TransformComponent>(entity, 'TransformComponent')?.getPosition() || { x: 0, y: 0, z: 0 })
+        : { 
+            x: parseFloat(object.position.x.toFixed(3)), 
+            y: parseFloat(object.position.y.toFixed(3)), 
+            z: parseFloat(object.position.z.toFixed(3))
+          },
+      rotation: isEntity && entity && entityManager
+        ? (entityManager.getComponent<TransformComponent>(entity, 'TransformComponent')?.getRotation() || { x: 0, y: 0, z: 0 })
+        : { 
+            x: parseFloat((object.rotation.x * 180 / Math.PI).toFixed(2)), 
+            y: parseFloat((object.rotation.y * 180 / Math.PI).toFixed(2)), 
+            z: parseFloat((object.rotation.z * 180 / Math.PI).toFixed(2))
+          },
+      scale: isEntity && entity && entityManager
+        ? (entityManager.getComponent<TransformComponent>(entity, 'TransformComponent')?.getScale() || { x: 1, y: 1, z: 1 })
+        : { 
+            x: parseFloat(object.scale.x.toFixed(3)), 
+            y: parseFloat(object.scale.y.toFixed(3)), 
+            z: parseFloat(object.scale.z.toFixed(3))
+          },
+      name: object.name || '',
+      visible: object.visible,
+      meshColor,
+      lightColor,
+      lightIntensity,
+      mass,
+    };
+  }, [object, entity, isEntity, entityManager]); // Only update when object changes, not when properties change
 
   // Apply changes
   const applyChanges = () => {
     if (!object) return;
 
+    const prev = previousValuesRef.current;
+
     if (isEntity && entity && entityManager) {
       // Update entity components
       const transform = entityManager.getComponent<TransformComponent>(entity, 'TransformComponent');
       if (transform) {
+        const oldName = entity.name;
         entity.name = name || '(unnamed)';
+        
+        // Track transform changes
+        if (historyManager && prev.position && prev.rotation && prev.scale) {
+          const oldPos = new THREE.Vector3(prev.position.x, prev.position.y, prev.position.z);
+          const oldRot = new THREE.Quaternion().setFromEuler(new THREE.Euler(prev.rotation.x * Math.PI / 180, prev.rotation.y * Math.PI / 180, prev.rotation.z * Math.PI / 180));
+          const oldScl = new THREE.Vector3(prev.scale.x, prev.scale.y, prev.scale.z);
+          const newPos = new THREE.Vector3(position.x, position.y, position.z);
+          const newRot = new THREE.Quaternion().setFromEuler(new THREE.Euler(rotation.x * Math.PI / 180, rotation.y * Math.PI / 180, rotation.z * Math.PI / 180));
+          const newScl = new THREE.Vector3(scale.x, scale.y, scale.z);
+          
+          if (!oldPos.equals(newPos) || !oldRot.equals(newRot) || !oldScl.equals(newScl)) {
+            historyManager.addAction(createTransformObjectAction(object, oldPos, oldRot, oldScl, newPos, newRot, newScl, `Transform ${object.name || object.type}`));
+          }
+        }
+        
+        // Track name changes
+        if (historyManager && oldName !== entity.name) {
+          historyManager.addAction(createPropertyChangeAction(object, 'name', oldName, entity.name, `Rename to ${entity.name}`));
+        }
+        
         transform.setPosition(position);
         transform.setRotation(rotation);
         transform.setScale(scale);
@@ -143,12 +216,21 @@ export default function InspectorEnhanced({ object, entityManager, manager, onOb
 
       const meshRenderer = entityManager.getComponent<MeshRendererComponent>(entity, 'MeshRendererComponent');
       if (meshRenderer) {
+        if (historyManager && prev.meshColor !== undefined && prev.meshColor !== meshColor) {
+          historyManager.addAction(createPropertyChangeAction(object, 'meshColor', prev.meshColor, meshColor, `Change mesh color`));
+        }
+        if (historyManager && prev.visible !== undefined && prev.visible !== visible) {
+          historyManager.addAction(createPropertyChangeAction(object, 'visible', prev.visible, visible, `Change visibility`));
+        }
         meshRenderer.setColor(meshColor);
         meshRenderer.setVisible(visible);
       }
 
       const physics = entityManager.getComponent<PhysicsComponent>(entity, 'PhysicsComponent');
       if (physics && physicsType !== 'none') {
+        if (historyManager && prev.mass !== undefined && prev.mass !== mass) {
+          historyManager.addAction(createPropertyChangeAction(object, 'mass', prev.mass, mass, `Change mass`));
+        }
         // Physics type changes require recreating the component - complex operation
         // For now, just update mass
         if (physics.properties.mass !== undefined) {
@@ -159,16 +241,41 @@ export default function InspectorEnhanced({ object, entityManager, manager, onOb
 
       const light = entityManager.getComponent<LightComponent>(entity, 'LightComponent');
       if (light) {
+        if (historyManager && prev.lightColor !== undefined && prev.lightColor !== lightColor) {
+          historyManager.addAction(createPropertyChangeAction(object, 'lightColor', prev.lightColor, lightColor, `Change light color`));
+        }
+        if (historyManager && prev.lightIntensity !== undefined && prev.lightIntensity !== lightIntensity) {
+          historyManager.addAction(createPropertyChangeAction(object, 'lightIntensity', prev.lightIntensity, lightIntensity, `Change light intensity`));
+        }
         light.setColor(lightColor);
         light.setIntensity(lightIntensity);
       }
+
+      // Update previous values
+      previousValuesRef.current = {
+        position: { ...position },
+        rotation: { ...rotation },
+        scale: { ...scale },
+        name: entity.name,
+        visible,
+        meshColor,
+        lightColor,
+        lightIntensity,
+        mass,
+      };
 
       // Trigger update
       if (onObjectChange) {
         onObjectChange(object);
       }
     } else {
-      // Legacy object
+      // Legacy object - track changes
+      const oldName = object.name;
+      const oldVisible = object.visible;
+      const oldPosition = object.position.clone();
+      const oldRotation = object.quaternion.clone();
+      const oldScale = object.scale.clone();
+
       object.name = name || '(unnamed)';
       object.position.set(position.x, position.y, position.z);
       object.rotation.set(
@@ -178,6 +285,37 @@ export default function InspectorEnhanced({ object, entityManager, manager, onOb
       );
       object.scale.set(scale.x, scale.y, scale.z);
       object.visible = visible;
+
+      // Create history actions
+      if (historyManager) {
+        const newPosition = object.position.clone();
+        const newRotation = object.quaternion.clone();
+        const newScale = object.scale.clone();
+        
+        // Track transform changes
+        if (!oldPosition.equals(newPosition) || !oldRotation.equals(newRotation) || !oldScale.equals(newScale)) {
+          historyManager.addAction(createTransformObjectAction(object, oldPosition, oldRotation, oldScale, newPosition, newRotation, newScale, `Transform ${object.name || object.type}`));
+        }
+        
+        // Track name changes
+        if (oldName !== object.name) {
+          historyManager.addAction(createPropertyChangeAction(object, 'name', oldName, object.name, `Rename to ${object.name}`));
+        }
+        
+        // Track visibility changes
+        if (oldVisible !== object.visible) {
+          historyManager.addAction(createPropertyChangeAction(object, 'visible', oldVisible, object.visible, `Change visibility`));
+        }
+      }
+
+      // Update previous values
+      previousValuesRef.current = {
+        position: { ...position },
+        rotation: { ...rotation },
+        scale: { ...scale },
+        name: object.name,
+        visible: object.visible,
+      };
 
       if (onObjectChange) {
         onObjectChange(object);
@@ -281,21 +419,74 @@ export default function InspectorEnhanced({ object, entityManager, manager, onOb
           />
         </div>
 
-        {/* Transform */}
+        {/* Transform - 3 columns layout (Position, Rotation, Scale) */}
         <div className="mb-3 border-b border-gray-700 pb-3">
           <div className="text-xs font-mono font-semibold text-gray-400 mb-2">Transform</div>
-          {renderVectorInput('Position', position, (v) => {
-            setPosition(v);
-            handlePropertyChange();
-          })}
-          {renderVectorInput('Rotation (deg)', rotation, (v) => {
-            setRotation(v);
-            handlePropertyChange();
-          })}
-          {renderVectorInput('Scale', scale, (v) => {
-            setScale(v);
-            handlePropertyChange();
-          })}
+          <div className="grid grid-cols-3 gap-2">
+            {/* Position Column */}
+            <div>
+              <div className="text-xs font-mono font-semibold text-gray-500 mb-1.5">Position</div>
+              <div className="space-y-1.5">
+                {['x', 'y', 'z'].map((axis) => (
+                  <div key={axis}>
+                    <label className="text-xs text-gray-600 block mb-0.5 uppercase">{axis}</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={position[axis as keyof typeof position]}
+                      onChange={(e) => {
+                        setPosition({ ...position, [axis]: parseFloat(e.target.value) || 0 });
+                        handlePropertyChange();
+                      }}
+                      className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-xs font-mono focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Rotation Column */}
+            <div>
+              <div className="text-xs font-mono font-semibold text-gray-500 mb-1.5">Rotation (deg)</div>
+              <div className="space-y-1.5">
+                {['x', 'y', 'z'].map((axis) => (
+                  <div key={axis}>
+                    <label className="text-xs text-gray-600 block mb-0.5 uppercase">{axis}</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={rotation[axis as keyof typeof rotation]}
+                      onChange={(e) => {
+                        setRotation({ ...rotation, [axis]: parseFloat(e.target.value) || 0 });
+                        handlePropertyChange();
+                      }}
+                      className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-xs font-mono focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Scale Column */}
+            <div>
+              <div className="text-xs font-mono font-semibold text-gray-500 mb-1.5">Scale</div>
+              <div className="space-y-1.5">
+                {['x', 'y', 'z'].map((axis) => (
+                  <div key={axis}>
+                    <label className="text-xs text-gray-600 block mb-0.5 uppercase">{axis}</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={scale[axis as keyof typeof scale]}
+                      onChange={(e) => {
+                        setScale({ ...scale, [axis]: parseFloat(e.target.value) || 1 });
+                        handlePropertyChange();
+                      }}
+                      className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-xs font-mono focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Mesh Renderer Component */}
@@ -397,11 +588,25 @@ export default function InspectorEnhanced({ object, entityManager, manager, onOb
                 }}
                 className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-xs font-mono focus:outline-none focus:border-blue-500"
               >
-                <option value="ambient">Ambient</option>
-                <option value="directional">Directional</option>
                 <option value="point">Point</option>
+                <option value="directional">Directional</option>
                 <option value="spot">Spot</option>
+                <option value="ambient">Ambient</option>
               </select>
+            </div>
+            <div className="mb-2">
+              <label className="text-xs text-gray-500 block mb-0.5">Intensity</label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                value={lightIntensity}
+                onChange={(e) => {
+                  setLightIntensity(parseFloat(e.target.value) || 0);
+                  handlePropertyChange();
+                }}
+                className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-xs font-mono focus:outline-none focus:border-blue-500"
+              />
             </div>
             <div className="mb-2">
               <label className="text-xs text-gray-500 block mb-0.5">Color</label>
@@ -430,41 +635,13 @@ export default function InspectorEnhanced({ object, entityManager, manager, onOb
                 />
               </div>
             </div>
-            <div className="mb-2">
-              <label className="text-xs text-gray-500 block mb-0.5">Intensity</label>
-              <input
-                type="number"
-                step="0.1"
-                min="0"
-                value={lightIntensity}
-                onChange={(e) => {
-                  setLightIntensity(parseFloat(e.target.value) || 0);
-                  handlePropertyChange();
-                }}
-                className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-xs font-mono focus:outline-none focus:border-blue-500"
-              />
-            </div>
           </div>
         )}
 
-        {/* Legacy Object Info */}
+        {/* Legacy object properties fallback */}
         {!isEntity && (
           <div className="mb-3 border-b border-gray-700 pb-3">
-            <div className="text-xs font-mono font-semibold text-gray-400 mb-2">Info</div>
-            <div className="mb-1">
-              <span className="text-xs text-gray-500 font-mono">Type:</span>{' '}
-              <span className="text-xs text-gray-300 font-mono">{object.constructor.name}</span>
-            </div>
-            <div className="mb-1">
-              <span className="text-xs text-gray-500 font-mono">UUID:</span>{' '}
-              <span className="text-xs text-gray-300 font-mono">{object.uuid.substring(0, 8)}...</span>
-            </div>
-          </div>
-        )}
-
-        {/* Visibility (for legacy objects) */}
-        {!isEntity && (
-          <div className="mb-3 border-b border-gray-700 pb-3">
+            <div className="text-xs font-mono font-semibold text-gray-400 mb-2">Properties</div>
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -483,4 +660,3 @@ export default function InspectorEnhanced({ object, entityManager, manager, onOb
     </div>
   );
 }
-

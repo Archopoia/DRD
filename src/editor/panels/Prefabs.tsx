@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import * as THREE from 'three';
 import { PrefabManager, Prefab } from '@/game/ecs/prefab/PrefabManager';
 import { EntityManager } from '@/game/ecs/EntityManager';
 import { Entity } from '@/game/ecs/Entity';
@@ -10,16 +11,20 @@ interface PrefabsProps {
   prefabManager?: PrefabManager | null;
   entityManager?: EntityManager | null;
   entityFactory?: EntityFactory | null;
+  selectedObject?: THREE.Object3D | null;
   onPrefabInstantiated?: (entity: Entity) => void;
+  onPrefabCreated?: () => void;
 }
 
 /**
  * Prefabs Panel - Shows and manages prefab templates
  */
-export default function Prefabs({ prefabManager, entityManager, entityFactory, onPrefabInstantiated }: PrefabsProps) {
+export default function Prefabs({ prefabManager, entityManager, entityFactory, selectedObject, onPrefabInstantiated, onPrefabCreated }: PrefabsProps) {
   const [prefabs, setPrefabs] = useState<Prefab[]>([]);
   const [selectedPrefab, setSelectedPrefab] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [prefabName, setPrefabName] = useState('New Prefab');
 
   // Load prefabs
   useEffect(() => {
@@ -76,8 +81,54 @@ export default function Prefabs({ prefabManager, entityManager, entityFactory, o
     }
   };
 
-  // Handle create prefab from selection (this would need to be called from parent)
-  // For now, we'll show a message that selection is needed
+  // Handle create prefab from selected object
+  const handleCreatePrefab = () => {
+    if (!prefabManager || !entityManager || !selectedObject) {
+      alert('Please select an entity to create a prefab');
+      return;
+    }
+
+    // Check if selected object is an entity
+    const entityId = selectedObject.userData?.entityId;
+    if (!entityId) {
+      alert('Selected object is not an entity. Please select an entity.');
+      return;
+    }
+
+    const entity = entityManager.getEntity(entityId);
+    if (!entity) {
+      alert('Entity not found');
+      return;
+    }
+
+    setPrefabName(entity.name || 'New Prefab');
+    setShowCreateDialog(true);
+  };
+
+  const handleConfirmCreatePrefab = () => {
+    if (!prefabManager || !entityManager || !selectedObject || !prefabName.trim()) {
+      return;
+    }
+
+    const entityId = selectedObject.userData?.entityId;
+    if (!entityId) return;
+
+    const entity = entityManager.getEntity(entityId);
+    if (!entity) return;
+
+    try {
+      prefabManager.createPrefab(prefabName.trim(), entity, entityManager);
+      setPrefabs(prefabManager.getAllPrefabs());
+      setShowCreateDialog(false);
+      setPrefabName('New Prefab');
+      if (onPrefabCreated) {
+        onPrefabCreated();
+      }
+    } catch (error) {
+      console.error('Failed to create prefab:', error);
+      alert('Failed to create prefab');
+    }
+  };
 
   if (!prefabManager) {
     return (
@@ -91,6 +142,22 @@ export default function Prefabs({ prefabManager, entityManager, entityFactory, o
 
   return (
     <div className="h-full flex flex-col bg-gray-800">
+      {/* Create Prefab Button */}
+      <div className="p-2 border-b border-gray-700 flex-shrink-0">
+        <button
+          onClick={handleCreatePrefab}
+          disabled={!selectedObject || !entityManager}
+          className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-white text-xs font-mono rounded transition-colors flex items-center justify-center gap-2"
+          title={!selectedObject ? 'Select an entity first' : 'Create Prefab from Selected Entity'}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          <span>Create Prefab</span>
+        </button>
+      </div>
+
       {/* Search Bar */}
       <div className="p-2 border-b border-gray-700 flex-shrink-0">
         <input

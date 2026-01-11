@@ -5,6 +5,8 @@ import * as THREE from 'three';
 import { GAME_CONFIG } from '@/lib/constants';
 import { TransformGizmo, TransformMode } from '@/editor/gizmos/TransformGizmo';
 import { logGizmo, logTransform, logGeneral } from '@/editor/utils/debugLogger';
+import { HistoryManager } from '../history/HistoryManager';
+import { createTransformObjectAction } from '../history/actions/EditorActions';
 
 interface GameViewportProps {
   scene: THREE.Scene | null;
@@ -15,12 +17,13 @@ interface GameViewportProps {
   onSelectObject: (object: THREE.Object3D | null, multiSelect?: boolean) => void;
   onObjectChange?: (object: THREE.Object3D) => void;
   onTransformModeChange?: (mode: TransformMode) => void;
+  historyManager?: HistoryManager | null;
 }
 
 /**
  * Game Viewport - Shows the 3D scene with editor camera and object selection
  */
-export default function GameViewport({ scene, selectedObject, selectedObjects, transformMode, gameInstance, onSelectObject, onObjectChange, onTransformModeChange }: GameViewportProps) {
+export default function GameViewport({ scene, selectedObject, selectedObjects, transformMode, gameInstance, onSelectObject, onObjectChange, onTransformModeChange, historyManager }: GameViewportProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -46,6 +49,12 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
     rotation?: THREE.Euler;
     scale?: THREE.Vector3;
   } | null>(null);
+  // Store start transforms for all selected objects for multi-select
+  const dragStartTransformsRef = useRef<Map<THREE.Object3D, {
+    position: THREE.Vector3;
+    rotation: THREE.Euler;
+    scale: THREE.Vector3;
+  }>>(new Map());
 
   // Update camera position based on orbit controls
   const updateCameraPosition = useCallback(() => {
@@ -287,31 +296,38 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
                 objectScale: selectedObject.scale.clone(),
               });
               
-              // Mark object as editor-controlled BEFORE starting drag
+              // Mark ALL selected objects as editor-controlled BEFORE starting drag
               // This prevents physics from overwriting our changes in the game loop
-              if (selectedObject instanceof THREE.Mesh) {
-                selectedObject.userData._editorControlled = true;
-                logTransform(`Marked object as editor-controlled`, {
-                  objectName: selectedObject.name || '(unnamed)',
-                  objectType: selectedObject.type,
+              dragStartTransformsRef.current.clear();
+              selectedObjects.forEach(obj => {
+                if (obj instanceof THREE.Mesh) {
+                  obj.userData._editorControlled = true;
+                }
+                // Store start transform for each selected object
+                dragStartTransformsRef.current.set(obj, {
+                  position: obj.position.clone(),
+                  rotation: obj.rotation.clone(),
+                  scale: obj.scale.clone(),
                 });
-              }
+              });
               
-              setIsDraggingGizmo(true);
-              setDraggingAxis(axis);
-              dragStartMouseRef.current = new THREE.Vector2(e.clientX, e.clientY);
+              // Also store for the primary selected object (for backward compatibility)
               dragStartObjectTransformRef.current = {
                 position: selectedObject.position.clone(),
                 rotation: selectedObject.rotation.clone(),
                 scale: selectedObject.scale.clone(),
               };
               
-              logTransform(`Dragging started: ${transformMode} on ${axis} axis`, {
+              setIsDraggingGizmo(true);
+              setDraggingAxis(axis);
+              dragStartMouseRef.current = new THREE.Vector2(e.clientX, e.clientY);
+              
+              logTransform(`Dragging started: ${transformMode} on ${axis} axis (${selectedObjects.size} objects)`, {
                 startMouse: { x: e.clientX, y: e.clientY },
                 startPosition: dragStartObjectTransformRef.current.position,
                 startRotation: dragStartObjectTransformRef.current.rotation,
                 startScale: dragStartObjectTransformRef.current.scale,
-                isEditorControlled: selectedObject.userData._editorControlled,
+                selectedCount: selectedObjects.size,
               });
               
               return; // Don't process object selection
@@ -465,22 +481,33 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
       
       if (currentMode === 'translate') {
         // Calculate movement along the axis in world space
-        if (startTransform.position) {
-          // Use distance-based sensitivity
-          const distance = currentObject.position.distanceTo(camera.position);
-          const sensitivity = 0.015 * Math.max(0.5, Math.min(2.0, distance / 10));
-          
-          // Project mouse movement onto axis (use combined delta for better feel)
-          let mouseDelta = mouseDeltaX + mouseDeltaY;
-          
-          // Invert direction for blue gizmo (z-axis)
-          if (currentAxis === 'z') {
-            mouseDelta = -mouseDelta;
+        // Use distance from primary object for sensitivity (applies to all objects)
+        const distance = currentObject.position.distanceTo(camera.position);
+        const sensitivity = 0.015 * Math.max(0.5, Math.min(2.0, distance / 10));
+        
+        // Project mouse movement onto axis (use combined delta for better feel)
+        let mouseDelta = mouseDeltaX + mouseDeltaY;
+        
+        // Invert direction for blue gizmo (z-axis)
+        if (currentAxis === 'z') {
+          mouseDelta = -mouseDelta;
+        }
+        
+        const movement = axisDirection.clone().multiplyScalar(mouseDelta * sensitivity);
+        
+        // Apply transform to ALL selected objects
+        selectedObjects.forEach(obj => {
+          const objStartTransform = dragStartTransformsRef.current.get(obj);
+          if (objStartTransform) {
+            obj.position.copy(objStartTransform.position).add(movement);
+            obj.updateMatrix();
+            obj.updateMatrixWorld(true);
+            updatePhysicsBodyIfExists(obj);
           }
-          
-          const movement = axisDirection.clone().multiplyScalar(mouseDelta * sensitivity);
-          
-          logTransform(`Translate calculation`, {
+        });
+        
+        if (startTransform.position) {
+          logTransform(`Translate calculation (${selectedObjects.size} objects)`, {
             distance,
             sensitivity,
             mouseDelta,
@@ -488,139 +515,112 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
             startPosition: startTransform.position,
             newPosition: startTransform.position.clone().add(movement),
           });
-          
-          currentObject.position.copy(startTransform.position).add(movement);
-          
-          // Force matrix update
-          currentObject.updateMatrix();
-          currentObject.updateMatrixWorld(true);
-          
-          // Update physics body if this object has one (for red boxes, etc.)
-          updatePhysicsBodyIfExists(currentObject);
         }
 
       } else if (currentMode === 'rotate') {
         // Rotate mode - calculate angle from total mouse movement since drag start
-        if (startTransform.rotation) {
-          // Calculate total rotation angle from start position
-          let totalAngle = (mouseDeltaX + mouseDeltaY) * 0.015; // Radians
-          
-          // Invert controls only for red (x-axis) rotating gizmo
-          if (currentAxis === 'x') {
-            totalAngle = -totalAngle;
+        // Calculate total rotation angle from start position
+        let totalAngle = (mouseDeltaX + mouseDeltaY) * 0.015; // Radians
+        
+        // Invert controls only for red (x-axis) rotating gizmo
+        if (currentAxis === 'x') {
+          totalAngle = -totalAngle;
+        }
+        
+        // Create rotation quaternion for the total angle around world axis
+        const rotationQuaternion = new THREE.Quaternion().setFromAxisAngle(axisDirection, totalAngle);
+        
+        // Apply rotation to ALL selected objects
+        selectedObjects.forEach(obj => {
+          const objStartTransform = dragStartTransformsRef.current.get(obj);
+          if (objStartTransform) {
+            // Store start quaternion if not already stored
+            if (!obj.userData._gizmoStartQuaternion) {
+              obj.userData._gizmoStartQuaternion = new THREE.Quaternion().setFromEuler(objStartTransform.rotation);
+            }
+            const startQuaternion = obj.userData._gizmoStartQuaternion;
+            
+            // Combine rotations: rotationQuaternion * startQuaternion
+            const finalQuaternion = rotationQuaternion.clone().multiply(startQuaternion);
+            
+            // Apply to object quaternion directly
+            obj.quaternion.copy(finalQuaternion);
+            
+            // Update Euler angles from quaternion (for Inspector display)
+            obj.rotation.setFromQuaternion(obj.quaternion);
+            
+            // Force matrix update - critical for visual updates!
+            obj.updateMatrix();
+            obj.updateMatrixWorld(true);
+            
+            // Update physics body if this object has one
+            updatePhysicsBodyIfExists(obj);
           }
-          
-          logTransform(`Rotate calculation`, {
+        });
+        
+        if (startTransform.rotation) {
+          logTransform(`Rotate calculation (${selectedObjects.size} objects)`, {
             mouseDeltaX,
             mouseDeltaY,
             totalAngle,
             totalAngleDegrees: (totalAngle * 180 / Math.PI).toFixed(2),
             axis: currentAxis,
-            axisDirection: { x: axisDirection.x, y: axisDirection.y, z: axisDirection.z },
-            startRotation: startTransform.rotation,
-            currentRotationBefore: currentObject.rotation.clone(),
-          });
-          
-          // Store start quaternion if not already stored
-          if (!currentObject.userData._gizmoStartQuaternion) {
-            currentObject.userData._gizmoStartQuaternion = new THREE.Quaternion().setFromEuler(startTransform.rotation);
-            logTransform(`Stored start quaternion`, {
-              startQuaternion: currentObject.userData._gizmoStartQuaternion.clone(),
-              startRotation: startTransform.rotation,
-            });
-          }
-          const startQuaternion = currentObject.userData._gizmoStartQuaternion;
-          
-          // Create rotation quaternion for the total angle around world axis  
-          const rotationQuaternion = new THREE.Quaternion().setFromAxisAngle(axisDirection, totalAngle);
-          
-          // Combine rotations: startQuaternion * rotationQuaternion
-          // In Three.js, multiply() applies right operand first, then left operand
-          // So: startQuaternion.multiply(rotationQuaternion) = rotationQuaternion applied first, then startQuaternion
-          // We want: startQuaternion applied first, then rotate around axis
-          // Solution: use premultiply which applies left operand first
-          // Or: rotationQuaternion.multiply(startQuaternion) = startQuaternion first, then rotationQuaternion ✓
-          const finalQuaternion = rotationQuaternion.clone().multiply(startQuaternion);
-          
-          logTransform(`Quaternion calculation`, {
-            startQuaternion: startQuaternion.clone(),
-            rotationQuaternion: rotationQuaternion.clone(),
-            finalQuaternion: finalQuaternion.clone(),
-            totalAngle,
-            totalAngleDegrees: (totalAngle * 180 / Math.PI).toFixed(2),
-            axisDirection: axisDirection.clone(),
-          });
-          
-          // Apply to object quaternion directly
-          currentObject.quaternion.copy(finalQuaternion);
-          
-          // Update Euler angles from quaternion (for Inspector display)
-          currentObject.rotation.setFromQuaternion(currentObject.quaternion);
-          
-          // Force matrix update - critical for visual updates!
-          currentObject.updateMatrix();
-          currentObject.updateMatrixWorld(true);
-          
-          // Update physics body if this object has one (for red boxes, etc.)
-          updatePhysicsBodyIfExists(currentObject);
-          
-          logTransform(`Rotation applied and matrices updated`, {
-            objectQuaternion: currentObject.quaternion.clone(),
-            objectRotation: currentObject.rotation.clone(),
-            objectRotationDegrees: {
-              x: (currentObject.rotation.x * 180 / Math.PI).toFixed(2),
-              y: (currentObject.rotation.y * 180 / Math.PI).toFixed(2),
-              z: (currentObject.rotation.z * 180 / Math.PI).toFixed(2),
-            },
           });
         }
 
       } else if (currentMode === 'scale') {
         // Scale mode - calculate based on mouse movement
+        // Use distance from primary object for sensitivity (applies to all objects)
+        const distance = currentObject.position.distanceTo(camera.position);
+        const sensitivity = 0.01 * Math.max(0.5, Math.min(2.0, distance / 10));
+        
+        // Calculate scale factor from mouse movement
+        let mouseDelta = mouseDeltaX + mouseDeltaY;
+        
+        // Invert direction for blue gizmo (z-axis)
+        if (currentAxis === 'z') {
+          mouseDelta = -mouseDelta;
+        }
+        
+        const scaleFactor = 1 + (mouseDelta * sensitivity);
+        
+        // Apply scaling to ALL selected objects
+        selectedObjects.forEach(obj => {
+          const objStartTransform = dragStartTransformsRef.current.get(obj);
+          if (objStartTransform) {
+            // Reset to start scale
+            obj.scale.copy(objStartTransform.scale);
+            
+            // Apply scaling to the selected axis
+            if (currentAxis === 'x') {
+              obj.scale.x = objStartTransform.scale.x * scaleFactor;
+            } else if (currentAxis === 'y') {
+              obj.scale.y = objStartTransform.scale.y * scaleFactor;
+            } else if (currentAxis === 'z') {
+              obj.scale.z = objStartTransform.scale.z * scaleFactor;
+            }
+            
+            // Clamp scale to reasonable values
+            if (obj.scale.x < 0.01) obj.scale.x = 0.01;
+            if (obj.scale.y < 0.01) obj.scale.y = 0.01;
+            if (obj.scale.z < 0.01) obj.scale.z = 0.01;
+            
+            // Force matrix update
+            obj.updateMatrix();
+            obj.updateMatrixWorld(true);
+            
+            // Update physics body if this object has one
+            updatePhysicsBodyIfExists(obj);
+          }
+        });
+        
         if (startTransform.scale) {
-          // Use distance-based sensitivity
-          const distance = currentObject.position.distanceTo(camera.position);
-          const sensitivity = 0.01 * Math.max(0.5, Math.min(2.0, distance / 10));
-          
-          // Calculate scale factor from mouse movement
-          let mouseDelta = mouseDeltaX + mouseDeltaY;
-          
-          // Invert direction for blue gizmo (z-axis)
-          if (currentAxis === 'z') {
-            mouseDelta = -mouseDelta;
-          }
-          
-          const scaleFactor = 1 + (mouseDelta * sensitivity);
-          
-          // Reset to start scale
-          currentObject.scale.copy(startTransform.scale);
-          
-          // Apply scaling to the selected axis
-          if (currentAxis === 'x') {
-            currentObject.scale.x = startTransform.scale.x * scaleFactor;
-          } else if (currentAxis === 'y') {
-            currentObject.scale.y = startTransform.scale.y * scaleFactor;
-          } else if (currentAxis === 'z') {
-            currentObject.scale.z = startTransform.scale.z * scaleFactor;
-          }
-          
-          // Clamp scale to reasonable values
-          if (currentObject.scale.x < 0.01) currentObject.scale.x = 0.01;
-          if (currentObject.scale.y < 0.01) currentObject.scale.y = 0.01;
-          if (currentObject.scale.z < 0.01) currentObject.scale.z = 0.01;
-          
-          // Force matrix update
-          currentObject.updateMatrix();
-          currentObject.updateMatrixWorld(true);
-          
-          // Update physics body if this object has one (for red boxes, etc.)
-          updatePhysicsBodyIfExists(currentObject);
-          
-          logTransform(`Scale applied`, {
-            scaleFactor,
-            mouseDelta,
+          logTransform(`Scale calculation (${selectedObjects.size} objects)`, {
+            distance,
             sensitivity,
-            newScale: currentObject.scale.clone(),
+            mouseDelta,
+            scaleFactor,
+            startScale: startTransform.scale,
           });
         }
       }
@@ -685,6 +685,40 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
       // Final physics body update
       updatePhysicsBodyIfExists(currentObject);
       
+      // Create history action for transform if start transform was stored and history manager is available
+      if (historyManager && selectedObjects.size > 0) {
+        // For multi-select, create an action for each transformed object
+        selectedObjects.forEach(obj => {
+          const objStartTransform = dragStartTransformsRef.current.get(obj);
+          if (objStartTransform) {
+            const oldPosition = objStartTransform.position.clone();
+            const oldRotation = new THREE.Quaternion().setFromEuler(objStartTransform.rotation);
+            const oldScale = objStartTransform.scale.clone();
+            
+            const newPosition = obj.position.clone();
+            const newRotation = obj.quaternion.clone();
+            const newScale = obj.scale.clone();
+            
+            // Only create action if transform actually changed
+            if (!oldPosition.equals(newPosition) || 
+                !oldRotation.equals(newRotation) || 
+                !oldScale.equals(newScale)) {
+              const action = createTransformObjectAction(
+                obj,
+                oldPosition,
+                oldRotation,
+                oldScale,
+                newPosition,
+                newRotation,
+                newScale,
+                `Transform ${obj.name || obj.type}`
+              );
+              historyManager.addAction(action);
+            }
+          }
+        });
+      }
+      
       logGizmo(`Gizmo drag ended`, {
         mode: currentMode,
         axis: currentAxis,
@@ -715,7 +749,7 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
       document.removeEventListener('mousemove', handleGizmoDrag);
       document.removeEventListener('mouseup', handleGizmoDragEnd);
     };
-  }, [isDraggingGizmo, draggingAxis, selectedObject, transformMode, onObjectChange, gameInstance]);
+  }, [isDraggingGizmo, draggingAxis, selectedObject, selectedObjects, transformMode, onObjectChange, gameInstance, historyManager]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!containerRef.current || !editorCameraRef.current || !scene) return;
@@ -839,9 +873,16 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
     >
       {/* Transform Tools - Floating vertical panel (left side) */}
       {selectedObject && onTransformModeChange && (
-        <div className="absolute left-2 top-1/2 -translate-y-1/2 bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-lg p-1.5 flex flex-col gap-1.5 z-20 shadow-xl">
+        <div 
+          className="absolute left-2 top-1/2 -translate-y-1/2 bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-lg p-1.5 flex flex-col gap-1.5 z-20 shadow-xl"
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+        >
           <button
-            onClick={() => onTransformModeChange('translate')}
+            onClick={(e) => {
+              e.stopPropagation();
+              onTransformModeChange('translate');
+            }}
             className={`w-9 h-9 flex items-center justify-center rounded transition-all ${
               transformMode === 'translate'
                 ? 'bg-blue-600 text-white shadow-md'
@@ -860,7 +901,10 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
             </svg>
           </button>
           <button
-            onClick={() => onTransformModeChange('rotate')}
+            onClick={(e) => {
+              e.stopPropagation();
+              onTransformModeChange('rotate');
+            }}
             className={`w-9 h-9 flex items-center justify-center rounded transition-all ${
               transformMode === 'rotate'
                 ? 'bg-blue-600 text-white shadow-md'
@@ -882,7 +926,10 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
             </svg>
           </button>
           <button
-            onClick={() => onTransformModeChange('scale')}
+            onClick={(e) => {
+              e.stopPropagation();
+              onTransformModeChange('scale');
+            }}
             className={`w-9 h-9 flex items-center justify-center rounded transition-all ${
               transformMode === 'scale'
                 ? 'bg-blue-600 text-white shadow-md'

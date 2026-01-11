@@ -1,16 +1,25 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { CharacterSheetManager } from '@/game/character/CharacterSheetManager';
 import SceneHierarchy from './panels/SceneHierarchy';
 import Inspector from './panels/Inspector';
 import InspectorEnhanced from './panels/InspectorEnhanced';
 import Assets from './panels/Assets';
 import GameViewport from './panels/GameViewport';
+import History from './panels/History';
 import Console from '@/components/ui/Console';
 import * as THREE from 'three';
 import { TransformMode } from './gizmos/TransformGizmo';
 import { EntityManager } from '@/game/ecs/EntityManager';
+import { HistoryManager } from './history/HistoryManager';
+import {
+  createCreateObjectAction,
+  createDeleteObjectAction,
+  createTransformObjectAction,
+  createReparentObjectAction,
+  createPropertyChangeAction,
+} from './history/actions/EditorActions';
 
 interface GameEditorProps {
   isOpen: boolean;
@@ -46,6 +55,16 @@ export default function GameEditor({
   const previousSelectionRef = useRef<THREE.Object3D | null>(null);
   const [transformMode, setTransformMode] = useState<TransformMode>('translate');
   const [entityManager, setEntityManager] = useState<EntityManager | null>(null);
+  const [rightPanelTab, setRightPanelTab] = useState<'inspector' | 'history'>('inspector');
+  
+  // Initialize history manager
+  const historyManagerRef = useRef<HistoryManager | null>(null);
+  const historyManager = useMemo(() => {
+    if (!historyManagerRef.current) {
+      historyManagerRef.current = new HistoryManager(100);
+    }
+    return historyManagerRef.current;
+  }, []);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
@@ -210,6 +229,10 @@ export default function GameEditor({
   const handleDeleteObject = useCallback((object: THREE.Object3D) => {
     if (!scene) return;
     
+    // Create history action
+    const action = createDeleteObjectAction(object, scene);
+    historyManager.addAction(action);
+    
     // Remove from selections
     setSelectedObjects(prev => {
       const next = new Set(prev);
@@ -236,7 +259,7 @@ export default function GameEditor({
     
     // Force hierarchy refresh
     setHierarchyKey(prev => prev + 1);
-  }, [scene, selectedObject]);
+  }, [scene, selectedObject, historyManager]);
 
   // Handle object duplication
   const handleDuplicateObject = useCallback((object: THREE.Object3D) => {
@@ -246,9 +269,14 @@ export default function GameEditor({
     cloned.name = cloned.name + ' (Copy)';
     cloned.position.x += 1; // Offset slightly
     scene.add(cloned);
+    
+    // Create history action
+    const action = createCreateObjectAction(cloned, scene, `Duplicate ${object.name || object.type}`);
+    historyManager.addAction(action);
+    
     setSelectedObject(cloned);
     setHierarchyKey(prev => prev + 1);
-  }, [scene]);
+  }, [scene, historyManager]);
 
   // Handle adding new objects
   const handleAddObject = useCallback((type: 'box' | 'sphere' | 'plane' | 'light' | 'group') => {
@@ -294,6 +322,19 @@ export default function GameEditor({
         event.preventDefault();
         handleSaveClick();
       }
+      // Ctrl+Z to undo
+      else if ((event.ctrlKey || event.metaKey) && event.code === 'KeyZ' && !event.shiftKey) {
+        event.preventDefault();
+        historyManager.undo();
+      }
+      // Ctrl+Y or Ctrl+Shift+Z to redo
+      else if (
+        ((event.ctrlKey || event.metaKey) && event.code === 'KeyY') ||
+        ((event.ctrlKey || event.metaKey) && event.code === 'KeyZ' && event.shiftKey)
+      ) {
+        event.preventDefault();
+        historyManager.redo();
+      }
       // Transform mode shortcuts
       else if (event.code === 'KeyW' && selectedObject) {
         event.preventDefault();
@@ -313,7 +354,7 @@ export default function GameEditor({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose, selectedObject, scene, handleDeleteObject, handleDuplicateObject]);
+  }, [isOpen, onClose, selectedObject, scene, handleDeleteObject, handleDuplicateObject, handleSaveClick, historyManager]);
 
   if (!isOpen) return null;
 
@@ -474,6 +515,7 @@ export default function GameEditor({
                 }}
                 onDeleteObject={handleDeleteObject}
                 onDuplicateObject={handleDuplicateObject}
+                historyManager={historyManager}
               />
             )}
             {activeTab === 'assets' && (
@@ -482,6 +524,7 @@ export default function GameEditor({
                 prefabManager={gameInstance?.getPrefabManager?.() || null}
                 entityManager={entityManager}
                 entityFactory={gameInstance?.getEntityFactory?.() || null}
+                selectedObject={selectedObject}
                 onPrefabInstantiated={(entity) => {
                   // Refresh hierarchy after prefab instantiation
                   setHierarchyKey(prev => prev + 1);
@@ -493,6 +536,10 @@ export default function GameEditor({
                       setSelectedObjects(new Set([obj3d]));
                     }
                   }
+                }}
+                onPrefabCreated={() => {
+                  // Refresh hierarchy after prefab creation
+                  setHierarchyKey(prev => prev + 1);
                 }}
               />
             )}
@@ -533,6 +580,7 @@ export default function GameEditor({
             transformMode={transformMode}
             gameInstance={gameInstance}
             onTransformModeChange={setTransformMode}
+            historyManager={historyManager}
             onSelectObject={(object, multiSelect) => {
               if (multiSelect) {
                 // Multi-select mode - toggle object in selection set
@@ -593,28 +641,55 @@ export default function GameEditor({
           }}
         />
 
-        {/* Right Panel - Inspector */}
+        {/* Right Panel - Inspector / History */}
         <div 
           className="bg-gray-800 border-l border-gray-700 flex flex-col overflow-hidden relative"
           style={{ width: `${rightPanelWidth}px` }}
         >
-          <div className="px-4 py-2 border-b border-gray-700 flex-shrink-0">
-            <div className="text-white font-mono text-sm font-semibold">Inspector</div>
+          {/* Right Panel Tabs */}
+          <div className="flex border-b border-gray-700 flex-shrink-0">
+            <button
+              onClick={() => setRightPanelTab('inspector')}
+              className={`px-4 py-2 text-sm font-mono flex-1 ${
+                rightPanelTab === 'inspector'
+                  ? 'bg-gray-700 text-white border-b-2 border-blue-500'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+              }`}
+            >
+              Inspector
+            </button>
+            <button
+              onClick={() => setRightPanelTab('history')}
+              className={`px-4 py-2 text-sm font-mono flex-1 ${
+                rightPanelTab === 'history'
+                  ? 'bg-gray-700 text-white border-b-2 border-blue-500'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+              }`}
+            >
+              History
+            </button>
           </div>
+
+          {/* Right Panel Content */}
           <div className="flex-1 overflow-hidden min-h-0">
-            {entityManager ? (
-              <InspectorEnhanced 
-                object={selectedObject}
-                entityManager={entityManager}
-                manager={manager}
-                onObjectChange={handleObjectChange}
-              />
+            {rightPanelTab === 'inspector' ? (
+              entityManager ? (
+                <InspectorEnhanced 
+                  object={selectedObject}
+                  entityManager={entityManager}
+                  manager={manager}
+                  historyManager={historyManager}
+                  onObjectChange={handleObjectChange}
+                />
+              ) : (
+                <Inspector 
+                  object={selectedObject}
+                  manager={manager}
+                  onObjectChange={handleObjectChange}
+                />
+              )
             ) : (
-              <Inspector 
-                object={selectedObject}
-                manager={manager}
-                onObjectChange={handleObjectChange}
-              />
+              <History historyManager={historyManager} />
             )}
           </div>
         </div>
