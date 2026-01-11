@@ -153,6 +153,31 @@ export class Game {
   }
 
   /**
+   * Pause the game (pause physics simulation)
+   */
+  pause(): void {
+    if (this.gameLoop.getRunning()) {
+      this.gameLoop.stop();
+    }
+  }
+
+  /**
+   * Resume the game (resume physics simulation)
+   */
+  resume(): void {
+    if (!this.gameLoop.getRunning()) {
+      this.gameLoop.start();
+    }
+  }
+
+  /**
+   * Check if game is running
+   */
+  isRunning(): boolean {
+    return this.gameLoop.getRunning();
+  }
+
+  /**
    * Update game state
    */
   private update(deltaTime: number): void {

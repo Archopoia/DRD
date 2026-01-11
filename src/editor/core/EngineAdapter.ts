@@ -60,5 +60,21 @@ export class EngineAdapter implements IEngine {
     }
     return false;
   }
+
+  pause(): void {
+    if (this.game.pause) {
+      this.game.pause();
+    }
+  }
+
+  resume(): void {
+    if (this.game.resume) {
+      this.game.resume();
+    }
+  }
+
+  isRunning(): boolean {
+    return this.game.isRunning ? this.game.isRunning() : false;
+  }
 }
 

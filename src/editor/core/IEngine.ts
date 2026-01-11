@@ -58,5 +58,20 @@ export interface IEngine {
    * Load scene from storage
    */
   loadScene(sceneId: string): Promise<boolean>;
+
+  /**
+   * Pause the game (pause physics simulation)
+   */
+  pause(): void;
+
+  /**
+   * Resume the game (resume physics simulation)
+   */
+  resume(): void;
+
+  /**
+   * Check if game is running
+   */
+  isRunning(): boolean;
 }
 

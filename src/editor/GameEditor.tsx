@@ -53,6 +53,30 @@ export default function GameEditor({
     return editorCoreRef.current;
   }, []);
 
+  // Pause/resume game when editor opens/closes
+  useEffect(() => {
+    if (!gameInstance) return;
+
+    if (isOpen) {
+      // Pause game when editor opens (stop physics simulation)
+      if (gameInstance.isRunning && gameInstance.isRunning()) {
+        gameInstance.pause();
+      }
+    } else {
+      // Resume game when editor closes
+      if (gameInstance.isRunning && !gameInstance.isRunning()) {
+        gameInstance.resume();
+      }
+    }
+
+    // Cleanup: resume game when component unmounts (if editor was open)
+    return () => {
+      if (gameInstance && gameInstance.isRunning && !gameInstance.isRunning()) {
+        gameInstance.resume();
+      }
+    };
+  }, [isOpen, gameInstance]);
+
   // Selection state managed by EditorCore
   const [selectedObjects, setSelectedObjects] = useState<Set<THREE.Object3D>>(new Set());
   const [selectedObject, setSelectedObject] = useState<THREE.Object3D | null>(null);
