@@ -10,16 +10,8 @@ import GameViewport from './panels/GameViewport';
 import History from './panels/History';
 import Console from '@/components/ui/Console';
 import * as THREE from 'three';
+import { EditorCore, EngineAdapter } from './core';
 import { TransformMode } from './gizmos/TransformGizmo';
-import { EntityManager } from '@/game/ecs/EntityManager';
-import { HistoryManager } from './history/HistoryManager';
-import {
-  createCreateObjectAction,
-  createDeleteObjectAction,
-  createTransformObjectAction,
-  createReparentObjectAction,
-  createPropertyChangeAction,
-} from './history/actions/EditorActions';
 
 interface GameEditorProps {
   isOpen: boolean;
@@ -33,8 +25,8 @@ interface GameEditorProps {
 type PanelTab = 'hierarchy' | 'inspector' | 'assets' | 'console';
 
 /**
- * Game Editor Component - Similar to Creator Engine
- * Shows when Tab is pressed, includes scene hierarchy, inspector, assets, and console
+ * Game Editor Component - Similar to Creation Engine
+ * Refactored to use EditorCore for state management and EngineAdapter for engine access
  */
 export default function GameEditor({ 
   isOpen, 
@@ -45,32 +37,75 @@ export default function GameEditor({
   gameInstance 
 }: GameEditorProps) {
   const [activeTab, setActiveTab] = useState<PanelTab>('hierarchy');
-  const [selectedObject, setSelectedObject] = useState<THREE.Object3D | null>(null);
-  const [selectedObjects, setSelectedObjects] = useState<Set<THREE.Object3D>>(new Set()); // Multi-select support
   const [leftPanelWidth, setLeftPanelWidth] = useState(280);
   const [rightPanelWidth, setRightPanelWidth] = useState(320);
   const [bottomPanelHeight, setBottomPanelHeight] = useState(200);
   const [scene, setScene] = useState<THREE.Scene | null>(null);
   const [hierarchyKey, setHierarchyKey] = useState(0); // Force re-render when scene changes
-  const previousSelectionRef = useRef<THREE.Object3D | null>(null);
-  const [transformMode, setTransformMode] = useState<TransformMode>('translate');
-  const [entityManager, setEntityManager] = useState<EntityManager | null>(null);
   const [rightPanelTab, setRightPanelTab] = useState<'inspector' | 'history'>('inspector');
   
-  // Initialize history manager
-  const historyManagerRef = useRef<HistoryManager | null>(null);
-  const historyManager = useMemo(() => {
-    if (!historyManagerRef.current) {
-      historyManagerRef.current = new HistoryManager(100);
+  // Initialize EditorCore
+  const editorCoreRef = useRef<EditorCore | null>(null);
+  const editorCore = useMemo(() => {
+    if (!editorCoreRef.current) {
+      editorCoreRef.current = new EditorCore(100);
     }
-    return historyManagerRef.current;
+    return editorCoreRef.current;
   }, []);
+
+  // Selection state managed by EditorCore
+  const [selectedObjects, setSelectedObjects] = useState<Set<THREE.Object3D>>(new Set());
+  const [selectedObject, setSelectedObject] = useState<THREE.Object3D | null>(null);
+  const [transformMode, setTransformMode] = useState<TransformMode>('translate');
+
+  // Dialog state
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showLoadDialog, setShowLoadDialog] = useState(false);
   const [sceneName, setSceneName] = useState('Scene 1');
   const [availableScenes, setAvailableScenes] = useState<Array<{ id: string; name: string; createdAt: number; updatedAt: number }>>([]);
+
+  // Initialize engine adapter and set it on EditorCore
+  useEffect(() => {
+    if (gameInstance) {
+      const engine = new EngineAdapter(gameInstance);
+      editorCore.setEngine(engine);
+      
+      // Get scene from engine
+      try {
+        const gameScene = engine.getScene();
+        if (gameScene) {
+          setScene(gameScene);
+          setHierarchyKey(prev => prev + 1);
+        }
+      } catch (error) {
+        console.error('Failed to get scene from engine:', error);
+      }
+    } else {
+      editorCore.setEngine(null);
+      setScene(null);
+    }
+  }, [gameInstance, editorCore]);
+
+  // Subscribe to selection changes from EditorCore
+  useEffect(() => {
+    const unsubscribe = editorCore.subscribeToSelection((objects, primary) => {
+      setSelectedObjects(new Set(objects));
+      setSelectedObject(primary);
+    });
+
+    return unsubscribe;
+  }, [editorCore]);
+
+  // Subscribe to transform mode changes from EditorCore
+  useEffect(() => {
+    const unsubscribe = editorCore.subscribeToTransformMode((mode) => {
+      setTransformMode(mode);
+    });
+
+    return unsubscribe;
+  }, [editorCore]);
 
   // Apply visual selection highlighting for multi-select
   useEffect(() => {
@@ -108,26 +143,17 @@ export default function GameEditor({
     });
   }, [selectedObjects, scene]);
 
-  // Get scene and entity manager from game instance
+  // Clear editor-controlled flags when editor closes
   useEffect(() => {
-    if (gameInstance && gameInstance.getScene) {
-      try {
-        const gameScene = gameInstance.getScene();
-        if (gameScene) {
-          setScene(gameScene);
-          setHierarchyKey(prev => prev + 1); // Trigger re-render
+    if (!isOpen && scene) {
+      scene.traverse((object) => {
+        if (object instanceof THREE.Mesh && object.userData._editorControlled) {
+          delete object.userData._editorControlled;
         }
-
-        // Get entity manager if available
-        if (gameInstance.getEntityManager) {
-          const em = gameInstance.getEntityManager();
-          setEntityManager(em);
-        }
-      } catch (error) {
-        console.error('Failed to get scene from game instance:', error);
-      }
+      });
+      editorCore.clearSelection();
     }
-  }, [gameInstance, isOpen]);
+  }, [isOpen, scene, editorCore]);
 
   // Handle save scene button click
   const handleSaveClick = () => {
@@ -137,13 +163,12 @@ export default function GameEditor({
 
   // Handle save scene (after dialog confirmation)
   const handleSaveScene = async () => {
-    if (!gameInstance || !gameInstance.saveScene) return;
     if (!sceneName.trim()) return;
 
     setSaving(true);
     setShowSaveDialog(false);
     try {
-      const id = await gameInstance.saveScene(sceneName.trim());
+      const id = await editorCore.saveScene(sceneName.trim());
       if (id) {
         console.log(`Scene saved successfully! (ID: ${id})`);
       } else {
@@ -158,10 +183,11 @@ export default function GameEditor({
 
   // Handle load scene button click
   const handleLoadClick = async () => {
-    if (!gameInstance || !gameInstance.getSceneStorage) return;
+    const engine = editorCore.getEngine();
+    if (!engine) return;
 
     try {
-      const storage = gameInstance.getSceneStorage();
+      const storage = engine.getSceneStorage();
       if (!storage) {
         console.error('Scene storage not available');
         return;
@@ -177,12 +203,10 @@ export default function GameEditor({
 
   // Handle load scene (after dialog selection)
   const handleLoadScene = async (sceneId: string) => {
-    if (!gameInstance || !gameInstance.loadScene) return;
-
     setLoading(true);
     setShowLoadDialog(false);
     try {
-      const success = await gameInstance.loadScene(sceneId);
+      const success = await editorCore.loadScene(sceneId);
       if (success) {
         console.log('Scene loaded successfully');
         setHierarchyKey(prev => prev + 1); // Refresh hierarchy
@@ -196,100 +220,44 @@ export default function GameEditor({
     }
   };
 
-  // Clear editor-controlled flags when editor closes or objects are deselected
-  useEffect(() => {
-    if (!isOpen) {
-      // Editor closed - clear all editor-controlled flags
-      if (scene) {
-        scene.traverse((object) => {
-          if (object instanceof THREE.Mesh && object.userData._editorControlled) {
-            delete object.userData._editorControlled;
-          }
-        });
-      }
-      // Clear selections
-      setSelectedObjects(new Set());
-      setSelectedObject(null);
-    }
-  }, [isOpen, scene]);
-
   // Handle object changes (when Inspector modifies an object)
   const handleObjectChange = useCallback((object: THREE.Object3D) => {
-    // Update physics body if object has one (for editor-created objects modified via Inspector)
-    if (gameInstance && object instanceof THREE.Mesh && gameInstance.updatePhysicsBodyForMesh) {
-      object.userData._editorControlled = true;
-      gameInstance.updatePhysicsBodyForMesh(object);
+    // Update physics body if object has one
+    if (object instanceof THREE.Mesh) {
+      editorCore.updatePhysicsBody(object);
     }
     
     // Force hierarchy refresh
     setHierarchyKey(prev => prev + 1);
-  }, [gameInstance]);
+  }, [editorCore]);
 
   // Handle object deletion
   const handleDeleteObject = useCallback((object: THREE.Object3D) => {
-    if (!scene) return;
-    
-    // Create history action
-    const action = createDeleteObjectAction(object, scene);
-    historyManager.addAction(action);
-    
-    // Remove from selections
-    setSelectedObjects(prev => {
-      const next = new Set(prev);
-      next.delete(object);
-      return next;
-    });
-    
-    if (selectedObject === object) {
-      setSelectedObject(null);
-    }
-    
-    // Remove from scene
-    scene.remove(object);
-    
-    // Dispose geometry and material if it's a mesh
-    if (object instanceof THREE.Mesh) {
-      object.geometry.dispose();
-      if (Array.isArray(object.material)) {
-        object.material.forEach(m => m.dispose());
-      } else if (object.material) {
-        object.material.dispose();
-      }
-    }
-    
-    // Force hierarchy refresh
+    editorCore.deleteObject(object);
     setHierarchyKey(prev => prev + 1);
-  }, [scene, selectedObject, historyManager]);
+  }, [editorCore]);
 
   // Handle object duplication
   const handleDuplicateObject = useCallback((object: THREE.Object3D) => {
-    if (!scene) return;
-    
-    const cloned = object.clone();
-    cloned.name = cloned.name + ' (Copy)';
-    cloned.position.x += 1; // Offset slightly
-    scene.add(cloned);
-    
-    // Create history action
-    const action = createCreateObjectAction(cloned, scene, `Duplicate ${object.name || object.type}`);
-    historyManager.addAction(action);
-    
-    setSelectedObject(cloned);
+    editorCore.duplicateObject(object);
     setHierarchyKey(prev => prev + 1);
-  }, [scene, historyManager]);
+  }, [editorCore]);
 
   // Handle adding new objects
   const handleAddObject = useCallback((type: 'box' | 'sphere' | 'plane' | 'light' | 'group') => {
-    if (!gameInstance) return;
-    
-    if (gameInstance.addObjectToScene) {
-      const newObject = gameInstance.addObjectToScene(type);
-      if (newObject) {
-        setSelectedObject(newObject);
-        setHierarchyKey(prev => prev + 1);
-      }
-    }
-  }, [gameInstance]);
+    editorCore.addObject(type);
+    setHierarchyKey(prev => prev + 1);
+  }, [editorCore]);
+
+  // Handle selection change
+  const handleSelectObject = useCallback((object: THREE.Object3D | null, multiSelect?: boolean) => {
+    editorCore.selectObject(object, multiSelect);
+  }, [editorCore]);
+
+  // Get entity manager for components that need it
+  const entityManager = editorCore.getEngine()?.getEntityManager() || null;
+  const historyManager = editorCore.getHistoryManager();
+  const engine = editorCore.getEngine();
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -308,7 +276,7 @@ export default function GameEditor({
         onClose();
       }
       // Delete key to delete selected object
-      else if (event.code === 'Delete' && selectedObject && scene) {
+      else if (event.code === 'Delete' && selectedObject) {
         event.preventDefault();
         handleDeleteObject(selectedObject);
       }
@@ -340,23 +308,23 @@ export default function GameEditor({
       // Transform mode shortcuts
       else if (event.code === 'KeyW' && selectedObject) {
         event.preventDefault();
-        setTransformMode('translate');
+        editorCore.setTransformMode('translate');
       }
       else if (event.code === 'KeyE' && selectedObject) {
         event.preventDefault();
-        setTransformMode('rotate');
+        editorCore.setTransformMode('rotate');
       }
       else if (event.code === 'KeyR' && selectedObject) {
         event.preventDefault();
-        setTransformMode('scale');
+        editorCore.setTransformMode('scale');
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown, true); // Use capture phase to intercept before browser
+    document.addEventListener('keydown', handleKeyDown, true);
     return () => {
       document.removeEventListener('keydown', handleKeyDown, true);
     };
-  }, [isOpen, onClose, selectedObject, scene, handleDeleteObject, handleDuplicateObject, handleSaveClick, historyManager]);
+  }, [isOpen, onClose, selectedObject, handleDeleteObject, handleDuplicateObject, handleSaveClick, editorCore, historyManager]);
 
   if (!isOpen) return null;
 
@@ -373,8 +341,6 @@ export default function GameEditor({
           <span>Editor</span>
         </div>
         
-        
-
         {/* Object actions */}
         {selectedObject && (
           <div className="flex gap-2 border-l border-gray-700 pl-4">
@@ -401,7 +367,7 @@ export default function GameEditor({
         <div className="flex gap-2 border-l border-gray-700 pl-4">
           <button
             onClick={handleSaveClick}
-            disabled={saving || !gameInstance}
+            disabled={saving || !engine}
             className="text-gray-400 hover:text-white text-xs px-3 py-1 hover:bg-gray-700 rounded font-mono disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
             title="Save Scene (Ctrl+S)"
           >
@@ -414,7 +380,7 @@ export default function GameEditor({
           </button>
           <button
             onClick={handleLoadClick}
-            disabled={loading || !gameInstance}
+            disabled={loading || !engine}
             className="text-gray-400 hover:text-white text-xs px-3 py-1 hover:bg-gray-700 rounded font-mono disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
             title="Load Scene"
           >
@@ -479,42 +445,7 @@ export default function GameEditor({
                 scene={scene} 
                 selectedObject={selectedObject}
                 selectedObjects={selectedObjects}
-                onSelectObject={(object, multiSelect) => {
-                  if (multiSelect) {
-                    // Multi-select mode - toggle in selection set
-                    setSelectedObjects(prev => {
-                      const next = new Set(prev);
-                      if (object) {
-                        if (next.has(object)) {
-                          next.delete(object);
-                          if (selectedObject === object) {
-                            const remaining = Array.from(next);
-                            setSelectedObject(remaining.length > 0 ? remaining[0] : null);
-                          }
-                        } else {
-                          next.add(object);
-                          setSelectedObject(object);
-                        }
-                      }
-                      return next;
-                    });
-                  } else {
-                    // Single select
-                    if (object) {
-                      setSelectedObjects(new Set([object]));
-                      setSelectedObject(object);
-                    } else {
-                      // Clear selection - release editor control from previously selected objects
-                      selectedObjects.forEach((obj) => {
-                        if (obj instanceof THREE.Mesh) {
-                          delete obj.userData._editorControlled;
-                        }
-                      });
-                      setSelectedObjects(new Set());
-                      setSelectedObject(null);
-                    }
-                  }
-                }}
+                onSelectObject={handleSelectObject}
                 onDeleteObject={handleDeleteObject}
                 onDuplicateObject={handleDuplicateObject}
                 historyManager={historyManager}
@@ -523,24 +454,20 @@ export default function GameEditor({
             {activeTab === 'assets' && (
               <Assets 
                 manager={manager}
-                prefabManager={gameInstance?.getPrefabManager?.() || null}
+                prefabManager={engine?.getPrefabManager() || null}
                 entityManager={entityManager}
-                entityFactory={gameInstance?.getEntityFactory?.() || null}
+                entityFactory={engine?.getEntityFactory() || null}
                 selectedObject={selectedObject}
                 onPrefabInstantiated={(entity) => {
-                  // Refresh hierarchy after prefab instantiation
                   setHierarchyKey(prev => prev + 1);
-                  // Select the newly instantiated entity's object
                   if (entityManager) {
                     const obj3d = entityManager.getObject3D(entity);
                     if (obj3d) {
-                      setSelectedObject(obj3d);
-                      setSelectedObjects(new Set([obj3d]));
+                      editorCore.selectObject(obj3d);
                     }
                   }
                 }}
                 onPrefabCreated={() => {
-                  // Refresh hierarchy after prefab creation
                   setHierarchyKey(prev => prev + 1);
                 }}
               />
@@ -581,39 +508,9 @@ export default function GameEditor({
             selectedObjects={selectedObjects}
             transformMode={transformMode}
             gameInstance={gameInstance}
-            onTransformModeChange={setTransformMode}
+            onTransformModeChange={(mode) => editorCore.setTransformMode(mode)}
             historyManager={historyManager}
-            onSelectObject={(object, multiSelect) => {
-              if (multiSelect) {
-                // Multi-select mode - toggle object in selection set
-                setSelectedObjects(prev => {
-                  const next = new Set(prev);
-                  if (object) {
-                    if (next.has(object)) {
-                      next.delete(object);
-                      if (selectedObject === object) {
-                        // If primary selection was deselected, pick another one
-                        const remaining = Array.from(next);
-                        setSelectedObject(remaining.length > 0 ? remaining[0] : null);
-                      }
-                    } else {
-                      next.add(object);
-                      setSelectedObject(object); // Set as primary selection
-                    }
-                  }
-                  return next;
-                });
-              } else {
-                // Single select mode - clear all and select only this object
-                if (object) {
-                  setSelectedObjects(new Set([object]));
-                  setSelectedObject(object);
-                } else {
-                  setSelectedObjects(new Set());
-                  setSelectedObject(null);
-                }
-              }
-            }}
+            onSelectObject={handleSelectObject}
             onObjectChange={handleObjectChange}
           />
         </div>
@@ -826,4 +723,3 @@ export default function GameEditor({
     </div>
   );
 }
-

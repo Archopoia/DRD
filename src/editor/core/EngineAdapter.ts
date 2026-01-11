@@ -1,0 +1,64 @@
+/**
+ * EngineAdapter - Adapts Game instance to IEngine interface
+ * This allows the editor to work with the Game class through a clean interface
+ */
+
+import { IEngine } from './IEngine';
+import * as THREE from 'three';
+
+/**
+ * Adapter that wraps a Game instance to implement IEngine
+ * This allows the editor to work with Game without knowing its internals
+ */
+export class EngineAdapter implements IEngine {
+  private game: any; // Game instance - using any to avoid circular dependencies
+
+  constructor(game: any) {
+    this.game = game;
+  }
+
+  getScene(): THREE.Scene {
+    return this.game.getScene();
+  }
+
+  getEntityManager() {
+    return this.game.getEntityManager?.() || null;
+  }
+
+  getEntityFactory() {
+    return this.game.getEntityFactory?.() || null;
+  }
+
+  getPrefabManager() {
+    return this.game.getPrefabManager?.() || null;
+  }
+
+  getSceneStorage() {
+    return this.game.getSceneStorage?.() || null;
+  }
+
+  addObjectToScene(type: 'box' | 'sphere' | 'plane' | 'light' | 'group'): THREE.Object3D | null {
+    return this.game.addObjectToScene?.(type) || null;
+  }
+
+  updatePhysicsBodyForMesh(mesh: THREE.Mesh): void {
+    if (this.game.updatePhysicsBodyForMesh) {
+      this.game.updatePhysicsBodyForMesh(mesh);
+    }
+  }
+
+  async saveScene(sceneName: string, author?: string): Promise<string | null> {
+    if (this.game.saveScene) {
+      return await this.game.saveScene(sceneName, author);
+    }
+    return null;
+  }
+
+  async loadScene(sceneId: string): Promise<boolean> {
+    if (this.game.loadScene) {
+      return await this.game.loadScene(sceneId);
+    }
+    return false;
+  }
+}
+
