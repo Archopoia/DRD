@@ -16,6 +16,7 @@ import { PrefabManager } from '../ecs/prefab/PrefabManager';
 import { SceneStorage } from '../ecs/storage/SceneStorage';
 import { SceneSerializer } from '../ecs/serialization/SceneSerializer';
 import { Entity } from '../ecs/Entity';
+import { logScene } from '@/editor/utils/debugLogger';
 
 /**
  * Main game class that orchestrates all game systems
@@ -275,14 +276,34 @@ export class Game {
         physicsType: 'dynamic',
       });
 
+      logScene('addObjectToScene: Entity created', {
+        type,
+        entityId: entity.id,
+        entityName: entity.name,
+        totalEntities: this.entityManager.getAllEntities().length,
+      });
+
       // Get the Three.js object from the entity
       const object3D = this.entityManager.getObject3D(entity);
       if (object3D) {
         Debug.log('Game', `Added ${type} entity to scene: ${entity.name} (${entity.id})`);
+        logScene('addObjectToScene: Object3D retrieved', {
+          type,
+          entityId: entity.id,
+          entityName: entity.name,
+          object3DName: object3D.name,
+          object3DType: object3D.type,
+          object3DUuid: object3D.uuid,
+        });
         return object3D;
       }
 
       Debug.warn('Game', `Failed to get Object3D from entity: ${entity.name}`);
+      logScene('addObjectToScene: Failed to get Object3D', {
+        type,
+        entityId: entity.id,
+        entityName: entity.name,
+      });
       return null;
     } catch (error) {
       Debug.error('Game', `Failed to add ${type} object to scene`, error as Error);
@@ -322,18 +343,60 @@ export class Game {
    * Save current scene
    */
   async saveScene(sceneName: string = 'Scene', author?: string): Promise<string | null> {
+    console.log('[Game] saveScene: Starting save', {
+      sceneName,
+      author,
+      hasEntityManager: !!this.entityManager,
+      hasSceneStorage: !!this.sceneStorage,
+    });
+
     if (!this.entityManager || !this.sceneStorage) {
       Debug.error('Game', 'ECS system or storage not initialized');
+      console.error('[Game] saveScene: ECS system or storage not initialized', {
+        entityManager: !!this.entityManager,
+        sceneStorage: !!this.sceneStorage,
+      });
       return null;
     }
 
     try {
+      const entityCount = this.entityManager.getAllEntities().length;
+      const allEntities = this.entityManager.getAllEntities();
+      logScene('saveScene: Serializing scene', {
+        sceneName,
+        entityCount,
+        sceneChildrenCount: this.scene.scene.children.length,
+        entityIds: allEntities.map(e => ({ id: e.id, name: e.name })),
+      });
+
       const serialized = SceneSerializer.serialize(this.entityManager, sceneName, author);
+      console.log('[Game] saveScene: Scene serialized', {
+        sceneName,
+        entityCount: serialized.entities.length,
+        version: serialized.version,
+        metadata: serialized.metadata,
+      });
+
       const id = await this.sceneStorage.saveScene(serialized);
-      Debug.log('Game', `Scene saved: ${sceneName} (${id})`);
+      if (id) {
+        Debug.log('Game', `Scene saved: ${sceneName} (${id})`);
+        console.log('[Game] saveScene: Scene saved successfully', {
+          sceneName,
+          sceneId: id,
+          entityCount: serialized.entities.length,
+          author,
+        });
+      } else {
+        console.error('[Game] saveScene: Save returned null id');
+      }
       return id;
     } catch (error) {
       Debug.error('Game', 'Failed to save scene', error as Error);
+      console.error('[Game] saveScene: Error saving scene', {
+        sceneName,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       return null;
     }
   }
@@ -342,25 +405,91 @@ export class Game {
    * Load scene from storage
    */
   async loadScene(sceneId: string): Promise<boolean> {
+    logScene('loadScene: Starting load', {
+      sceneId,
+      hasEntityManager: !!this.entityManager,
+      hasSceneStorage: !!this.sceneStorage,
+      currentEntityCount: this.entityManager?.getAllEntities().length || 0,
+      currentSceneChildrenCount: this.scene.scene.children.length,
+    });
+
     if (!this.entityManager || !this.sceneStorage) {
       Debug.error('Game', 'ECS system or storage not initialized');
+      logScene('loadScene: ECS system or storage not initialized', {
+        entityManager: !!this.entityManager,
+        sceneStorage: !!this.sceneStorage,
+      });
       return false;
     }
 
     try {
+      const beforeLoadEntityCount = this.entityManager.getAllEntities().length;
+      const beforeLoadSceneChildren = this.scene.scene.children.length;
+      
+      logScene('loadScene: Loading from storage', {
+        sceneId,
+        beforeLoadEntityCount,
+        beforeLoadSceneChildren,
+      });
+
       const serialized = await this.sceneStorage.loadScene(sceneId);
       if (!serialized) {
         Debug.error('Game', `Scene not found: ${sceneId}`);
+        logScene('loadScene: Scene not found in storage', { sceneId });
         return false;
       }
 
-      // Clear existing entities (optional - could merge instead)
-      // For now, we'll just deserialize into the existing manager
+      logScene('loadScene: Scene loaded from storage', {
+        sceneId,
+        sceneName: serialized.metadata.name,
+        entityCount: serialized.entities.length,
+        version: serialized.version,
+        metadata: serialized.metadata,
+      });
+
+      // Clear existing entities before loading new scene
+      Debug.log('Game', 'Clearing existing entities before loading scene...');
+      logScene('loadScene: Clearing existing entities', {
+        beforeClearEntityCount: this.entityManager.getAllEntities().length,
+        beforeClearSceneChildren: this.scene.scene.children.length,
+      });
+      this.entityManager.clearAll();
+      const afterClearSceneChildren = this.scene.scene.children.length;
+      logScene('loadScene: Entities cleared', {
+        afterClearEntityCount: this.entityManager.getAllEntities().length,
+        afterClearSceneChildren,
+      });
+
+      // Deserialize the new scene
+      logScene('loadScene: Deserializing scene', {
+        entityCount: serialized.entities.length,
+      });
       SceneSerializer.deserialize(this.entityManager, serialized, this.renderer, this.physicsWorld);
+      
+      const afterLoadEntityCount = this.entityManager.getAllEntities().length;
+      const afterLoadSceneChildren = this.scene.scene.children.length;
+      
+      logScene('loadScene: Scene deserialized', {
+        entityCount: afterLoadEntityCount,
+        sceneChildrenCount: afterLoadSceneChildren,
+        expectedEntities: serialized.entities.length,
+      });
+
       Debug.log('Game', `Scene loaded: ${serialized.metadata.name}`);
+      logScene('loadScene: Scene loaded successfully', {
+        sceneName: serialized.metadata.name,
+        sceneId,
+        entityCount: afterLoadEntityCount,
+        sceneChildrenCount: afterLoadSceneChildren,
+      });
       return true;
     } catch (error) {
       Debug.error('Game', 'Failed to load scene', error as Error);
+      logScene('loadScene: Error loading scene', {
+        sceneId,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       return false;
     }
   }

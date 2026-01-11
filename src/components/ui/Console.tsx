@@ -33,7 +33,7 @@ export default function Console({ isOpen, onClose, manager, godMode, setGodMode,
   const [input, setInput] = useState('');
   const [history, setHistory] = useState<ConsoleMessage[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  const [showDebugLogs, setShowDebugLogs] = useState(false);
+  const [showDebugLogs, setShowDebugLogs] = useState(embedded); // Default to true when embedded in editor
   const [debugLogs, setDebugLogs] = useState<DebugLog[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const historyRef = useRef<string[]>([]);
@@ -269,6 +269,12 @@ export default function Console({ isOpen, onClose, manager, godMode, setGodMode,
                       ? 'text-purple-400'
                       : log.type === 'camera'
                       ? 'text-orange-400'
+                      : log.type === 'editor'
+                      ? 'text-blue-400'
+                      : log.type === 'scene'
+                      ? 'text-green-400'
+                      : log.type === 'history'
+                      ? 'text-pink-400'
                       : 'text-gray-400'
                   }`}
                 >
@@ -276,7 +282,7 @@ export default function Console({ isOpen, onClose, manager, godMode, setGodMode,
                   <span className="text-gray-500">[{log.type}]</span> {log.message}
                   {log.data && (
                     <span className="text-gray-600 ml-2">
-                      {typeof log.data === 'object' ? JSON.stringify(log.data) : String(log.data)}
+                      {typeof log.data === 'object' ? JSON.stringify(log.data, null, 2) : String(log.data)}
                     </span>
                   )}
                 </div>

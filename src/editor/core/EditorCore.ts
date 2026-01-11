@@ -11,6 +11,7 @@ import {
   createDeleteObjectAction,
 } from '../history/actions/EditorActions';
 import { TransformMode } from '../gizmos/TransformGizmo';
+import { logEditor, logScene, logHistory } from '../utils/debugLogger';
 
 /**
  * Editor Core - Manages editor state, selection, and operations
@@ -131,14 +132,29 @@ export class EditorCore {
    * Add object to scene
    */
   addObject(type: 'box' | 'sphere' | 'plane' | 'light' | 'group'): THREE.Object3D | null {
-    if (!this.engine) return null;
+    if (!this.engine) {
+      logEditor('addObject: Engine not available');
+      return null;
+    }
 
+    logEditor(`addObject: Creating ${type}`, { type });
     const newObject = this.engine.addObjectToScene(type);
     if (newObject) {
       const scene = this.engine.getScene();
+      logEditor('addObject: Object created', {
+        type,
+        name: newObject.name,
+        uuid: newObject.uuid,
+        position: newObject.position.toArray(),
+        sceneChildrenCount: scene.children.length,
+      });
+      
       const action = createCreateObjectAction(newObject, scene, `Create ${type}`);
       this.historyManager.addAction(action);
       this.selectObject(newObject);
+      logEditor('addObject: History action added and object selected');
+    } else {
+      logEditor('addObject: Failed to create object', { type });
     }
 
     return newObject;
@@ -148,23 +164,44 @@ export class EditorCore {
    * Delete selected object(s)
    */
   deleteObject(object: THREE.Object3D): void {
-    if (!this.engine) return;
+    if (!this.engine) {
+      logEditor('deleteObject: Engine not available');
+      return;
+    }
+
+    logEditor('deleteObject: Deleting object', {
+      name: object.name,
+      uuid: object.uuid,
+      type: object.type,
+      position: object.position.toArray(),
+      hasChildren: object.children.length,
+    });
 
     const scene = this.engine.getScene();
 
     // Create history action
     const action = createDeleteObjectAction(object, scene);
     this.historyManager.addAction(action);
+    logHistory('deleteObject: History action created', { objectName: object.name });
 
     // Remove from selections
     this.selectedObjects.delete(object);
     if (this.selectedObject === object) {
       const remaining = Array.from(this.selectedObjects);
       this.selectedObject = remaining.length > 0 ? remaining[0] : null;
+      logEditor('deleteObject: Selection updated', {
+        remainingSelected: remaining.length,
+        newPrimary: this.selectedObject?.name || null,
+      });
     }
 
     // Remove from scene
+    const wasInScene = scene.children.includes(object);
     scene.remove(object);
+    logEditor('deleteObject: Object removed from scene', {
+      wasInScene,
+      sceneChildrenCount: scene.children.length,
+    });
 
     // Dispose geometry and material if it's a mesh
     if (object instanceof THREE.Mesh) {
@@ -174,16 +211,28 @@ export class EditorCore {
       } else if (object.material) {
         object.material.dispose();
       }
+      logEditor('deleteObject: Mesh geometry and materials disposed');
     }
 
     this.notifySelectionListeners();
+    logEditor('deleteObject: Complete');
   }
 
   /**
    * Duplicate object
    */
   duplicateObject(object: THREE.Object3D): THREE.Object3D | null {
-    if (!this.engine) return null;
+    if (!this.engine) {
+      logEditor('duplicateObject: Engine not available');
+      return null;
+    }
+
+    logEditor('duplicateObject: Duplicating object', {
+      name: object.name,
+      uuid: object.uuid,
+      type: object.type,
+      position: object.position.toArray(),
+    });
 
     const scene = this.engine.getScene();
     const cloned = object.clone();
@@ -191,20 +240,47 @@ export class EditorCore {
     cloned.position.x += 1; // Offset slightly
     scene.add(cloned);
 
+    logEditor('duplicateObject: Object cloned and added to scene', {
+      originalName: object.name,
+      clonedName: cloned.name,
+      clonedUuid: cloned.uuid,
+      clonedPosition: cloned.position.toArray(),
+      sceneChildrenCount: scene.children.length,
+    });
+
     // Create history action
     const action = createCreateObjectAction(cloned, scene, `Duplicate ${object.name || object.type}`);
     this.historyManager.addAction(action);
+    logHistory('duplicateObject: History action created', { objectName: object.name, clonedName: cloned.name });
 
     this.selectObject(cloned);
+    logEditor('duplicateObject: Cloned object selected');
     return cloned;
   }
 
   /**
    * Update physics body for a mesh (called by viewport/inspector after transform changes)
+   * Also syncs the TransformComponent FROM the mesh position/rotation/scale
    */
   updatePhysicsBody(mesh: THREE.Mesh): void {
     if (!this.engine) return;
     mesh.userData._editorControlled = true;
+    
+    // Sync TransformComponent FROM mesh (if this is an ECS entity)
+    const entityManager = this.engine.getEntityManager();
+    if (entityManager && mesh.userData.entityId) {
+      const entity = entityManager.getEntity(mesh.userData.entityId);
+      if (entity) {
+        const transform = entityManager.getComponent(entity, 'TransformComponent');
+        if (transform) {
+          transform.position.copy(mesh.position);
+          transform.rotation.copy(mesh.rotation);
+          transform.scale.copy(mesh.scale);
+        }
+      }
+    }
+    
+    // Update physics body
     this.engine.updatePhysicsBodyForMesh(mesh);
   }
 
@@ -212,16 +288,74 @@ export class EditorCore {
    * Save scene
    */
   async saveScene(sceneName: string, author?: string): Promise<string | null> {
-    if (!this.engine) return null;
-    return await this.engine.saveScene(sceneName, author);
+    if (!this.engine) {
+      console.error('[EditorCore] saveScene: Engine not available');
+      return null;
+    }
+
+    console.log('[EditorCore] saveScene: Starting save', {
+      sceneName,
+      author,
+      hasEngine: !!this.engine,
+    });
+
+    try {
+      const sceneId = await this.engine.saveScene(sceneName, author);
+      if (sceneId) {
+        console.log('[EditorCore] saveScene: Scene saved successfully', {
+          sceneName,
+          sceneId,
+          author,
+        });
+      } else {
+        console.error('[EditorCore] saveScene: Save returned null sceneId');
+      }
+      return sceneId;
+    } catch (error) {
+      console.error('[EditorCore] saveScene: Error saving scene', {
+        sceneName,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      throw error;
+    }
   }
 
   /**
    * Load scene
    */
   async loadScene(sceneId: string): Promise<boolean> {
-    if (!this.engine) return false;
-    return await this.engine.loadScene(sceneId);
+    if (!this.engine) {
+      logScene('loadScene: Engine not available');
+      return false;
+    }
+
+    logScene('loadScene: Starting load', {
+      sceneId,
+      hasEngine: !!this.engine,
+    });
+
+    try {
+      const success = await this.engine.loadScene(sceneId);
+      if (success) {
+        logScene('loadScene: Scene loaded successfully', {
+          sceneId,
+          entityManager: this.engine.getEntityManager()?.getAllEntities().length || 0,
+        });
+      } else {
+        logScene('loadScene: Load returned false', {
+          sceneId,
+        });
+      }
+      return success;
+    } catch (error) {
+      logScene('loadScene: Error loading scene', {
+        sceneId,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      throw error;
+    }
   }
 
   /**

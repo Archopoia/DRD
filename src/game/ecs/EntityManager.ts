@@ -159,6 +159,18 @@ export class EntityManager {
   }
 
   /**
+   * Clear all entities from the scene
+   */
+  clearAll(): void {
+    // Get all entities and remove them
+    const allEntities = Array.from(this.entities.values());
+    allEntities.forEach((entity) => {
+      this.removeEntity(entity);
+    });
+    Debug.log('EntityManager', `Cleared all entities (${allEntities.length} entities removed)`);
+  }
+
+  /**
    * Update all entities (sync transforms, etc.)
    */
   update(deltaTime: number): void {
@@ -175,11 +187,16 @@ export class EntityManager {
       // Update mesh renderer transform
       const meshRenderer = this.getComponent<MeshRendererComponent>(entity, 'MeshRendererComponent');
       if (meshRenderer && meshRenderer.enabled) {
-        meshRenderer.updateTransform({
-          position: transform.position,
-          rotation: transform.rotation,
-          scale: transform.scale,
-        });
+        const mesh = meshRenderer.getMesh();
+        // If mesh is editor-controlled, skip syncing FROM component TO mesh
+        // The editor gizmo controls the mesh directly, and we'll sync component FROM mesh when needed
+        if (!mesh?.userData._editorControlled) {
+          meshRenderer.updateTransform({
+            position: transform.position,
+            rotation: transform.rotation,
+            scale: transform.scale,
+          });
+        }
       }
 
       // Update light transform

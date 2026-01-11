@@ -65,6 +65,7 @@ export default function GameEditor({
   const [showLoadDialog, setShowLoadDialog] = useState(false);
   const [sceneName, setSceneName] = useState('Scene 1');
   const [availableScenes, setAvailableScenes] = useState<Array<{ id: string; name: string; createdAt: number; updatedAt: number }>>([]);
+  const [showAddMenu, setShowAddMenu] = useState(false);
 
   // Initialize engine adapter and set it on EditorCore
   useEffect(() => {
@@ -259,6 +260,23 @@ export default function GameEditor({
   const historyManager = editorCore.getHistoryManager();
   const engine = editorCore.getEngine();
 
+  // Close add menu when clicking outside
+  useEffect(() => {
+    if (!showAddMenu) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('[data-add-menu]')) {
+        setShowAddMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showAddMenu]);
+
   // Handle keyboard shortcuts
   useEffect(() => {
     if (!isOpen) return;
@@ -339,6 +357,100 @@ export default function GameEditor({
             <line x1="3" y1="9" x2="21" y2="9"/>
           </svg>
           <span>Editor</span>
+        </div>
+
+        {/* Add Object Menu */}
+        <div className="flex gap-1 border-l border-gray-700 pl-3" data-add-menu>
+          <div className="relative">
+            <button
+              onClick={() => setShowAddMenu(!showAddMenu)}
+              className="text-gray-400 hover:text-white text-xs px-2 py-1 hover:bg-gray-700 rounded font-mono flex items-center gap-1"
+              title="Add Object"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              <span>Add</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            {showAddMenu && (
+            <div className="absolute top-full left-0 mt-1 bg-gray-700 border border-gray-600 rounded shadow-lg py-1 min-w-[120px] z-50">
+              <button
+                onClick={() => {
+                  handleAddObject('box');
+                  setShowAddMenu(false);
+                }}
+                className="w-full text-left text-gray-300 hover:text-white hover:bg-gray-600 text-xs px-3 py-1.5 font-mono flex items-center gap-2"
+                title="Add Box"
+              >
+                <span className="w-3 h-3 bg-gray-500 rounded-sm"></span>
+                <span>Box</span>
+              </button>
+              <button
+                onClick={() => {
+                  handleAddObject('sphere');
+                  setShowAddMenu(false);
+                }}
+                className="w-full text-left text-gray-300 hover:text-white hover:bg-gray-600 text-xs px-3 py-1.5 font-mono flex items-center gap-2"
+                title="Add Sphere"
+              >
+                <span className="w-3 h-3 bg-gray-500 rounded-full"></span>
+                <span>Sphere</span>
+              </button>
+              <button
+                onClick={() => {
+                  handleAddObject('plane');
+                  setShowAddMenu(false);
+                }}
+                className="w-full text-left text-gray-300 hover:text-white hover:bg-gray-600 text-xs px-3 py-1.5 font-mono flex items-center gap-2"
+                title="Add Plane"
+              >
+                <span className="w-3 h-3 bg-gray-500"></span>
+                <span>Plane</span>
+              </button>
+              <button
+                onClick={() => {
+                  handleAddObject('light');
+                  setShowAddMenu(false);
+                }}
+                className="w-full text-left text-gray-300 hover:text-white hover:bg-gray-600 text-xs px-3 py-1.5 font-mono flex items-center gap-2"
+                title="Add Light"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="5"/>
+                  <line x1="12" y1="1" x2="12" y2="3"/>
+                  <line x1="12" y1="21" x2="12" y2="23"/>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                  <line x1="1" y1="12" x2="3" y2="12"/>
+                  <line x1="21" y1="12" x2="23" y2="12"/>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>
+                <span>Light</span>
+              </button>
+              <button
+                onClick={() => {
+                  handleAddObject('group');
+                  setShowAddMenu(false);
+                }}
+                className="w-full text-left text-gray-300 hover:text-white hover:bg-gray-600 text-xs px-3 py-1.5 font-mono flex items-center gap-2"
+                title="Add Group"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="7" height="7"/>
+                  <rect x="14" y="3" width="7" height="7"/>
+                  <rect x="14" y="14" width="7" height="7"/>
+                  <rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                <span>Group</span>
+              </button>
+            </div>
+            )}
+          </div>
         </div>
         
         {/* Object actions */}
@@ -507,7 +619,7 @@ export default function GameEditor({
             selectedObject={selectedObject}
             selectedObjects={selectedObjects}
             transformMode={transformMode}
-            gameInstance={gameInstance}
+            editorCore={editorCore}
             onTransformModeChange={(mode) => editorCore.setTransformMode(mode)}
             historyManager={historyManager}
             onSelectObject={handleSelectObject}

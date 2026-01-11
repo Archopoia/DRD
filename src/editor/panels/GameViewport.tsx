@@ -7,13 +7,14 @@ import { TransformGizmo, TransformMode } from '@/editor/gizmos/TransformGizmo';
 import { logGizmo, logTransform, logGeneral } from '@/editor/utils/debugLogger';
 import { HistoryManager } from '../history/HistoryManager';
 import { createTransformObjectAction } from '../history/actions/EditorActions';
+import { EditorCore } from '../core';
 
 interface GameViewportProps {
   scene: THREE.Scene | null;
   selectedObject: THREE.Object3D | null;
   selectedObjects: Set<THREE.Object3D>;
   transformMode: TransformMode;
-  gameInstance?: any; // Game instance to access Scene for physics body updates
+  editorCore?: EditorCore | null; // EditorCore for physics body updates and editor operations
   onSelectObject: (object: THREE.Object3D | null, multiSelect?: boolean) => void;
   onObjectChange?: (object: THREE.Object3D) => void;
   onTransformModeChange?: (mode: TransformMode) => void;
@@ -22,8 +23,9 @@ interface GameViewportProps {
 
 /**
  * Game Viewport - Shows the 3D scene with editor camera and object selection
+ * Refactored to use EditorCore instead of direct gameInstance access
  */
-export default function GameViewport({ scene, selectedObject, selectedObjects, transformMode, gameInstance, onSelectObject, onObjectChange, onTransformModeChange, historyManager }: GameViewportProps) {
+export default function GameViewport({ scene, selectedObject, selectedObjects, transformMode, editorCore, onSelectObject, onObjectChange, onTransformModeChange, historyManager }: GameViewportProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -637,40 +639,30 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
 
     // Helper function to update physics body if object has one
     const updatePhysicsBodyIfExists = (object: THREE.Object3D) => {
-      if (!gameInstance || !(object instanceof THREE.Mesh)) {
-        if (!gameInstance) {
-          logGeneral(`Cannot update physics body: no gameInstance`, { objectName: object?.name || '(unnamed)' });
+      if (!editorCore || !(object instanceof THREE.Mesh)) {
+        if (!editorCore) {
+          logGeneral(`Cannot update physics body: no editorCore`, { objectName: object?.name || '(unnamed)' });
         }
         return;
       }
       
       try {
-        // Use Game's method to update physics body
-        if (typeof gameInstance.updatePhysicsBodyForMesh === 'function') {
-          // Object is already marked as editor-controlled at drag start
-          // Update physics body from mesh
-          gameInstance.updatePhysicsBodyForMesh(object);
-          
-          logTransform(`Physics body updated successfully`, {
-            objectName: object.name || '(unnamed)',
-            objectType: object.type,
-            position: object.position.clone(),
-            rotation: object.rotation.clone(),
-            quaternion: object.quaternion.clone(),
-            hasPhysicsBody: true,
-          });
-        } else {
-          logGeneral(`updatePhysicsBodyForMesh method not available on gameInstance`, {
-            objectName: object.name || '(unnamed)',
-            hasGameInstance: !!gameInstance,
-            gameInstanceMethods: Object.keys(gameInstance || {}),
-          });
-        }
+        // Use EditorCore's method to update physics body
+        editorCore.updatePhysicsBody(object);
+        
+        logTransform(`Physics body updated successfully`, {
+          objectName: object.name || '(unnamed)',
+          objectType: object.type,
+          position: object.position.clone(),
+          rotation: object.rotation.clone(),
+          quaternion: object.quaternion.clone(),
+          hasPhysicsBody: true,
+        });
       } catch (error) {
         logGeneral(`Failed to update physics body`, { 
           error: error instanceof Error ? error.message : String(error), 
           errorStack: error instanceof Error ? error.stack : undefined,
-          objectName: object.name || '(unnamed)',
+          objectName: object?.name || '(unnamed)',
           objectType: object.type,
         });
       }
@@ -749,7 +741,7 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
       document.removeEventListener('mousemove', handleGizmoDrag);
       document.removeEventListener('mouseup', handleGizmoDragEnd);
     };
-  }, [isDraggingGizmo, draggingAxis, selectedObject, selectedObjects, transformMode, onObjectChange, gameInstance, historyManager]);
+  }, [isDraggingGizmo, draggingAxis, selectedObject, selectedObjects, transformMode, onObjectChange, editorCore, historyManager]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!containerRef.current || !editorCameraRef.current || !scene) return;

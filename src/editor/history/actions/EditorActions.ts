@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { HistoryAction } from '../HistoryManager';
+import { logHistory, logEditor } from '../../utils/debugLogger';
 
 /**
  * Action creators for common editor operations
@@ -15,13 +16,29 @@ export function createCreateObjectAction(
   scene: THREE.Scene,
   description: string = `Create ${object.name || object.type}`
 ): HistoryAction {
+  const actionId = `create_${object.uuid}_${Date.now()}`;
+  logHistory('createCreateObjectAction: Created action', {
+    id: actionId,
+    description,
+    objectName: object.name,
+    objectType: object.type,
+    objectUuid: object.uuid,
+    position: object.position.toArray(),
+    sceneChildrenCount: scene.children.length,
+  });
+
   return {
-    id: `create_${object.uuid}_${Date.now()}`,
+    id: actionId,
     type: 'create_object',
     description,
     timestamp: Date.now(),
     data: { object, scene },
     undo: () => {
+      logHistory('createCreateObjectAction: Undoing', {
+        id: actionId,
+        objectName: object.name,
+        sceneChildrenBefore: scene.children.length,
+      });
       scene.remove(object);
       // Dispose geometry and material if it's a mesh
       if (object instanceof THREE.Mesh) {
@@ -34,9 +51,22 @@ export function createCreateObjectAction(
           }
         }
       }
+      logHistory('createCreateObjectAction: Undone', {
+        id: actionId,
+        sceneChildrenAfter: scene.children.length,
+      });
     },
     redo: () => {
+      logHistory('createCreateObjectAction: Redoing', {
+        id: actionId,
+        objectName: object.name,
+        sceneChildrenBefore: scene.children.length,
+      });
       scene.add(object);
+      logHistory('createCreateObjectAction: Redone', {
+        id: actionId,
+        sceneChildrenAfter: scene.children.length,
+      });
     },
   };
 }
@@ -55,22 +85,53 @@ export function createDeleteObjectAction(
 ): HistoryAction {
   const parent = object.parent;
   const index = parent ? parent.children.indexOf(object) : -1;
+  const actionId = `delete_${object.uuid}_${Date.now()}`;
+  
+  logHistory('createDeleteObjectAction: Created action', {
+    id: actionId,
+    description,
+    objectName: object.name,
+    objectType: object.type,
+    objectUuid: object.uuid,
+    parent: parent?.name || 'scene',
+    index,
+    sceneChildrenCount: scene.children.length,
+  });
 
   return {
-    id: `delete_${object.uuid}_${Date.now()}`,
+    id: actionId,
     type: 'delete_object',
     description,
     timestamp: Date.now(),
     data: { object, scene, parent, index },
     undo: () => {
+      logHistory('createDeleteObjectAction: Undoing', {
+        id: actionId,
+        objectName: object.name,
+        parent: parent?.name || 'scene',
+        sceneChildrenBefore: scene.children.length,
+      });
       if (parent) {
         parent.add(object);
       } else {
         scene.add(object);
       }
+      logHistory('createDeleteObjectAction: Undone', {
+        id: actionId,
+        sceneChildrenAfter: scene.children.length,
+      });
     },
     redo: () => {
+      logHistory('createDeleteObjectAction: Redoing', {
+        id: actionId,
+        objectName: object.name,
+        sceneChildrenBefore: scene.children.length,
+      });
       scene.remove(object);
+      logHistory('createDeleteObjectAction: Redone', {
+        id: actionId,
+        sceneChildrenAfter: scene.children.length,
+      });
     },
   };
 }
@@ -95,6 +156,7 @@ export function createTransformObjectAction(
   newScale: THREE.Vector3,
   description: string = `Transform ${object.name || object.type}`
 ): HistoryAction {
+  const actionId = `transform_${object.uuid}_${Date.now()}`;
   const data: TransformObjectActionData = {
     object,
     oldPosition: oldPosition.clone(),
@@ -105,27 +167,59 @@ export function createTransformObjectAction(
     newScale: newScale.clone(),
   };
 
+  console.log('[EditorActions] createTransformObjectAction: Created action', {
+    id: actionId,
+    description,
+    objectName: object.name,
+    objectType: object.type,
+    objectUuid: object.uuid,
+    oldPosition: data.oldPosition.toArray(),
+    newPosition: data.newPosition.toArray(),
+    oldRotation: data.oldRotation.toArray(),
+    newRotation: data.newRotation.toArray(),
+    oldScale: data.oldScale.toArray(),
+    newScale: data.newScale.toArray(),
+  });
+
   return {
-    id: `transform_${object.uuid}_${Date.now()}`,
+    id: actionId,
     type: 'transform_object',
     description,
     timestamp: Date.now(),
     data,
     undo: () => {
+      console.log('[EditorActions] createTransformObjectAction: Undoing', {
+        id: actionId,
+        objectName: object.name,
+        targetPosition: data.oldPosition.toArray(),
+      });
       object.position.copy(data.oldPosition);
       object.quaternion.copy(data.oldRotation);
       object.rotation.setFromQuaternion(data.oldRotation);
       object.scale.copy(data.oldScale);
       object.updateMatrix();
       object.updateMatrixWorld(true);
+      console.log('[EditorActions] createTransformObjectAction: Undone', {
+        id: actionId,
+        actualPosition: object.position.toArray(),
+      });
     },
     redo: () => {
+      console.log('[EditorActions] createTransformObjectAction: Redoing', {
+        id: actionId,
+        objectName: object.name,
+        targetPosition: data.newPosition.toArray(),
+      });
       object.position.copy(data.newPosition);
       object.quaternion.copy(data.newRotation);
       object.rotation.setFromQuaternion(data.newRotation);
       object.scale.copy(data.newScale);
       object.updateMatrix();
       object.updateMatrixWorld(true);
+      console.log('[EditorActions] createTransformObjectAction: Redone', {
+        id: actionId,
+        actualPosition: object.position.toArray(),
+      });
     },
   };
 }
@@ -257,6 +351,7 @@ export function createPropertyChangeAction(
   newValue: any,
   description: string = `Change ${property} of ${object.name || object.type}`
 ): HistoryAction {
+  const actionId = `property_${object.uuid}_${property}_${Date.now()}`;
   const data: PropertyChangeActionData = {
     object,
     property,
@@ -264,13 +359,30 @@ export function createPropertyChangeAction(
     newValue,
   };
 
+  logHistory('createPropertyChangeAction: Created action', {
+    id: actionId,
+    description,
+    objectName: object.name,
+    objectType: object.type,
+    objectUuid: object.uuid,
+    property,
+    oldValue,
+    newValue,
+  });
+
   return {
-    id: `property_${object.uuid}_${property}_${Date.now()}`,
+    id: actionId,
     type: 'property_change',
     description,
     timestamp: Date.now(),
     data,
     undo: () => {
+      logHistory('createPropertyChangeAction: Undoing', {
+        id: actionId,
+        objectName: object.name,
+        property,
+        targetValue: data.oldValue,
+      });
       (object as any)[property] = data.oldValue;
       if (property === 'name') {
         // Name change doesn't need matrix update
@@ -278,8 +390,18 @@ export function createPropertyChangeAction(
         object.updateMatrix();
         object.updateMatrixWorld(true);
       }
+      logHistory('createPropertyChangeAction: Undone', {
+        id: actionId,
+        actualValue: (object as any)[property],
+      });
     },
     redo: () => {
+      logHistory('createPropertyChangeAction: Redoing', {
+        id: actionId,
+        objectName: object.name,
+        property,
+        targetValue: data.newValue,
+      });
       (object as any)[property] = data.newValue;
       if (property === 'name') {
         // Name change doesn't need matrix update
@@ -287,6 +409,10 @@ export function createPropertyChangeAction(
         object.updateMatrix();
         object.updateMatrixWorld(true);
       }
+      logHistory('createPropertyChangeAction: Redone', {
+        id: actionId,
+        actualValue: (object as any)[property],
+      });
     },
   };
 }

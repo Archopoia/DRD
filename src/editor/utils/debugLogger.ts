@@ -3,7 +3,7 @@
  * Logs can be displayed in the Console component
  */
 
-export type DebugLogType = 'gizmo' | 'selection' | 'transform' | 'camera' | 'general';
+export type DebugLogType = 'gizmo' | 'selection' | 'transform' | 'camera' | 'general' | 'editor' | 'scene' | 'history';
 
 export interface DebugLog {
   type: DebugLogType;
@@ -110,4 +110,7 @@ export const logSelection = (message: string, data?: any) => debugLogger.log('se
 export const logTransform = (message: string, data?: any) => debugLogger.log('transform', message, data);
 export const logCamera = (message: string, data?: any) => debugLogger.log('camera', message, data);
 export const logGeneral = (message: string, data?: any) => debugLogger.log('general', message, data);
+export const logEditor = (message: string, data?: any) => debugLogger.log('editor', message, data);
+export const logScene = (message: string, data?: any) => debugLogger.log('scene', message, data);
+export const logHistory = (message: string, data?: any) => debugLogger.log('history', message, data);
 

@@ -93,12 +93,27 @@ src/editor/
 
 The refactoring maintains backward compatibility:
 - All existing panels continue to work
-- GameViewport still receives gameInstance (for now)
 - No breaking changes to external API
 - Editor functionality remains the same from user perspective
 
-Future improvements:
-- Panels could be refactored to use EditorCore directly
-- GameViewport could use EditorCore instead of gameInstance
+## Completed Improvements
+
+### GameViewport Refactoring ✅
+- **GameViewport** now uses `EditorCore` instead of `gameInstance`
+- Physics body updates now go through `editorCore.updatePhysicsBody()` instead of `gameInstance.updatePhysicsBodyForMesh()`
+- Cleaner architecture with better separation of concerns
+- GameViewport no longer needs direct access to Game instance
+
+### Benefits
+- **Better Abstraction**: GameViewport works through EditorCore interface
+- **Easier Testing**: Can mock EditorCore instead of entire Game instance
+- **Consistency**: All editor operations now go through EditorCore
+- **Future-Proof**: Easy to extend EditorCore with new operations
+
+## Future Improvements
+
+The following improvements are still possible:
 - Further abstraction layers for renderer/physics could be added
+- Additional panels could be refactored to use EditorCore directly (currently they use callbacks, which is fine)
+- EditorCore could be extended with more editor operations as needed
 
