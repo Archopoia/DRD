@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { getEventLog, GameEvent, EventType } from '@/game/utils/EventLog';
 
 interface EventLogProps {
@@ -16,8 +16,15 @@ interface EventLogProps {
 export default function EventLog({ maxVisible = 10 }: EventLogProps) {
   const [events, setEvents] = useState<GameEvent[]>([]);
   const eventLog = getEventLog();
+  const subscriptionRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
+    // Clean up any existing subscription first
+    if (subscriptionRef.current) {
+      subscriptionRef.current();
+      subscriptionRef.current = null;
+    }
+
     // Initial events
     const initialEvents = eventLog.getRecentEvents(maxVisible);
     setEvents(initialEvents);
@@ -30,7 +37,14 @@ export default function EventLog({ maxVisible = 10 }: EventLogProps) {
       });
     });
 
-    return unsubscribe;
+    subscriptionRef.current = unsubscribe;
+
+    return () => {
+      if (subscriptionRef.current) {
+        subscriptionRef.current();
+        subscriptionRef.current = null;
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [maxVisible]);
 
@@ -60,21 +74,21 @@ export default function EventLog({ maxVisible = 10 }: EventLogProps) {
   const getEventColor = (type: EventType): string => {
     switch (type) {
       case EventType.SOUFFRANCE_DAMAGE:
-        return 'text-red-400';
+        return 'text-red-300';
       case EventType.SOUFFRANCE_RESISTED:
-        return 'text-yellow-400';
+        return 'text-blue-300';
       case EventType.COMPETENCE_USE:
-        return 'text-blue-400';
+        return 'text-yellow-300';
       case EventType.HEALTH_STATE_CHANGE:
-        return 'text-orange-400';
-      case EventType.EXPERIENCE_GAIN:
-        return 'text-green-400';
-      case EventType.WARNING:
         return 'text-orange-300';
+      case EventType.EXPERIENCE_GAIN:
+        return 'text-green-300';
+      case EventType.WARNING:
+        return 'text-yellow-400';
       case EventType.INFO:
-        return 'text-gray-300';
+        return 'text-blue-300';
       default:
-        return 'text-gray-400';
+        return 'text-gray-300';
     }
   };
 
@@ -82,33 +96,33 @@ export default function EventLog({ maxVisible = 10 }: EventLogProps) {
   const getEventBgColor = (type: EventType): string => {
     switch (type) {
       case EventType.SOUFFRANCE_DAMAGE:
-        return 'bg-red-900/30 border-red-700/50';
+        return 'bg-red-900/30';
       case EventType.SOUFFRANCE_RESISTED:
-        return 'bg-yellow-900/30 border-yellow-700/50';
+        return 'bg-blue-900/30';
       case EventType.COMPETENCE_USE:
-        return 'bg-blue-900/30 border-blue-700/50';
+        return 'bg-yellow-900/30';
       case EventType.HEALTH_STATE_CHANGE:
-        return 'bg-orange-900/30 border-orange-700/50';
+        return 'bg-orange-900/30';
       case EventType.EXPERIENCE_GAIN:
-        return 'bg-green-900/30 border-green-700/50';
+        return 'bg-green-900/30';
       case EventType.WARNING:
-        return 'bg-orange-900/30 border-orange-600/50';
+        return 'bg-yellow-900/30';
       case EventType.INFO:
-        return 'bg-gray-900/30 border-gray-700/50';
+        return 'bg-blue-900/30';
       default:
-        return 'bg-gray-900/30 border-gray-700/50';
+        return 'bg-gray-900/30';
     }
   };
 
-  // Format timestamp to relative time
+  // Get time ago string
   const getTimeAgo = (timestamp: number): string => {
-    const now = Date.now();
-    const diff = now - timestamp;
-    
-    if (diff < 1000) return 'just now';
-    if (diff < 5000) return `${Math.floor(diff / 1000)}s ago`;
-    if (diff < 60000) return `${Math.floor(diff / 1000)}s ago`;
-    return `${Math.floor(diff / 60000)}m ago`;
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    if (seconds < 1) return 'now';
+    if (seconds < 60) return `${seconds}s`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    return `${hours}h`;
   };
 
   return (
@@ -180,4 +194,3 @@ export default function EventLog({ maxVisible = 10 }: EventLogProps) {
     </div>
   );
 }
-

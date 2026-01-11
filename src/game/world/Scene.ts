@@ -483,7 +483,7 @@ export class Scene {
           const souffranceName = getSouffranceName(platform.souffrance);
           Debug.log('Scene', `Character on ${souffranceName} platform - applied ${applied.toFixed(1)} DS (total: ${afterDegree.toFixed(1)} DS)`);
         }
-        } else if (horizontalDistance < 3.0) {
+      } else if (horizontalDistance < 3.0) {
           // Debug log occasionally to help troubleshoot when very close
           // Only log once per 2 seconds max per platform to avoid spam
           const debugKey = platform.souffrance;

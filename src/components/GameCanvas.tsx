@@ -61,6 +61,11 @@ export default function GameCanvas() {
   }, [showConsole, showEditor]);
 
   useEffect(() => {
+    // Prevent duplicate initialization (React StrictMode can cause double mounting)
+    if (gameRef.current) {
+      return; // Already initialized
+    }
+
     // Initialize Debug system to capture all console logs
     // This will clear previous logs and start fresh on each page refresh
     Debug.initialize();
@@ -75,11 +80,23 @@ export default function GameCanvas() {
         return;
       }
 
+      // Double-check we don't already have a game instance
+      if (gameRef.current) {
+        Debug.log('GameCanvas', 'Game already initialized, skipping');
+        return;
+      }
+
       Debug.log('GameCanvas', 'Initializing game...');
 
       try {
         // Dynamic import ensures this only runs on client
         const { Game } = await import('@/game/core/Game');
+        
+        // Double-check again after async import
+        if (gameRef.current) {
+          Debug.log('GameCanvas', 'Game already initialized during import, skipping');
+          return;
+        }
         
         // Initialize game
         const game = new Game(canvas);
@@ -89,53 +106,7 @@ export default function GameCanvas() {
         // Get character sheet manager from game
         setCharacterSheetManager(game.getCharacterSheetManager());
 
-        // Update FPS display every second
-        const fpsInterval = setInterval(() => {
-          if (gameRef.current) {
-            setFps(gameRef.current.getFPS());
-          }
-        }, 1000);
-
-        // Auto-save logs every second (append mode)
-        const logSaveInterval = setInterval(() => {
-          Debug.saveLogs(true).catch(() => {
-            // Silently fail on periodic saves - not critical
-          });
-        }, 1000);
-
-        // Update active CTs display (update more frequently for smooth countdown)
-        const activeCTsInterval = setInterval(() => {
-          if (gameRef.current) {
-            try {
-              const tracker = gameRef.current.getActiveCompetencesTracker();
-              if (tracker) {
-                const activeCTsWithTime = tracker.getActiveCompetencesWithRemainingTime();
-                setActiveCTs(activeCTsWithTime);
-              }
-            } catch (error) {
-              // Silently fail if tracker is not available yet
-            }
-          }
-        }, 100); // Update 10 times per second for smooth countdown
-
-        // Initial save - create the log file with all current logs
-        Debug.saveLogs(false).catch(() => {
-          // Silently fail on initial save - not critical
-        });
-
         Debug.log('GameCanvas', 'Game initialized successfully');
-
-        // Cleanup on unmount
-        return () => {
-          Debug.log('GameCanvas', 'Cleaning up game...');
-          clearInterval(fpsInterval);
-          clearInterval(logSaveInterval);
-          clearInterval(activeCTsInterval);
-          if (gameRef.current) {
-            gameRef.current.dispose();
-            gameRef.current = null;
-          }
-        };
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error';
         Debug.error('GameCanvas', 'Failed to initialize game', err as Error);
@@ -144,6 +115,40 @@ export default function GameCanvas() {
     };
 
     initGame();
+
+    // Setup intervals after game initialization
+    const fpsInterval = setInterval(() => {
+      if (gameRef.current) {
+        setFps(gameRef.current.getFPS());
+      }
+    }, 1000);
+
+    // Auto-save logs every second (append mode)
+    const logSaveInterval = setInterval(() => {
+      Debug.saveLogs(true).catch(() => {
+        // Silently fail on periodic saves - not critical
+      });
+    }, 1000);
+
+    // Update active CTs display (update more frequently for smooth countdown)
+    const activeCTsInterval = setInterval(() => {
+      if (gameRef.current) {
+        try {
+          const tracker = gameRef.current.getActiveCompetencesTracker();
+          if (tracker) {
+            const activeCTsWithTime = tracker.getActiveCompetencesWithRemainingTime();
+            setActiveCTs(activeCTsWithTime);
+          }
+        } catch (error) {
+          // Silently fail if tracker is not available yet
+        }
+      }
+    }, 100); // Update 10 times per second for smooth countdown
+
+    // Initial save - create the log file with all current logs
+    Debug.saveLogs(false).catch(() => {
+      // Silently fail on initial save - not critical
+    });
 
     // Final save on page unload (append any remaining logs)
     const handleBeforeUnload = () => {
