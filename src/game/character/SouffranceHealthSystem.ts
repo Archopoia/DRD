@@ -195,18 +195,9 @@ export class SouffranceHealthSystem {
     // Rules: 1 CT = 3 marks, 2 CTs = 1.5 marks each, 3 CTs = 1 mark each
     // Priority: If more than 3 CTs active, prioritize those with lowest degree count
     
-    // Get currently active competences FIRST (from gameplay actions like walking, jumping, etc.)
-    // This captures the current state BEFORE we potentially mark usedCompetence
-    const currentActiveCompetences = this.activeCompetencesTracker.getActiveCompetences();
-    
-    // Only mark the used competence as active if it's not already active
-    // This prevents environmental damage from resetting timers of CTs that are already active from gameplay
-    if (!currentActiveCompetences.includes(usedCompetence)) {
-      this.activeCompetencesTracker.markActive(usedCompetence);
-    }
-    
-    // Get the final active competences list (after potentially adding usedCompetence)
-    // This ensures we have the most up-to-date list for XP distribution
+    // Get currently active competences (from gameplay actions like walking, jumping, etc.)
+    // Environmental damage should only distribute XP to competences that are already active from gameplay
+    // The usedCompetence parameter is only for context/logging - we don't mark it as active here
     const activeCompetences = this.activeCompetencesTracker.getActiveCompetences();
     
     // Distribute marks among active competences
@@ -237,8 +228,8 @@ export class SouffranceHealthSystem {
       let message = '';
       
       if (numCompetences === 0) {
-        // No active CTs (shouldn't happen, but handle gracefully)
-        message = `No active CTs. Gained ${(totalMarksPerFailure * failures).toFixed(1)} marks on ${getCompetenceName(usedCompetence)}`;
+        // No active CTs - can happen if environmental damage occurs when no competences are active from gameplay
+        message = `No active CTs. No XP distributed`;
       } else if (numCompetences === 1) {
         // Only one CT active and received XP
         message = `Active CTs: ${selectedNamesList}. Gained ${(totalMarksPerFailure * failures).toFixed(1)} marks total (${(marksPerCT * failures).toFixed(1)} marks to ${selectedNamesList})`;

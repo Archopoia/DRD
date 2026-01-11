@@ -367,8 +367,10 @@ export class FPSCamera {
     moveDirection.normalize();
 
     // Mark movement-related CTs as active when moving
-    if (this.direction.length() > 0 && this.activeCompetencesTracker) {
-      // PAS - Walking/running (basic movement)
+    // PAS should only be active when WASD keys are actually pressed (walking)
+    const isMoving = this.controls.moveForward || this.controls.moveBackward || this.controls.moveLeft || this.controls.moveRight;
+    if (isMoving && this.activeCompetencesTracker) {
+      // PAS - Walking/running (basic movement) - only when WASD keys are pressed
       this.activeCompetencesTracker.markActive(Competence.PAS);
       
       // EQUILIBRE - Balance (only when moving AND not grounded)
@@ -379,13 +381,13 @@ export class FPSCamera {
       
       // FLUIDITE - Movement fluidity: only when movement (WASD as single input) + other actions
       // WASD keys count as a single movement input (any combination = 1)
-      const hasMovement = this.direction.length() > 0; // Any WASD key(s) pressed = 1 movement input
+      // Since we're already inside the isMoving block, we know movement is happening
       
       // Check if movement + other actions are active simultaneously:
       // Movement (WASD as one) + running + jumping = 3 inputs (fluid movement combo)
       // Movement (WASD as one) + running = 2 inputs (not enough)
       // Movement (WASD as one) + jumping = 2 inputs (not enough)
-      const hasMultipleActions = hasMovement && this.controls.run && !isGrounded; // Movement + running + jumping (3 inputs)
+      const hasMultipleActions = isMoving && this.controls.run && !isGrounded; // Movement + running + jumping (3 inputs)
       
       // FLUIDITE for movement combos - only when doing truly complex movement with 3+ different input types
       // Camera-based FLUIDITE is handled in updateRotation() with stricter thresholds

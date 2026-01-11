@@ -11,6 +11,7 @@ interface EventLogProps {
  * Event Log Component
  * Displays recent game world events in the bottom left corner
  * Newest events at the bottom (most visible)
+ * Events fade out after 10 seconds
  */
 export default function EventLog({ maxVisible = 10 }: EventLogProps) {
   const [events, setEvents] = useState<GameEvent[]>([]);
@@ -32,6 +33,28 @@ export default function EventLog({ maxVisible = 10 }: EventLogProps) {
     return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [maxVisible]);
+
+  // Force re-renders to update opacity smoothly, and remove events older than 11 seconds
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const updateInterval = setInterval(() => {
+      const now = Date.now();
+      const maxAge = 11000; // 10 seconds visible + 1 second fade = 11 seconds total
+
+      // Force re-render to update opacity
+      setTick((prev) => prev + 1);
+
+      // Remove events older than 11 seconds
+      setEvents((currentEvents) => {
+        return currentEvents.filter((event) => {
+          const age = now - event.timestamp;
+          return age < maxAge;
+        });
+      });
+    }, 100); // Update every 100ms for smooth fade animation
+
+    return () => clearInterval(updateInterval);
+  }, []);
 
   // Get color for event type
   const getEventColor = (type: EventType): string => {
@@ -110,21 +133,32 @@ export default function EventLog({ maxVisible = 10 }: EventLogProps) {
           </div>
         ) : (
           [...events].reverse().map((event, index) => {
-            // Calculate opacity: after reverse, index 0 renders at TOP (oldest), index max renders at BOTTOM (newest)
-            // Top event (index 0, oldest): most faded (0.2)
-            // Bottom event (index max, newest): most visible (1.0)
+            // Calculate opacity based on age and position
+            const now = Date.now();
+            const age = now - event.timestamp;
+            const fadeOutStart = 10000; // Start fading at 10 seconds
+            const fadeOutDuration = 1000; // Fade over 1 second
+            const maxAge = fadeOutStart + fadeOutDuration; // Remove after 11 seconds
+
+            // Position-based opacity (for multiple events: older at top are more faded)
             const maxIndex = events.length - 1;
-            // Fade: top (index 0) = most faded, bottom (index max) = most visible
-            const opacity = maxIndex > 0 
-              ? 0.2 + (index / maxIndex) * 0.8 // Fade from 0.2 (top, oldest, index 0) to 1.0 (bottom, newest, index max)
+            const positionOpacity = maxIndex > 0 
+              ? 0.2 + (index / maxIndex) * 0.8 // Fade from 0.2 (top, oldest) to 1.0 (bottom, newest)
               : 1.0;
+
+            // Age-based fade-out: fade from positionOpacity to 0 over the last second
+            let opacity = positionOpacity;
+            if (age >= fadeOutStart) {
+              const fadeProgress = (age - fadeOutStart) / fadeOutDuration; // 0 to 1
+              opacity = positionOpacity * (1 - fadeProgress); // Fade from positionOpacity to 0
+            }
             
             return (
               <div
                 key={event.id}
-                className={`px-2 py-0.5 text-base transition-all duration-300 ${getEventColor(event.type)} pointer-events-auto`}
+                className={`px-2 py-0.5 text-base transition-opacity duration-1000 ease-out ${getEventColor(event.type)} pointer-events-auto`}
                 style={{
-                  opacity: opacity,
+                  opacity: Math.max(0, opacity), // Ensure opacity doesn't go below 0
                   textShadow: '1px 1px 2px rgba(0, 0, 0, 0.9)',
                 }}
               >
