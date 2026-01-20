@@ -9,3 +9,6 @@ export { MeshRendererComponent, type MeshType, type MeshGeometry } from './compo
 export { PhysicsComponent, type PhysicsBodyType, type PhysicsProperties } from './components/PhysicsComponent';
 export { LightComponent, type LightType, type LightProperties } from './components/LightComponent';
 
+
+
+

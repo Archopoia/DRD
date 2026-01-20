@@ -43,3 +43,6 @@ export abstract class Component {
   abstract clone(entity: Entity): Component;
 }
 
+
+
+

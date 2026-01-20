@@ -188,3 +188,6 @@ export class PhysicsComponent extends Component {
   }
 }
 
+
+
+

@@ -112,3 +112,6 @@ if (this.direction.length() > 0) {
 - All CT marking should happen in the game loop/update methods, not in the constructor
 - Remember: marking a CT as active resets its XP timeframe to another 2 seconds from that point
 
+
+
+
