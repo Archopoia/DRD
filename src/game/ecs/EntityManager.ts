@@ -196,16 +196,11 @@ export class EntityManager {
       // Update mesh renderer transform
       const meshRenderer = this.getComponent<MeshRendererComponent>(entity, 'MeshRendererComponent');
       if (meshRenderer && meshRenderer.enabled) {
-        const mesh = meshRenderer.getMesh();
-        // If mesh is editor-controlled, skip syncing FROM component TO mesh
-        // The editor gizmo controls the mesh directly, and we'll sync component FROM mesh when needed
-        if (!mesh?.userData._editorControlled) {
-          meshRenderer.updateTransform({
-            position: transform.position,
-            rotation: transform.rotation,
-            scale: transform.scale,
-          });
-        }
+        meshRenderer.updateTransform({
+          position: transform.position,
+          rotation: transform.rotation,
+          scale: transform.scale,
+        });
       }
 
       // Update light transform
@@ -214,14 +209,10 @@ export class EntityManager {
         light.updateTransform(transform.position, transform.rotation);
       }
 
-      // Sync physics body with transform (if not editor-controlled)
+      // Sync physics body with transform
       const physics = this.getComponent<PhysicsComponent>(entity, 'PhysicsComponent');
       if (physics && physics.enabled && physics.rigidBody) {
-        // Check if entity is editor-controlled via mesh userData
-        const mesh = meshRenderer?.getMesh();
-        const isEditorControlled = mesh?.userData._editorControlled || false;
-
-        if (!isEditorControlled && physics.properties.bodyType === 'dynamic') {
+        if (physics.properties.bodyType === 'dynamic') {
           // Sync transform FROM physics (physics drives the transform)
           const physTransform = physics.getTransform();
           transform.setPosition(physTransform.position);
@@ -233,7 +224,7 @@ export class EntityManager {
             physTransform.rotation.w
           );
           transform.rotation.setFromQuaternion(quat);
-        } else if (isEditorControlled || physics.properties.bodyType === 'static' || physics.properties.bodyType === 'kinematic') {
+        } else if (physics.properties.bodyType === 'static' || physics.properties.bodyType === 'kinematic') {
           // Sync transform TO physics (transform drives the physics)
           const quat = new THREE.Quaternion().setFromEuler(transform.rotation);
           physics.updateTransform(transform.getPosition(), {

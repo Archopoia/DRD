@@ -6,7 +6,6 @@ import { Competence } from '@/game/character/data/CompetenceData';
 import { Attribute } from '@/game/character/data/AttributeData';
 import { getCompetenceName } from '@/game/character/data/CompetenceData';
 import { getAttributeName } from '@/game/character/data/AttributeData';
-import { debugLogger, DebugLog } from '@/editor/utils/debugLogger';
 
 interface ConsoleProps {
   isOpen: boolean;
@@ -14,14 +13,13 @@ interface ConsoleProps {
   manager?: CharacterSheetManager;
   godMode: boolean;
   setGodMode: (enabled: boolean) => void;
-  embedded?: boolean; // If true, console is embedded in editor (no Tab close, different styling)
+  embedded?: boolean; // If true, console is embedded (no Tab close, different styling)
 }
 
 interface ConsoleMessage {
-  type: 'command' | 'success' | 'error' | 'info' | 'debug';
+  type: 'command' | 'success' | 'error' | 'info';
   text: string;
   timestamp: number;
-  debugType?: string;
 }
 
 /**
@@ -33,8 +31,6 @@ export default function Console({ isOpen, onClose, manager, godMode, setGodMode,
   const [input, setInput] = useState('');
   const [history, setHistory] = useState<ConsoleMessage[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  const [showDebugLogs, setShowDebugLogs] = useState(embedded); // Default to true when embedded in editor
-  const [debugLogs, setDebugLogs] = useState<DebugLog[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const historyRef = useRef<string[]>([]);
   const historyScrollRef = useRef<HTMLDivElement>(null);
@@ -46,22 +42,12 @@ export default function Console({ isOpen, onClose, manager, godMode, setGodMode,
     }
   }, [isOpen]);
 
-  // Subscribe to debug logs
-  useEffect(() => {
-    const unsubscribe = debugLogger.subscribe((logs) => {
-      if (showDebugLogs) {
-        setDebugLogs(logs);
-      }
-    });
-    return unsubscribe;
-  }, [showDebugLogs]);
-
   // Auto-scroll history to bottom when new messages arrive
   useEffect(() => {
     if (historyScrollRef.current) {
       historyScrollRef.current.scrollTop = historyScrollRef.current.scrollHeight;
     }
-  }, [history, debugLogs, showDebugLogs]);
+  }, [history]);
 
   // Handle command execution
   const executeCommand = (command: string) => {
@@ -116,28 +102,6 @@ export default function Console({ isOpen, onClose, manager, godMode, setGodMode,
           break;
         case 'help':
           result = getHelpText();
-          break;
-        case 'debug':
-        case 'debuglogs':
-          if (args.length === 0) {
-            result = `Debug logs are ${showDebugLogs ? 'ENABLED' : 'DISABLED'}. Use 'debug on' or 'debug off' to toggle.`;
-          } else {
-            const arg = args[0].toLowerCase();
-            if (arg === 'on' || arg === '1' || arg === 'true' || arg === 'enable') {
-              setShowDebugLogs(true);
-              setDebugLogs(debugLogger.getLogs());
-              result = 'Debug logs ENABLED. Editor debug information will now appear in console.';
-            } else if (arg === 'off' || arg === '0' || arg === 'false' || arg === 'disable') {
-              setShowDebugLogs(false);
-              result = 'Debug logs DISABLED.';
-            } else if (arg === 'clear') {
-              debugLogger.clear();
-              setDebugLogs([]);
-              result = 'Debug logs cleared.';
-            } else {
-              result = 'Error: Usage: debug [on|off|clear]. Use without arguments to check status.';
-            }
-          }
           break;
         default:
           result = `Unknown command: ${cmd}. Type 'help' for available commands.`;
@@ -213,37 +177,6 @@ export default function Console({ isOpen, onClose, manager, godMode, setGodMode,
           <span className="text-xs font-mono text-gray-300 font-semibold">
             Console
           </span>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                const newState = !showDebugLogs;
-                setShowDebugLogs(newState);
-                if (newState) {
-                  setDebugLogs(debugLogger.getLogs());
-                }
-              }}
-              className={`text-xs px-2 py-1 rounded font-mono transition-colors ${
-                showDebugLogs
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
-              }`}
-              title={showDebugLogs ? 'Hide debug logs' : 'Show debug logs'}
-            >
-              Debug {showDebugLogs ? 'ON' : 'OFF'}
-            </button>
-            {showDebugLogs && debugLogs.length > 0 && (
-              <button
-                onClick={() => {
-                  debugLogger.clear();
-                  setDebugLogs([]);
-                }}
-                className="text-xs px-2 py-1 rounded font-mono text-gray-400 hover:text-white hover:bg-gray-700"
-                title="Clear debug logs"
-              >
-                Clear
-              </button>
-            )}
-          </div>
         </div>
 
         {/* History */}
@@ -254,42 +187,7 @@ export default function Console({ isOpen, onClose, manager, godMode, setGodMode,
             backgroundColor: 'rgba(0, 0, 0, 0.3)',
           }}
         >
-          {showDebugLogs && debugLogs.length > 0 && (
-            <div className="mb-4 pb-2 border-b border-gray-700">
-              <div className="text-gray-400 text-xs mb-2 font-semibold">DEBUG LOGS ({debugLogs.length}):</div>
-              {debugLogs.slice(-100).map((log, idx) => (
-                <div
-                  key={idx}
-                  className={`mb-1 text-xs ${
-                    log.type === 'gizmo'
-                      ? 'text-yellow-400'
-                      : log.type === 'transform'
-                      ? 'text-cyan-400'
-                      : log.type === 'selection'
-                      ? 'text-purple-400'
-                      : log.type === 'camera'
-                      ? 'text-orange-400'
-                      : log.type === 'editor'
-                      ? 'text-blue-400'
-                      : log.type === 'scene'
-                      ? 'text-green-400'
-                      : log.type === 'history'
-                      ? 'text-pink-400'
-                      : 'text-gray-400'
-                  }`}
-                >
-                  <span className="text-gray-600">[{new Date(log.timestamp).toLocaleTimeString()}]</span>{' '}
-                  <span className="text-gray-500">[{log.type}]</span> {log.message}
-                  {log.data && (
-                    <span className="text-gray-600 ml-2">
-                      {typeof log.data === 'object' ? JSON.stringify(log.data, null, 2) : String(log.data)}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-          {history.length === 0 && (!showDebugLogs || debugLogs.length === 0) ? (
+          {history.length === 0 ? (
             <div className="text-gray-500 italic">
               Type commands to affect game variables. Type 'help' for available commands.
             </div>
@@ -589,7 +487,6 @@ function getHelpText(): string {
   setCompetence <competence> <degreeCount> - Set compétence degree count
   reveal <competence>                      - Reveal a hidden compétence
   godmode [on|off]                         - Toggle God mode (enables editing all CS fields)
-  debug [on|off|clear]                     - Toggle debug logs display (editor debugging)
   help                                     - Show this help
 
 Examples:
@@ -599,7 +496,6 @@ Examples:
   addFreeMarks 50
   setCompetence VISION 5  - Set VISION compétence to 5 degrees
   reveal INVESTIGATION
-  godmode on
-  debug on  - Enable debug logs for editor operations`;
+  godmode on`;
 }
 

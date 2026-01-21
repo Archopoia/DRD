@@ -326,8 +326,7 @@ export class EntityFactory {
     const trigger = new TriggerComponent(entity, triggerProps, this.physicsWorld, this.scriptLoader);
     this.entityManager.addComponent(entity, trigger);
 
-    // Add a visual representation (wireframe box) for editor visualization
-    // This can be toggled visible/invisible in editor
+    // Add a visual representation (wireframe box) for visualization
     const geometry: MeshGeometry = {
       type: 'box',
       width: triggerProps.size?.x || scale.x,

@@ -342,12 +342,12 @@ export class Scene {
   }
 
   /**
-   * Update physics body position/rotation/scale from mesh (for editor)
+   * Update physics body position/rotation/scale from mesh
    */
   updatePhysicsBodyFromMesh(mesh: THREE.Mesh): void {
     const body = this.physicsBodies.get(mesh);
     if (!body) {
-      // No physics body for this mesh - that's fine for editor-created objects
+      // No physics body for this mesh
       Debug.log('Scene', `No physics body found for mesh: ${mesh.name || '(unnamed)'}`, {
         meshName: mesh.name || '(unnamed)',
         meshType: mesh.type,
@@ -391,13 +391,7 @@ export class Scene {
   update(deltaTime: number): void {
     try {
       // Sync dynamic object positions with physics bodies
-      // BUT: Skip objects that are being edited in the editor (marked in userData)
       this.physicsBodies.forEach((body, mesh) => {
-        // Skip if this object is being edited in the editor
-        if (mesh.userData._editorControlled) {
-          return;
-        }
-
         // Only sync dynamic bodies (static bodies don't move)
         if (body.bodyType() === RAPIER.RigidBodyType.Dynamic) {
           const translation = body.translation();

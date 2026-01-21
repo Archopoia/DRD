@@ -12,7 +12,7 @@ export default function Home() {
         <p className="mb-1" style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)' }}>Space to jump | Shift+Space to dodge</p>
         <p className="mb-1" style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)' }}>Right-click to aim/zoom</p>
         <p className="mb-1" style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)' }}>C - Character sheet</p>
-        <p className="mb-1" style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)' }}>Tab - Game Editor</p>
+        <p className="mb-1" style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)' }}>Tab - Console</p>
         <p style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)' }}>Ctrl/Cmd+L - Save logs</p>
       </div>
     </main>

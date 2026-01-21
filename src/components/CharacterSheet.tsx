@@ -392,7 +392,7 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                         {/* Input box above the name */}
                         <DegreeInput
                           value={state.attributes[atb1]}
-                          onChange={(value) => handleAttributeChange(atb1, value)}
+                          onChange={(value: number) => handleAttributeChange(atb1, value)}
                           min={-50}
                           max={50}
                           size="md"
@@ -459,7 +459,7 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                               <div className="font-bold text-text-cream mb-1 flex items-center gap-1">
                                 <DegreeInput
                                   value={resistanceDegreeCount}
-                                  onChange={(value) => {
+                                  onChange={(value: number) => {
                                     if (godMode) {
                                       manager.setResistanceDegreeCount(souf, value);
                                       updateState();
@@ -635,7 +635,7 @@ export default function CharacterSheet({ isOpen, onClose, manager: externalManag
                                                 <div onClick={(e) => e.stopPropagation()}>
                                                   <DegreeInput
                                                     value={compData.degreeCount}
-                                                    onChange={(value) => {
+                                                    onChange={(value: number) => {
                                                       if (godMode) {
                                                         manager.setCompetenceDegree(comp, value);
                                                         updateState();
