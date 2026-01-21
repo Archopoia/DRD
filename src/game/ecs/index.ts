@@ -8,6 +8,7 @@ export { TransformComponent } from './components/TransformComponent';
 export { MeshRendererComponent, type MeshType, type MeshGeometry } from './components/MeshRendererComponent';
 export { PhysicsComponent, type PhysicsBodyType, type PhysicsProperties } from './components/PhysicsComponent';
 export { LightComponent, type LightType, type LightProperties } from './components/LightComponent';
+export { TriggerComponent, type TriggerEventType, type TriggerAction, type TriggerProperties } from './components/TriggerComponent';
 
 
 

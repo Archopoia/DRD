@@ -589,7 +589,6 @@ export default function GameEditor({
             )}
             {activeTab === 'assets' && (
               <Assets 
-                manager={manager}
                 prefabManager={engine?.getPrefabManager() || null}
                 entityManager={entityManager}
                 entityFactory={engine?.getEntityFactory() || null}

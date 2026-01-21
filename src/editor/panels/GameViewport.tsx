@@ -41,6 +41,13 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
   const orbitAngleRef = useRef({ horizontal: Math.PI / 4, vertical: Math.PI / 3 });
   const orbitTargetRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
   
+  // Grid state
+  const gridRef = useRef<THREE.GridHelper | null>(null);
+  const [gridSize, setGridSize] = useState(10); // Grid size (number of divisions)
+  const [gridScale, setGridScale] = useState(1.0); // Grid scale (spacing)
+  const [snapEnabled, setSnapEnabled] = useState(true); // Snap to grid enabled
+  const [snapSize, setSnapSize] = useState(0.5); // Snap size (same as grid spacing)
+  
   // Gizmo state
   const gizmoRef = useRef<TransformGizmo | null>(null);
   const [isDraggingGizmo, setIsDraggingGizmo] = useState(false);
@@ -58,6 +65,21 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
     scale: THREE.Vector3;
   }>>(new Map());
 
+  // Snap to grid function
+  const snapToGrid = useCallback((value: number, snapSize: number): number => {
+    if (!snapEnabled) return value;
+    return Math.round(value / snapSize) * snapSize;
+  }, [snapEnabled]);
+
+  // Snap vector to grid
+  const snapVectorToGrid = useCallback((vec: THREE.Vector3, snapSize: number): THREE.Vector3 => {
+    return new THREE.Vector3(
+      snapToGrid(vec.x, snapSize),
+      snapToGrid(vec.y, snapSize),
+      snapToGrid(vec.z, snapSize)
+    );
+  }, [snapEnabled, snapSize]);
+
   // Update camera position based on orbit controls
   const updateCameraPosition = useCallback(() => {
     if (!editorCameraRef.current) return;
@@ -74,6 +96,25 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
     camera.position.set(x, y, z);
     camera.lookAt(target);
   }, []);
+
+  // Initialize grid
+  useEffect(() => {
+    if (!scene) return;
+
+    // Create grid helper
+    const grid = new THREE.GridHelper(gridSize * gridScale, gridSize, 0x444444, 0x222222);
+    grid.position.y = 0;
+    scene.add(grid);
+    gridRef.current = grid;
+
+    return () => {
+      if (grid && scene) {
+        scene.remove(grid);
+        grid.dispose();
+      }
+      gridRef.current = null;
+    };
+  }, [scene, gridSize, gridScale]);
 
   // Initialize gizmo
   useEffect(() => {
@@ -501,7 +542,13 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
         selectedObjects.forEach(obj => {
           const objStartTransform = dragStartTransformsRef.current.get(obj);
           if (objStartTransform) {
-            obj.position.copy(objStartTransform.position).add(movement);
+            const newPosition = objStartTransform.position.clone().add(movement);
+            // Apply snap to grid if enabled
+            let finalPosition = newPosition;
+            if (snapEnabled) {
+              finalPosition = snapVectorToGrid(newPosition, snapSize);
+            }
+            obj.position.copy(finalPosition);
             obj.updateMatrix();
             obj.updateMatrixWorld(true);
             updatePhysicsBodyIfExists(obj);
@@ -516,6 +563,13 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
             movement: { x: movement.x, y: movement.y, z: movement.z },
             startPosition: startTransform.position,
             newPosition: startTransform.position.clone().add(movement),
+          });
+        }
+
+        // Update object change callback
+        if (onObjectChange) {
+          selectedObjects.forEach(obj => {
+            onObjectChange(obj);
           });
         }
 
@@ -863,6 +917,42 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
       onContextMenu={(e) => e.preventDefault()}
       style={{ cursor: isRotating ? 'grabbing' : isPanning ? 'grabbing' : 'default' }}
     >
+      {/* Grid Controls - Floating panel (top right) */}
+      <div 
+        className="absolute top-2 right-2 bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-lg p-2 z-20 shadow-xl"
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-2 mb-1">
+          <label className="text-xs text-gray-300 font-mono">Grid</label>
+          <input
+            type="checkbox"
+            checked={snapEnabled}
+            onChange={(e) => setSnapEnabled(e.target.checked)}
+            className="w-3 h-3"
+          />
+        </div>
+        {snapEnabled && (
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-gray-400 font-mono">Size:</label>
+            <input
+              type="number"
+              value={snapSize}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                if (!isNaN(val) && val > 0) {
+                  setSnapSize(val);
+                }
+              }}
+              step="0.1"
+              min="0.1"
+              max="5"
+              className="w-12 px-1 py-0.5 bg-gray-700 border border-gray-600 rounded text-white text-xs font-mono"
+            />
+          </div>
+        )}
+      </div>
+
       {/* Transform Tools - Floating vertical panel (left side) */}
       {selectedObject && onTransformModeChange && (
         <div 
@@ -939,8 +1029,11 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
         </div>
       )}
 
-      {/* Viewport overlay info - Compact version */}
-      <div className="absolute top-2 right-2 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded px-2 py-1 text-xs font-mono text-gray-300 pointer-events-none">
+      {/* Viewport overlay info - Command bar at bottom */}
+      <div 
+        className="absolute bottom-2 left-2 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded px-2 py-1 text-xs font-mono text-gray-300 pointer-events-none z-10"
+        style={{ position: 'absolute', bottom: '0.5rem', left: '0.5rem' }}
+      >
         {!scene ? 'No scene' : 
          isDraggingGizmo ? `Dragging ${draggingAxis?.toUpperCase()}` :
          isRotating ? 'Orbiting' :
@@ -949,7 +1042,7 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
       </div>
       
       {selectedObjects.size > 0 && (
-        <div className="absolute bottom-2 left-2 bg-blue-900/80 border border-blue-700 rounded px-2 py-1 text-xs font-mono text-white pointer-events-none">
+        <div className="absolute bottom-2 right-2 bg-blue-900/80 border border-blue-700 rounded px-2 py-1 text-xs font-mono text-white pointer-events-none">
           {selectedObjects.size === 1 
             ? `Selected: ${Array.from(selectedObjects)[0].name || Array.from(selectedObjects)[0].type}`
             : `${selectedObjects.size} objects selected`}
