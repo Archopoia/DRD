@@ -1,0 +1,10 @@
+^D:\TOYS\WEBSITE\DRD-WEBGAME\ARENA-FRAMEWORK\BUILD\CMAKEFILES\92B4FD3035580C40DDA15347E4C79D56\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/Toys/WEBSITE/DRD-Webgame/arena-framework -BD:/Toys/WEBSITE/DRD-Webgame/arena-framework/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/ArenaFramework.slnx
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

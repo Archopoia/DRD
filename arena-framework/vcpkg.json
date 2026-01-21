@@ -1,0 +1,9 @@
+{
+  "name": "arena-framework",
+  "version": "0.1.0",
+  "description": "Minimal TES Arena-style C++ framework",
+  "dependencies": [
+    "sdl2",
+    "stb"
+  ]
+}

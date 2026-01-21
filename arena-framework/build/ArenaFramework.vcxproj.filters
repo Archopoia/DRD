@@ -1,0 +1,103 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\core\Window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\core\Input.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\core\Time.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\utils\Log.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\math\Mat4.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\assets\AssetLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\Renderer2D.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\Sprite.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\Font.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\RaycastCamera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\Raycaster.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\game\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\game\world\GridMap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\game\world\Chunk.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\game\world\MapGenerator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\game\world\Collision.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\game\world\Door.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\game\actors\Actor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\game\actors\Player.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\game\items\Item.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\game\simulation\Combat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\UIRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\game\ui\Inventory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\game\ui\HUD.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\game\ui\Dialogue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\game\ui\Menu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\game\data\GameData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\game\systems\SaveSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\game\systems\QuestSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\utils\DebugOverlay.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{5840E17D-411E-351D-8964-8341C1C6D35A}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

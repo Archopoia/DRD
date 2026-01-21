@@ -1,237 +1,254 @@
-# Cursor Rules for Daggerfall-like RPG Project
+# Cursor Rules for TES Arena-Style C++ Framework
 
 ## Primary Goal
 
-Build a retro, Daggerfall-like first-person RPG fully in the browser, optimized for AI-assisted development and rapid iteration.
+Build a minimal TES Arena-style C++ framework that compiles to both native desktop and WebAssembly, following vibecoding principles: build only what you need, start with the game, let it shape the framework.
 
-## Core Principles: AI-Optimized Development
-When requiring to fix an issue, always check the LATEST logs in /logs.
+## Core Principles: Vibecoding & AI-Optimized Development
 
-### 1. Language: TypeScript
+### Vibecoding Philosophy
+1. **Build only what you need**: Don't add framework features until the game requires them
+2. **Start with the game**: Write game code first, extract framework code when patterns emerge
+3. **Let the game shape the framework**: Framework grows organically from game needs
+4. **No premature optimization**: Keep code simple until performance becomes an issue
+5. **WASM-first mindset**: Code should work in both native and WASM without modification
+
+### 1. Language: C++17
 **Rule:**
-- All game code should be written in TypeScript with strict type checking
-- Avoid `any` types - use explicit types or `unknown` with proper type guards
-- Prefer interfaces and type unions over complex inheritance
+- Use C++17 standard (CMake requirement)
+- Prefer structs + functions over classes where possible
+- Use `#ifdef __EMSCRIPTEN__` for WASM-specific code paths
+- No exceptions in framework code (use error codes or `std::optional`)
+- Keep everything header-only where possible (except platform code)
 
 **Why:**
-- Prevents common math/type mistakes common in 3D games
-- Provides strong autocomplete and API safety for AI
-- Allows AI to refactor and extend code with fewer errors
-- Scales cleanly as the game grows (ECS, world gen, physics, etc.)
-- AI can better understand and modify type-safe code
+- C++17 provides modern features without complexity
+- Structs + functions are simpler and more AI-friendly
+- Header-only code reduces compilation complexity
+- No exceptions ensures WASM compatibility
+- AI can easily understand and modify simple C++ patterns
 
-### 2. Rendering: Three.js (WebGL)
+### 2. Rendering: Raycaster (OpenGL ES 2.0)
 **Rule:**
-- Use Three.js as the rendering engine, with custom shaders for retro aesthetics
-- Keep shader code well-commented and modular
-- Use TypeScript types for Three.js objects
+- Use classic Wolf3D-style raycaster algorithm
+- OpenGL ES 2.0 compatible (for WASM WebGL)
+- Render one vertical column per screen pixel
+- Use DDA (Digital Differential Analyzer) for grid traversal
+- Support wall textures, floor/ceiling rendering, sprite billboarding
 
 **Why:**
-- Lightweight and pure code → very AI-friendly
-- Perfect control over shaders to reproduce Daggerfall look
-- Excellent TypeScript typings and documentation
-- Easy handling of: billboards, procedural levels, chunk loading
-- Works perfectly inside browser + React frameworks
-- AI can easily reason about Three.js patterns
+- Perfect for TES Arena-style retro aesthetic
+- Simple algorithm that AI can understand and modify
+- Works identically in native and WASM (WebGL)
+- Low performance requirements
+- Classic, well-documented approach
 
-### 3. UI Framework: React + Next.js
+### 3. Build System: CMake + vcpkg
 **Rule:**
-- Use Next.js + React for all non-renderer UI:
-  - Menus
-  - Inventory
-  - Dialogues
-  - Character sheets
-  - Settings
-- Use `'use client'` directive for client components
-- Keep components small and focused
+- Use CMake 3.20+ for build configuration
+- Use vcpkg for dependency management (SDL2, stb_image)
+- Support both native and WASM builds via CMake options
+- Use Emscripten toolchain for WASM compilation
+- Keep build configuration simple and clear
 
 **Why:**
-- Consistent, modern workflow
-- Fast iteration (hot reload)
-- Avoids clunky in-engine UI systems
-- Easy styling and component organization
-- Integrates perfectly into web deployment
-- React patterns are well-understood by AI
+- Standard C++ build system
+- vcpkg simplifies dependency management
+- CMake supports both native and WASM targets
+- AI can easily understand CMake structure
+- Easy to add new dependencies
 
-### 4. Styling: Tailwind CSS
+### 4. Platform Abstraction: SDL2
 **Rule:**
-- Use Tailwind CSS for styling all React UI components
-- Prefer Tailwind utility classes over custom CSS
-- Extend Tailwind config with project-specific colors/utilities
-- Use inline Tailwind classes - avoid separate CSS files
+- Use SDL2 for window creation, input, and OpenGL context
+- Abstract platform differences (native vs WASM) in framework/core
+- Use Emscripten's SDL2 port for WASM builds
+- Keep platform-specific code isolated in `src/platform/`
 
 **Why:**
-- Super fast interface design
-- Keeps UI clean, responsive, consistent
-- Avoids writing large CSS files
-- AI works extremely well with utility classes
-- Better autocomplete and IntelliSense
-- Easier for AI to read and modify
+- SDL2 works on both desktop and WASM (via Emscripten)
+- Simple, well-documented API
+- Handles window, input, and OpenGL setup
+- AI can easily work with SDL2 patterns
 
-### 5. Physics: Cannon.js or Rapier
+### 5. Asset Loading: Direct File I/O
 **Rule:**
-- Start with Cannon.js (JS-based)
-- Optionally upgrade to Rapier (WASM) if performance needed
-- Keep physics logic isolated in separate modules
+- Use stb_image for sprite/texture loading
+- Load assets directly from files (no complex pipeline)
+- Native: Direct file I/O
+- WASM: Use Emscripten's file system API or fetch API
+- Keep asset formats simple (BMP/PNG/TGA, WAV)
 
 **Why:**
-- Simple and readable → AI-friendly
-- Enough functionality for retro FPS physics
-- Integrates cleanly with Three.js
-- Collision, simple rigid bodies, player capsule support
-- AI can easily understand and modify physics code
+- No complex asset pipeline to maintain
+- Simple file formats are easy to work with
+- Direct loading keeps code straightforward
+- AI can easily understand file I/O patterns
 
-### 6. Data Storage: LocalStorage/IndexedDB
+### 6. Data Storage: Binary/JSON
 **Rule:**
-- Use localStorage for simple saves
-- Use IndexedDB for large save files or world streaming
-- Keep storage logic abstracted in utility modules
+- Use simple binary formats for save games
+- Use JSON for game data (enemies, items, spells) if needed
+- Native: Direct file I/O
+- WASM: Use IndexedDB via Emscripten's IDBFS
+- Keep serialization simple (no complex frameworks)
 
 **Why:**
-- Zero backend needed
-- Instant builds and deploys
-- Supports procedural chunk saves
-- Can add Supabase/Firebase later without rewriting architecture
-- AI can easily work with browser storage APIs
+- Simple formats are easier to debug
+- Binary saves are fast and compact
+- JSON is human-readable for game data
+- AI can easily work with simple serialization
 
 ### 7. Project Architecture
 **Rule:**
-Organize code into clear modules following this structure:
+Organize code following this structure:
 
 ```
-/src
-  /app              # Next.js App Router pages
-  /components       # React UI components
-  /game
-    /core           # Game engine, loop, initialization
-    /renderer       # Three.js rendering and shaders
-    /camera         # Camera controls
-    /world          # Scene setup, chunks, terrain
-    /character      # Character system and data
-    /physics        # Physics integration (future)
-    /utils          # Utilities and helpers
-  /lib              # Constants and shared code
+/arena-framework/
+  /src/
+    /framework/          # Core framework (minimal, engine-like)
+      /core/            # Window, input, time, bootstrap
+      /renderer/        # Raycaster, 2D blitter, sprite batcher
+      /assets/          # Asset loading (binary, sprites, sounds)
+      /math/            # Vector, matrix, math utilities
+      /utils/           # Logging, file I/O, helpers
+    /game/              # Your game code (this is where you build)
+      /world/           # GridMap, chunk streaming, generation
+      /actors/          # NPCs, enemies, player
+      /items/           # Items, inventory
+      /ui/              # UI rendering (2D overlay)
+      /simulation/      # Gameplay systems (combat, dialogue, etc.)
+    /platform/          # Platform-specific code
+      /native/          # SDL2/GLFW for desktop
+      /wasm/            # Emscripten bindings for web
+  /assets/              # Game assets (sprites, sounds, data)
+  /tools/               # Optional debug tools
+  /build/               # CMake build output
+  CMakeLists.txt        # Main CMake config
+  vcpkg.json            # Dependency management
 ```
 
 **Why:**
-- Keeps game logic isolated from UI
-- Maximizes clarity for both human and AI collaborators
-- Clear separation of concerns
-- Easy generation of new systems
-- AI can easily navigate and understand the codebase
+- Clear separation between framework and game code
+- Framework stays minimal (only what game needs)
+- Platform code isolated for easy maintenance
+- AI can easily navigate and understand structure
+- Follows vibecoding: game code drives framework
 
 ### 8. Aesthetic Direction
 **Rule:**
-The game should intentionally aim for a retro, low-fidelity Daggerfall look, using:
+The game should intentionally aim for a retro, TES Arena-style look:
 
-- Nearest-neighbor textures
-- Billboard sprites for enemies
+- Raycaster rendering (2.5D perspective)
+- Pixelated textures (nearest-neighbor filtering)
+- Billboard sprites for NPCs and items
 - Low FOV / retro camera constraints
-- Simple lighting (flat, vertex, or custom fragment shaders)
-- Medieval/Final Fantasy Crystal Chronicles UI styling
+- Simple lighting (flat shading, no complex lighting)
+- Medieval/fantasy UI styling
 
 **Why:**
-- Easier to build
-- Fits browser performance
-- Perfect for custom shaders
+- Easier to build (simple rendering algorithm)
+- Fits browser performance (WASM)
+- Perfect for raycaster approach
 - Reduces content workload
-- Matches nostalgic style (pixelated 3D + sprites)
-- AI can easily understand and modify retro-style code
+- Matches nostalgic style
+- AI can easily understand retro-style code
 
-### 9. Deployment: Browser-First
+### 9. Deployment: Native + WASM
 **Rule:**
-- The entire game must run natively in the browser — no downloads, no installs
-- Keep bundle size reasonable (<5–10 MB)
-- Use code splitting for large features
+- Framework must compile to both native desktop and WebAssembly
+- Native: Standard executable (Windows/Linux/macOS)
+- WASM: Emscripten-compiled JavaScript + WASM bundle
+- Keep WASM bundle size reasonable (<5-10 MB)
+- Use Emscripten's file preloading for assets
 
 **Why:**
-- Instant playability
+- Native for development and testing
+- WASM for browser deployment
+- Same codebase for both targets
+- Instant playability in browser
 - Shareable via simple link
-- No engine runtimes
-- Lightweight builds
-- AI can manage the whole stack
-- Easy deployment to Vercel/Netlify
 
 ## Code Quality Standards
 
-### TypeScript Best Practices
-1. **Strict Typing**: Use strict mode, avoid `any` types
-2. **Type Definitions**: Create explicit interfaces and types for all data structures
-3. **Type Guards**: Use type guards for runtime type checking
-4. **Enums**: Use enums for game constants (Attributes, Aptitudes, Actions, etc.)
-5. **Helper Functions**: Create typed helper functions for common operations
+### C++ Best Practices
+1. **C++17 Standard**: Use C++17 features (no newer standards initially)
+2. **No Exceptions**: Use error codes or `std::optional` for error handling
+3. **Header-Only**: Prefer header-only implementations where possible
+4. **Simple Types**: Use structs + functions over classes when possible
+5. **RAII**: Use smart pointers and RAII for resource management
+6. **Const Correctness**: Use `const` where appropriate
+7. **Clear Naming**: Use descriptive names (e.g., `GridMap`, not `Map`)
 
 ### File Organization
 1. **One File, One Purpose**: Each file should have a single, clear responsibility
-2. **Named Exports**: Prefer named exports over default exports for better AI clarity
-3. **Barrel Exports**: Use index files sparingly, prefer explicit imports
-4. **Clear Naming**: Use descriptive names that explain purpose (e.g., `CharacterSheetManager`, not `Manager`)
-
-### Component Patterns
-1. **Functional Components**: Always use functional React components
-2. **Hooks**: Use hooks for state and side effects
-3. **Props Interfaces**: Always define TypeScript interfaces for component props
-4. **Small Components**: Break large components into smaller, focused ones
-5. **Custom Hooks**: Extract reusable logic into custom hooks
+2. **Header/Implementation Split**: Use `.h` and `.cpp` files (except header-only)
+3. **Include Guards**: Use `#pragma once` or include guards
+4. **Forward Declarations**: Use forward declarations to reduce includes
+5. **Clear Naming**: Use descriptive names that explain purpose
 
 ### Error Handling
-1. **Try-Catch**: Wrap critical operations in try-catch blocks
-2. **User-Friendly Messages**: Provide clear, actionable error messages
-3. **Logging**: Use the Debug utility for all logging
-4. **Validation**: Validate inputs and state before operations
-5. **Graceful Degradation**: Handle missing features gracefully
+1. **Error Codes**: Return error codes or use `std::optional` for failures
+2. **Logging**: Use the Log utility for all logging (INFO, WARN, ERROR)
+3. **Validation**: Validate inputs before operations
+4. **Graceful Degradation**: Handle missing features gracefully
+5. **No Exceptions**: Framework code should not throw exceptions
+
+### Memory Management
+1. **Smart Pointers**: Prefer `std::unique_ptr` and `std::shared_ptr`
+2. **RAII**: Use RAII for all resource management
+3. **No Raw New/Delete**: Avoid raw `new`/`delete` in framework code
+4. **Stack Allocation**: Prefer stack allocation for small objects
+5. **Clear Ownership**: Make ownership clear in function signatures
 
 ## Testing and Debugging Requirements
 
 ### Always Test Before Completing
-1. **ALWAYS run the game** after making changes to verify it works
-2. **ALWAYS check for linting errors** using `read_lints` before completing
-3. **ALWAYS add error handling** to critical paths (initialization, render loops, event handlers)
-4. **ALWAYS add debug logging** for important operations using the `Debug` utility
+1. **ALWAYS compile** both native and WASM builds after making changes
+2. **ALWAYS test in browser** (for WASM) and native executable
+3. **ALWAYS add error handling** to critical paths (initialization, render loops)
+4. **ALWAYS add debug logging** for important operations using the Log utility
+5. **ALWAYS check for memory leaks** (use Valgrind or similar for native)
 
 ### Debug Utility Usage
-- Use `Debug.log()` for informational messages during development
-- Use `Debug.error()` for error conditions
-- Use `Debug.warn()` for warnings (performance issues, invalid inputs, etc.)
-- Use `Debug.startMeasure()` and `Debug.endMeasure()` for performance monitoring
-- All debug output is automatically disabled in production builds
+- Use `Log::info()` for informational messages during development
+- Use `Log::error()` for error conditions
+- Use `Log::warn()` for warnings (performance issues, invalid inputs, etc.)
+- All debug output should be controllable via compile-time flags
+- WASM: Use `emscripten_log()` or `printf()` (redirects to console.log)
 
 ### Testing Checklist
 Before marking any task as complete:
-- [ ] Code compiles without TypeScript errors
-- [ ] No linting errors (`read_lints` shows no issues)
-- [ ] Game initializes without errors (check browser console)
-- [ ] Game renders correctly (scene visible)
+- [ ] Code compiles without errors (both native and WASM)
+- [ ] No compiler warnings (or warnings are intentional and documented)
+- [ ] Game initializes without errors (check console/logs)
+- [ ] Game renders correctly (raycaster visible)
 - [ ] Controls work (WASD movement, mouse look)
-- [ ] No console errors during gameplay
-- [ ] Performance is acceptable (FPS counter shows reasonable values)
-- [ ] Window resize works correctly
-- [ ] Cleanup works (no memory leaks on unmount)
+- [ ] No crashes during gameplay
+- [ ] Performance is acceptable (60 FPS target)
+- [ ] Window resize works correctly (native)
+- [ ] Memory usage is reasonable (no leaks)
 
 ### Performance Monitoring
-- FPS counter is displayed in development mode
-- Performance warnings logged for operations taking >16ms
-- Large delta time warnings logged for frame skips
-- Average performance metrics tracked for key operations
+- FPS counter in debug overlay
+- Frame time tracking
+- Memory usage display (debug mode)
+- Chunk loading/unloading metrics
+- Raycaster performance profiling
 
-### Browser Compatibility
-- Check WebGL support before initializing renderer
-- Handle pointer lock API failures gracefully
-- Validate window/document objects exist (SSR safety)
-- Use feature detection, not browser sniffing
+### Platform Compatibility
+- Test on Windows, Linux, macOS (native)
+- Test in Chrome, Firefox, Safari (WASM)
+- Handle WebGL context loss gracefully (WASM)
+- Validate SDL2 input works on all platforms
+- Use feature detection, not platform sniffing
 
-### React Component Guidelines
-- Use `'use client'` directive for client components
-- Handle loading and error states
-- Clean up resources in useEffect cleanup
-- Use refs for DOM elements and game instances
-- Display user-friendly error messages in UI
-
-### Game Loop Guidelines
-- Always cap delta time to prevent large jumps
-- Log warnings for unusual delta times
-- Handle errors in update/render without stopping loop
-- Track FPS and warn on low performance
+### Build System Guidelines
+- CMake configuration should be clear and well-commented
+- vcpkg dependencies should be minimal
+- Build should work out-of-the-box after cloning
+- WASM build should produce working HTML/JS/WASM bundle
+- Include build instructions in README
 
 ## AI-Assisted Development Best Practices
 
@@ -239,105 +256,138 @@ Before marking any task as complete:
 1. **Clear Intent**: Write code that clearly expresses intent - AI understands well-commented, self-documenting code
 2. **Consistent Patterns**: Follow established patterns in the codebase
 3. **Modular Design**: Break complex features into smaller, composable pieces
-4. **Type Safety**: Leverage TypeScript for AI to understand data structures
+4. **Simple Types**: Use simple structs and functions - avoid complex inheritance
 5. **Inline Comments**: Add comments explaining "why" not just "what"
+6. **Header Documentation**: Document public APIs in headers
 
 ### Prompting Strategy
 When asking AI to implement features:
 - Reference specific files and line numbers
 - Show examples of similar code in the codebase
 - Break complex features into smaller tasks
-- Ask for type-safe implementations
+- Ask for both header and implementation files
 - Request debug logging for new features
-- Specify Tailwind classes for UI components
-- Reference the TTRPG rules from `systeme_drd/` when implementing game mechanics
+- Specify CMake changes if needed
+- Reference the phased plan when implementing features
 
 ### Code Review for AI
 Before accepting AI-generated code:
 1. Verify it follows project patterns
-2. Check TypeScript types are correct
-3. Ensure Tailwind classes are used (not custom CSS)
+2. Check C++17 compatibility
+3. Ensure WASM compatibility (no exceptions, platform checks)
 4. Verify error handling is present
 5. Check that debug logging is added
-6. Ensure component structure matches project style
+6. Ensure file structure matches project layout
+7. Verify CMake integration if new files added
 
-## Styling Guidelines
+## Development Workflow
 
-### Tailwind CSS
-- **Always use Tailwind utility classes** for styling
-- **Extend Tailwind config** with project-specific colors/tokens
-- **Avoid custom CSS files** - use inline Tailwind classes
-- **Use arbitrary values** when needed (e.g., `bg-[#color]`)
-- **Leverage Tailwind's responsive utilities** for mobile support
+### Phased Development Approach
+Follow the plan phases in order:
+1. **Phase 1**: Bootstrap skeleton (window, input, time, math)
+2. **Phase 2**: 2D renderer (sprite blitting, text)
+3. **Phase 3**: Raycaster (DDA, wall rendering, textures)
+4. **Phase 4**: Map system (chunks, generation, collision)
+5. **Phase 5**: Basic gameplay (actors, player, items, combat)
+6. **Phase 6**: UI layer (inventory, HUD, dialogue, menus)
+7. **Phase 7**: Content pipeline (data loading, saves, quests)
+8. **Phase 8**: Tools & polish (debug overlay, hot reload)
 
-### Color Palette
-- Use theme colors from `tailwind.config.js`:
-  - `parchment-*` for backgrounds
-  - `text-*` for text colors
-  - `red-theme`, `yellow-theme`, etc. for accent colors
-  - `border-*` for borders
-  - `gold-glow` for highlights
+### Development Principles
+1. **Start with Phase 1**: Get window + input working first
+2. **Test in browser early**: Compile to WASM early to catch issues
+3. **Build incrementally**: Add one feature at a time
+4. **Let game drive framework**: Only add framework features when game needs them
+5. **Commit often**: Git history helps Cursor understand context
+6. **Use Cursor for implementation**: Write design docs, let Cursor generate code
 
-### Component Styling
-- Keep styling inline with components
-- Use consistent spacing scales (Tailwind's default)
-- Apply hover/focus states with Tailwind variants
-- Use transitions for smooth interactions
+### Build Commands
+```bash
+# Native build
+mkdir build && cd build
+cmake .. -DCMAKE_TOOLCHAIN_FILE=[vcpkg-root]/scripts/buildsystems/vcpkg.cmake
+cmake --build .
+
+# WASM build
+mkdir build-wasm && cd build-wasm
+emcmake cmake .. -DCMAKE_TOOLCHAIN_FILE=[vcpkg-root]/scripts/buildsystems/vcpkg.cmake -DTARGET_PLATFORM=WASM
+cmake --build .
+```
 
 ## Documentation Standards
 
 ### Code Comments
-- Add JSDoc comments for public functions/classes
-- Explain complex logic and game mechanics
-- Reference TTRPG rules when implementing mechanics
+- Add comments for public functions/classes in headers
+- Explain complex logic (especially raycaster math)
 - Document why choices were made, not just what code does
+- Use Doxygen-style comments for public APIs
+- Comment platform-specific code paths
 
 ### File Headers
 - Include a brief description at the top of complex files
 - Note dependencies and relationships to other files
 - Document any non-obvious patterns or conventions
+- Include author/date for significant files
+
+### README Requirements
+- Build instructions (native and WASM)
+- Dependency installation (vcpkg, Emscripten)
+- Project structure overview
+- Development workflow
+- Known issues and limitations
 
 ## When Adding New Features
 
 ### Development Workflow
-1. **Read TTRPG Rules**: Understand mechanic from `systeme_drd/` if applicable
-2. **Design Data Structure**: Create TypeScript interfaces/enums first
-3. **Implement Logic**: Build managers/calculators with type safety
-4. **Create UI**: Build React components using Tailwind
-5. **Add Debug Logging**: Log important operations
-6. **Test**: Verify functionality and check console
-7. **Check Performance**: Monitor FPS and warn on issues
+1. **Check the plan**: See which phase the feature belongs to
+2. **Design the interface**: Create header file with public API first
+3. **Implement logic**: Build implementation with error handling
+4. **Add to CMake**: Update CMakeLists.txt if new files added
+5. **Add debug logging**: Log important operations
+6. **Test**: Verify functionality in both native and WASM
+7. **Check performance**: Monitor FPS and memory usage
 8. **Document**: Add comments explaining the implementation
 
 ### Feature Checklist
-- [ ] TypeScript types defined
+- [ ] Header file created with clear API
+- [ ] Implementation file created (or header-only)
 - [ ] Error handling added
 - [ ] Debug logging included
-- [ ] UI uses Tailwind classes
-- [ ] Component follows React patterns
+- [ ] WASM compatibility verified (no exceptions, platform checks)
+- [ ] CMake integration updated
 - [ ] Code follows project structure
-- [ ] No linting errors
-- [ ] Tested in browser
+- [ ] No compiler warnings
+- [ ] Tested in both native and WASM
 - [ ] Performance acceptable
 
 ## File Structure Rules
 
-- Keep game logic in `src/game/`
-- Keep React components in `src/components/`
-- Keep utilities in `src/game/utils/`
-- Keep constants in `src/lib/`
-- Use TypeScript for all game code
-- Keep styling in Tailwind classes, not CSS files
+- Keep framework code in `src/framework/`
+- Keep game code in `src/game/`
+- Keep platform code in `src/platform/`
+- Use C++17 for all code
+- Keep headers in `.h` files, implementations in `.cpp` files
 - Organize by feature/domain, not by file type
+- Follow the phased plan structure
 
-## Summary
+## Key Principles Summary
 
-This project prioritizes:
-1. **AI-Assisted Development**: Code should be clear, type-safe, and follow consistent patterns
-2. **TypeScript First**: Strong typing enables better AI understanding and refactoring
-3. **Tailwind CSS**: Utility-first styling that AI can easily read and modify
-4. **Modular Architecture**: Clear separation of concerns for easy navigation
-5. **Browser-First**: Everything runs in the browser for instant deployment
-6. **Retro Aesthetic**: Low-fidelity graphics that are easier to implement and iterate on
+1. **Vibecoding**: Build only what you need, start with the game
+2. **WASM-First**: Code should work in both native and WASM
+3. **Simple C++**: Use structs + functions, avoid complex patterns
+4. **No Exceptions**: Use error codes or `std::optional`
+5. **Header-Only Preferred**: Reduce compilation complexity
+6. **Clear Structure**: Framework vs game code separation
+7. **AI-Friendly**: Write clear, well-commented, simple code
 
-Every code decision should consider: "Is this easy for AI to understand and modify?"
+## Success Criteria
+
+- Framework compiles to both native and WASM
+- Can render a simple raycaster dungeon
+- Player can move and interact with doors
+- Basic UI (inventory, HUD) works
+- Assets load from files
+- Game can save/load state
+- Debug overlay provides useful information
+
+Every code decision should consider: "Is this easy for AI to understand and modify? Does the game actually need this?"

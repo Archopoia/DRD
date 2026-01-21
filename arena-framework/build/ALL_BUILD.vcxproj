@@ -1,0 +1,185 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ResolveNugetPackages>false</ResolveNugetPackages>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{8572EB0C-5992-3E17-9AD3-1BD1CEB53DEA}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>ALL_BUILD</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src;D:\Toys\WEBSITE\DRD-Webgame\arena-framework;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src;D:\Toys\WEBSITE\DRD-Webgame\arena-framework;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src;D:\Toys\WEBSITE\DRD-Webgame\arena-framework;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src;D:\Toys\WEBSITE\DRD-Webgame\arena-framework;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule D:/Toys/WEBSITE/DRD-Webgame/arena-framework/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/Toys/WEBSITE/DRD-Webgame/arena-framework -BD:/Toys/WEBSITE/DRD-Webgame/arena-framework/build --check-stamp-file D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeDependentOption.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\FeatureSummary.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\WindowsPaths.cmake;C:\vcpkg\scripts\buildsystems\vcpkg.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\CMakeFiles\4.2.1\CMakeCXXCompiler.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\CMakeFiles\4.2.1\CMakeRCCompiler.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\CMakeFiles\4.2.1\CMakeSystem.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2Config.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2ConfigVersion.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2Targets-debug.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2Targets-release.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2Targets.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2mainTargets-debug.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2mainTargets-release.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2mainTargets.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\sdlfind.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\vcpkg.json;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule D:/Toys/WEBSITE/DRD-Webgame/arena-framework/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/Toys/WEBSITE/DRD-Webgame/arena-framework -BD:/Toys/WEBSITE/DRD-Webgame/arena-framework/build --check-stamp-file D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeDependentOption.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\FeatureSummary.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\WindowsPaths.cmake;C:\vcpkg\scripts\buildsystems\vcpkg.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\CMakeFiles\4.2.1\CMakeCXXCompiler.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\CMakeFiles\4.2.1\CMakeRCCompiler.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\CMakeFiles\4.2.1\CMakeSystem.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2Config.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2ConfigVersion.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2Targets-debug.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2Targets-release.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2Targets.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2mainTargets-debug.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2mainTargets-release.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2mainTargets.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\sdlfind.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\vcpkg.json;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule D:/Toys/WEBSITE/DRD-Webgame/arena-framework/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/Toys/WEBSITE/DRD-Webgame/arena-framework -BD:/Toys/WEBSITE/DRD-Webgame/arena-framework/build --check-stamp-file D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeDependentOption.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\FeatureSummary.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\WindowsPaths.cmake;C:\vcpkg\scripts\buildsystems\vcpkg.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\CMakeFiles\4.2.1\CMakeCXXCompiler.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\CMakeFiles\4.2.1\CMakeRCCompiler.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\CMakeFiles\4.2.1\CMakeSystem.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2Config.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2ConfigVersion.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2Targets-debug.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2Targets-release.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2Targets.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2mainTargets-debug.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2mainTargets-release.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2mainTargets.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\sdlfind.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\vcpkg.json;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule D:/Toys/WEBSITE/DRD-Webgame/arena-framework/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/Toys/WEBSITE/DRD-Webgame/arena-framework -BD:/Toys/WEBSITE/DRD-Webgame/arena-framework/build --check-stamp-file D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeDependentOption.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\FeatureSummary.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.2\Modules\Platform\WindowsPaths.cmake;C:\vcpkg\scripts\buildsystems\vcpkg.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\CMakeFiles\4.2.1\CMakeCXXCompiler.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\CMakeFiles\4.2.1\CMakeRCCompiler.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\CMakeFiles\4.2.1\CMakeSystem.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2Config.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2ConfigVersion.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2Targets-debug.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2Targets-release.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2Targets.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2mainTargets-debug.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2mainTargets-release.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\SDL2mainTargets.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\vcpkg_installed\x64-windows\share\sdl2\sdlfind.cmake;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\vcpkg.json;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\ZERO_CHECK.vcxproj">
+      <Project>{38EFEDF7-6C81-387F-96EE-4BD927591225}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\ArenaFramework.vcxproj">
+      <Project>{A8898782-08C1-30FD-B58A-283292D3C1E7}</Project>
+      <Name>ArenaFramework</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
