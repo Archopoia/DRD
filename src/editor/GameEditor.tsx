@@ -269,7 +269,7 @@ export default function GameEditor({
   }, [editorCore]);
 
   // Handle adding new objects
-  const handleAddObject = useCallback((type: 'box' | 'sphere' | 'plane' | 'light' | 'group') => {
+  const handleAddObject = useCallback((type: 'box' | 'sphere' | 'plane' | 'light' | 'group' | 'trigger' | 'spawnPoint' | 'npc' | 'item') => {
     editorCore.addObject(type);
     setHierarchyKey(prev => prev + 1);
   }, [editorCore]);
@@ -472,6 +472,74 @@ export default function GameEditor({
                 </svg>
                 <span>Group</span>
               </button>
+              <div className="h-px bg-gray-600 my-1"></div>
+              <button
+                onClick={() => {
+                  handleAddObject('trigger');
+                  setShowAddMenu(false);
+                }}
+                className="w-full text-left text-green-300 hover:text-green-200 hover:bg-gray-600 text-xs px-3 py-1.5 font-mono flex items-center gap-2"
+                title="Add Trigger Zone"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" strokeDasharray="2 2"/>
+                  <circle cx="12" cy="12" r="2"/>
+                </svg>
+                <span>Trigger Zone</span>
+              </button>
+              
+              {/* Separator */}
+              <div className="border-t border-gray-600 my-1"></div>
+              
+              {/* Entity Templates */}
+              <div className="px-2 py-1 text-xs font-mono text-gray-500 uppercase">
+                Entities
+              </div>
+              
+              <button
+                onClick={() => {
+                  handleAddObject('spawnPoint');
+                  setShowAddMenu(false);
+                }}
+                className="w-full text-left text-cyan-300 hover:text-cyan-200 hover:bg-gray-600 text-xs px-3 py-1.5 font-mono flex items-center gap-2"
+                title="Add Spawn Point (Player Start)"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 2v20M2 12h20"/>
+                </svg>
+                <span>Spawn Point</span>
+              </button>
+              
+              <button
+                onClick={() => {
+                  handleAddObject('npc');
+                  setShowAddMenu(false);
+                }}
+                className="w-full text-left text-orange-300 hover:text-orange-200 hover:bg-gray-600 text-xs px-3 py-1.5 font-mono flex items-center gap-2"
+                title="Add NPC (Non-Player Character)"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="8" r="4"/>
+                  <path d="M3 21v-2a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v2"/>
+                </svg>
+                <span>NPC</span>
+              </button>
+              
+              <button
+                onClick={() => {
+                  handleAddObject('item');
+                  setShowAddMenu(false);
+                }}
+                className="w-full text-left text-yellow-300 hover:text-yellow-200 hover:bg-gray-600 text-xs px-3 py-1.5 font-mono flex items-center gap-2"
+                title="Add Item (Pickup)"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <span>Item</span>
+              </button>
             </div>
             )}
           </div>
@@ -593,6 +661,10 @@ export default function GameEditor({
                 entityManager={entityManager}
                 entityFactory={engine?.getEntityFactory() || null}
                 selectedObject={selectedObject}
+                materialLibrary={engine?.getMaterialLibrary?.() || null}
+                scriptLoader={engine?.getScriptLoader?.() || null}
+                renderer={engine?.getRenderer?.() || null}
+                physicsWorld={engine?.getPhysicsWorld?.() || null}
                 onPrefabInstantiated={(entity) => {
                   setHierarchyKey(prev => prev + 1);
                   if (entityManager) {
@@ -708,13 +780,15 @@ export default function GameEditor({
           <div className="flex-1 overflow-hidden min-h-0">
             {rightPanelTab === 'inspector' ? (
               entityManager ? (
-                <InspectorEnhanced 
-                  object={selectedObject}
-                  entityManager={entityManager}
-                  manager={manager}
-                  historyManager={historyManager}
-                  onObjectChange={handleObjectChange}
-                />
+            <InspectorEnhanced
+              object={selectedObject}
+              entityManager={entityManager}
+              manager={manager}
+              historyManager={historyManager}
+              onObjectChange={handleObjectChange}
+              scriptLoader={engine?.getScriptLoader?.() || null}
+              materialLibrary={engine?.getMaterialLibrary?.() || null}
+            />
               ) : (
                 <Inspector 
                   object={selectedObject}

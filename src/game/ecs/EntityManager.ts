@@ -5,6 +5,8 @@ import { TransformComponent } from './components/TransformComponent';
 import { MeshRendererComponent } from './components/MeshRendererComponent';
 import { PhysicsComponent } from './components/PhysicsComponent';
 import { LightComponent } from './components/LightComponent';
+import { TriggerComponent } from './components/TriggerComponent';
+import { MaterialComponent } from './components/MaterialComponent';
 import { RetroRenderer } from '../renderer/RetroRenderer';
 import { PhysicsWorld } from '../physics/PhysicsWorld';
 import { Debug } from '../utils/debug';
@@ -88,6 +90,13 @@ export class EntityManager {
       }
     } else if (component instanceof PhysicsComponent) {
       component.setPhysicsWorld(this.physicsWorld);
+    } else if (component instanceof TriggerComponent) {
+      component.setPhysicsWorld(this.physicsWorld);
+      // Set script loader if available (will be set from Game instance)
+      // This is handled separately via Game.setScriptLoaderForTriggers()
+    } else if (component instanceof MaterialComponent) {
+      // Set material library if available (will be set from Game instance)
+      // This is handled separately via Game.setMaterialLibraryForComponents()
     }
 
     Debug.log('EntityManager', `Added ${componentType} to entity ${entity.name} (${entity.id})`);

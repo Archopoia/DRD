@@ -8,6 +8,8 @@ import { TransformComponent } from '@/game/ecs/components/TransformComponent';
 import { MeshRendererComponent } from '@/game/ecs/components/MeshRendererComponent';
 import { PhysicsComponent } from '@/game/ecs/components/PhysicsComponent';
 import { LightComponent } from '@/game/ecs/components/LightComponent';
+import { TriggerComponent } from '@/game/ecs/components/TriggerComponent';
+import { MaterialComponent } from '@/game/ecs/components/MaterialComponent';
 import { CharacterSheetManager } from '@/game/character/CharacterSheetManager';
 import { HistoryManager } from '../history/HistoryManager';
 import { createTransformObjectAction, createPropertyChangeAction } from '../history/actions/EditorActions';
@@ -18,13 +20,14 @@ interface InspectorEnhancedProps {
   manager?: CharacterSheetManager;
   historyManager?: HistoryManager | null;
   onObjectChange?: (object: THREE.Object3D) => void;
+  scriptLoader?: any; // ScriptLoader instance (optional, for trigger script reloading)
 }
 
 /**
  * Enhanced Inspector Panel - Shows properties of selected object or entity
  * Supports both legacy Three.js objects and new ECS entities
  */
-export default function InspectorEnhanced({ object, entityManager, manager, historyManager, onObjectChange }: InspectorEnhancedProps) {
+export default function InspectorEnhanced({ object, entityManager, manager, historyManager, onObjectChange, scriptLoader, materialLibrary }: InspectorEnhancedProps) {
   const [entity, setEntity] = useState<Entity | null>(null);
   const [isEntity, setIsEntity] = useState(false);
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -65,6 +68,17 @@ export default function InspectorEnhanced({ object, entityManager, manager, hist
   const [lightType, setLightType] = useState<'point' | 'directional' | 'spot' | 'ambient'>('point');
   const [lightIntensity, setLightIntensity] = useState(1.0);
   const [lightColor, setLightColor] = useState(0xffffff);
+  
+  // Trigger component properties
+  const [triggerEventType, setTriggerEventType] = useState<TriggerEventType>('onEnter');
+  const [triggerAction, setTriggerAction] = useState<TriggerAction>('script');
+  const [triggerScriptPath, setTriggerScriptPath] = useState('');
+  const [triggerOneShot, setTriggerOneShot] = useState(false);
+  const [triggerEnabled, setTriggerEnabled] = useState(true);
+  
+  // Material component properties
+  const [materialId, setMaterialId] = useState('');
+  const [availableMaterials, setAvailableMaterials] = useState<Array<{ id: string; name: string }>>([]);
 
   // Store previous values for history tracking
   const previousValuesRef = useRef<{
@@ -124,6 +138,36 @@ export default function InspectorEnhanced({ object, entityManager, manager, hist
         setLightType(light.properties.type);
         setLightIntensity(light.properties.intensity);
         setLightColor(light.properties.color);
+      }
+
+      const trigger = entityManager.getComponent<TriggerComponent>(entity, 'TriggerComponent');
+      if (trigger) {
+        setTriggerEventType(trigger.properties.eventType);
+        setTriggerAction(trigger.properties.action);
+        setTriggerScriptPath(trigger.properties.actionData?.scriptPath || '');
+        setTriggerOneShot(trigger.properties.oneShot || false);
+        setTriggerEnabled(trigger.properties.enabled ?? true);
+      } else {
+        // Reset trigger state if component not found
+        setTriggerEventType('onEnter');
+        setTriggerAction('script');
+        setTriggerScriptPath('');
+        setTriggerOneShot(false);
+        setTriggerEnabled(true);
+      }
+
+      // Material Component
+      const material = entityManager.getComponent<MaterialComponent>(entity, 'MaterialComponent');
+      if (material) {
+        setMaterialId(material.properties.materialId || '');
+      } else {
+        setMaterialId('');
+      }
+
+      // Load available materials from MaterialLibrary
+      if (materialLibrary) {
+        const materials = materialLibrary.getAllMaterialDefinitions();
+        setAvailableMaterials(materials.map(m => ({ id: m.id, name: m.name })));
       }
     } else {
       // Legacy object
@@ -249,6 +293,59 @@ export default function InspectorEnhanced({ object, entityManager, manager, hist
         }
         light.setColor(lightColor);
         light.setIntensity(lightIntensity);
+      }
+
+      const trigger = entityManager.getComponent<TriggerComponent>(entity, 'TriggerComponent');
+      if (trigger) {
+        // Update trigger properties
+        const oldEventType = trigger.properties.eventType;
+        const oldAction = trigger.properties.action;
+        const oldScriptPath = trigger.properties.actionData?.scriptPath || '';
+        const oldOneShot = trigger.properties.oneShot || false;
+        const oldEnabled = trigger.properties.enabled ?? true;
+
+        if (oldEventType !== triggerEventType) {
+          trigger.properties.eventType = triggerEventType;
+        }
+        if (oldAction !== triggerAction) {
+          trigger.properties.action = triggerAction;
+        }
+        if (oldScriptPath !== triggerScriptPath) {
+          if (!trigger.properties.actionData) {
+            trigger.properties.actionData = {};
+          }
+          trigger.properties.actionData.scriptPath = triggerScriptPath;
+          // Reload script if path changed
+          if (triggerScriptPath && scriptLoader) {
+            trigger.setScriptLoader(scriptLoader);
+          }
+        }
+        if (oldOneShot !== triggerOneShot) {
+          trigger.properties.oneShot = triggerOneShot;
+        }
+        if (oldEnabled !== triggerEnabled) {
+          trigger.properties.enabled = triggerEnabled;
+        }
+      }
+
+      // Material Component
+      let material = entityManager.getComponent<MaterialComponent>(entity, 'MaterialComponent');
+      if (materialId) {
+        // Add or update MaterialComponent
+        if (!material) {
+          // Create new MaterialComponent
+          material = new MaterialComponent(entity, { materialId }, materialLibrary);
+          if (materialLibrary) {
+            material.setMaterialLibrary(materialLibrary);
+          }
+          entityManager.addComponent(entity, material);
+        } else if (material.properties.materialId !== materialId) {
+          // Update existing MaterialComponent
+          material.setMaterialId(materialId);
+        }
+      } else if (material) {
+        // Remove MaterialComponent if materialId is empty
+        entityManager.removeComponent(entity, 'MaterialComponent');
       }
 
       // Update previous values
@@ -571,6 +668,137 @@ export default function InspectorEnhanced({ object, entityManager, manager, hist
                 />
               </div>
             )}
+          </div>
+        )}
+
+        {/* Material Component */}
+        {isEntity && entity && entityManager && (
+          <div className="mb-3 border-b border-gray-700 pb-3">
+            <div className="text-xs font-mono font-semibold text-gray-400 mb-2">Material</div>
+            <div className="mb-2">
+              <label className="text-xs text-gray-500 block mb-0.5">Material</label>
+              <select
+                value={materialId}
+                onChange={(e) => {
+                  setMaterialId(e.target.value);
+                  handlePropertyChange();
+                }}
+                className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-xs font-mono focus:outline-none focus:border-blue-500"
+              >
+                <option value="">None (use default material)</option>
+                {availableMaterials.map(mat => (
+                  <option key={mat.id} value={mat.id}>{mat.name}</option>
+                ))}
+              </select>
+            </div>
+            {!entityManager.getComponent<MaterialComponent>(entity, 'MaterialComponent') && materialId && (
+              <div className="text-xs text-gray-500 mt-1">
+                MaterialComponent will be added when you apply changes
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Trigger Component */}
+        {isEntity && entity && entityManager && entityManager.getComponent<TriggerComponent>(entity, 'TriggerComponent') && (
+          <div className="mb-3 border-b border-gray-700 pb-3">
+            <div className="text-xs font-mono font-semibold text-gray-400 mb-2">Trigger</div>
+            <div className="mb-2">
+              <label className="text-xs text-gray-500 block mb-0.5">Event Type</label>
+              <select
+                value={triggerEventType}
+                onChange={(e) => {
+                  setTriggerEventType(e.target.value as TriggerEventType);
+                  handlePropertyChange();
+                }}
+                className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-xs font-mono focus:outline-none focus:border-blue-500"
+              >
+                <option value="onEnter">On Enter</option>
+                <option value="onExit">On Exit</option>
+                <option value="onStay">On Stay</option>
+                <option value="onInteract">On Interact</option>
+              </select>
+            </div>
+            <div className="mb-2">
+              <label className="text-xs text-gray-500 block mb-0.5">Action</label>
+              <select
+                value={triggerAction}
+                onChange={(e) => {
+                  setTriggerAction(e.target.value as TriggerAction);
+                  handlePropertyChange();
+                }}
+                className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-xs font-mono focus:outline-none focus:border-blue-500"
+              >
+                <option value="script">Script</option>
+                <option value="loadLevel">Load Level</option>
+                <option value="spawnEntity">Spawn Entity</option>
+                <option value="enableEntity">Enable Entity</option>
+                <option value="disableEntity">Disable Entity</option>
+              </select>
+            </div>
+            {triggerAction === 'script' && (
+              <div className="mb-2">
+                <label className="text-xs text-gray-500 block mb-0.5">Script Path</label>
+                <div className="flex gap-1">
+                  <input
+                    type="text"
+                    value={triggerScriptPath}
+                    onChange={(e) => {
+                      setTriggerScriptPath(e.target.value);
+                      handlePropertyChange();
+                    }}
+                    placeholder="scripts/triggers/door"
+                    className="flex-1 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-xs font-mono focus:outline-none focus:border-blue-500"
+                  />
+                  {triggerScriptPath && (
+                    <button
+                      onClick={() => {
+                        // In Cursor/VSCode, we can't directly open files, but we can show the path
+                        // The user can manually navigate or we could use a file protocol
+                        const filePath = `src/game/${triggerScriptPath}.ts`;
+                        console.log(`Script file: ${filePath}`);
+                        alert(`Script file location:\n${filePath}\n\nYou can open this file in Cursor/VSCode manually.`);
+                      }}
+                      className="px-2 py-1 bg-blue-700 hover:bg-blue-600 text-white text-xs font-mono rounded"
+                      title="Open script in editor"
+                    >
+                      📁
+                    </button>
+                  )}
+                </div>
+                <div className="text-xs text-gray-600 mt-1">
+                  Path relative to src/game/ (e.g., "scripts/triggers/door")
+                </div>
+              </div>
+            )}
+            <div className="mb-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={triggerOneShot}
+                  onChange={(e) => {
+                    setTriggerOneShot(e.target.checked);
+                    handlePropertyChange();
+                  }}
+                  className="w-4 h-4 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                />
+                <span className="text-xs font-mono text-gray-300">One Shot</span>
+              </label>
+            </div>
+            <div className="mb-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={triggerEnabled}
+                  onChange={(e) => {
+                    setTriggerEnabled(e.target.checked);
+                    handlePropertyChange();
+                  }}
+                  className="w-4 h-4 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                />
+                <span className="text-xs font-mono text-gray-300">Enabled</span>
+              </label>
+            </div>
           </div>
         )}
 

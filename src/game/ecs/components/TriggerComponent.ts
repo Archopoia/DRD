@@ -3,6 +3,8 @@ import { Entity } from '../Entity';
 import * as THREE from 'three';
 import { PhysicsWorld } from '../../physics/PhysicsWorld';
 import RAPIER from '@dimforge/rapier3d';
+import { IScript, ScriptContext } from '@/game/scripts/types';
+import { ScriptLoader } from '@/game/scripts/ScriptLoader';
 
 export type TriggerEventType = 'onEnter' | 'onExit' | 'onStay' | 'onInteract';
 export type TriggerAction = 'script' | 'loadLevel' | 'spawnEntity' | 'enableEntity' | 'disableEntity';
@@ -15,7 +17,8 @@ export interface TriggerProperties {
   eventType: TriggerEventType;
   action: TriggerAction;
   actionData?: {
-    scriptName?: string;
+    scriptPath?: string; // Path to script file (e.g., "scripts/triggers/door")
+    scriptName?: string; // Legacy - deprecated, use scriptPath instead
     levelId?: string;
     entityId?: string;
     [key: string]: any;
@@ -32,10 +35,13 @@ export class TriggerComponent extends Component {
   public properties: TriggerProperties;
   public collider: RAPIER.Collider | null = null;
   private physicsWorld: PhysicsWorld | null = null;
+  private scriptLoader: ScriptLoader | null = null;
+  private loadedScript: IScript | null = null;
   private triggered: boolean = false;
   private entitiesInside: Set<number> = new Set(); // Track entities inside trigger
+  private scriptLoadPromise: Promise<IScript | null> | null = null;
 
-  constructor(entity: Entity, properties: TriggerProperties, physicsWorld?: PhysicsWorld) {
+  constructor(entity: Entity, properties: TriggerProperties, physicsWorld?: PhysicsWorld, scriptLoader?: ScriptLoader) {
     super(entity);
     this.properties = {
       shape: 'box',
@@ -46,8 +52,13 @@ export class TriggerComponent extends Component {
       ...properties,
     };
     this.physicsWorld = physicsWorld || null;
+    this.scriptLoader = scriptLoader || null;
     if (physicsWorld) {
       this.createTriggerCollider();
+    }
+    // Load script if scriptPath is provided
+    if (this.properties.action === 'script' && this.getScriptPath()) {
+      this.loadScript();
     }
   }
 
@@ -126,9 +137,65 @@ export class TriggerComponent extends Component {
   }
 
   /**
+   * Get script path from properties
+   */
+  private getScriptPath(): string | null {
+    return this.properties.actionData?.scriptPath || 
+           (this.properties.actionData?.scriptName ? `scripts/triggers/${this.properties.actionData.scriptName}` : null);
+  }
+
+  /**
+   * Load script from file path
+   */
+  private async loadScript(): Promise<void> {
+    const scriptPath = this.getScriptPath();
+    if (!scriptPath || !this.scriptLoader) {
+      return;
+    }
+
+    // If already loading, wait for that promise
+    if (this.scriptLoadPromise) {
+      await this.scriptLoadPromise;
+      return;
+    }
+
+    this.scriptLoadPromise = this.scriptLoader.loadScript(scriptPath);
+    this.loadedScript = await this.scriptLoadPromise;
+    this.scriptLoadPromise = null;
+
+    if (!this.loadedScript) {
+      console.warn(`[TriggerComponent] Failed to load script: ${scriptPath}`);
+    }
+  }
+
+  /**
+   * Execute script callback with context
+   */
+  private async executeScript(callbackName: 'onEnter' | 'onExit' | 'onStay' | 'onInteract', context: ScriptContext): Promise<void> {
+    // Ensure script is loaded
+    if (!this.loadedScript) {
+      await this.loadScript();
+    }
+
+    if (!this.loadedScript) {
+      console.warn(`[TriggerComponent] Script not loaded, cannot execute ${callbackName}`);
+      return;
+    }
+
+    const callback = this.loadedScript[callbackName];
+    if (callback) {
+      try {
+        callback(context);
+      } catch (error) {
+        console.error(`[TriggerComponent] Error executing script ${callbackName}:`, error);
+      }
+    }
+  }
+
+  /**
    * Handle trigger event
    */
-  handleTrigger(eventType: TriggerEventType, entityId: string): void {
+  async handleTrigger(eventType: TriggerEventType, entityId: string, scriptContext?: Partial<ScriptContext>): Promise<void> {
     if (!this.properties.enabled) return;
     if (this.properties.oneShot && this.triggered) return;
     if (this.properties.eventType !== eventType) return;
@@ -137,10 +204,37 @@ export class TriggerComponent extends Component {
 
     // Execute action based on type
     switch (this.properties.action) {
-      case 'script':
-        // Script execution would go here
-        console.log(`Trigger ${this.entity.id}: Execute script ${this.properties.actionData?.scriptName}`);
+      case 'script': {
+        const scriptPath = this.getScriptPath();
+        if (!scriptPath) {
+          console.warn(`[TriggerComponent] No script path specified for trigger ${this.entity.id}`);
+          break;
+        }
+
+        // Create script context
+        const context: ScriptContext = {
+          entity: this.entity,
+          triggerComponent: this,
+          time: performance.now() / 1000, // Convert to seconds
+          deltaTime: 0.016, // Approximate 60 FPS
+          data: this.properties.actionData,
+          ...scriptContext,
+        };
+
+        // Map trigger event type to script callback
+        const callbackMap: Record<TriggerEventType, 'onEnter' | 'onExit' | 'onStay' | 'onInteract'> = {
+          onEnter: 'onEnter',
+          onExit: 'onExit',
+          onStay: 'onStay',
+          onInteract: 'onInteract',
+        };
+
+        const callbackName = callbackMap[eventType];
+        if (callbackName) {
+          await this.executeScript(callbackName, context);
+        }
         break;
+      }
       case 'loadLevel':
         // Level loading would go here
         console.log(`Trigger ${this.entity.id}: Load level ${this.properties.actionData?.levelId}`);
@@ -157,6 +251,16 @@ export class TriggerComponent extends Component {
         // Disable entity would go here
         console.log(`Trigger ${this.entity.id}: Disable entity ${this.properties.actionData?.entityId}`);
         break;
+    }
+  }
+
+  /**
+   * Set script loader (for initialization after creation)
+   */
+  setScriptLoader(scriptLoader: ScriptLoader): void {
+    this.scriptLoader = scriptLoader;
+    if (this.properties.action === 'script' && this.getScriptPath()) {
+      this.loadScript();
     }
   }
 

@@ -37,7 +37,7 @@ export class EngineAdapter implements IEngine {
     return this.game.getSceneStorage?.() || null;
   }
 
-  addObjectToScene(type: 'box' | 'sphere' | 'plane' | 'light' | 'group'): THREE.Object3D | null {
+  addObjectToScene(type: 'box' | 'sphere' | 'plane' | 'light' | 'group' | 'trigger'): THREE.Object3D | null {
     return this.game.addObjectToScene?.(type) || null;
   }
 
@@ -75,6 +75,22 @@ export class EngineAdapter implements IEngine {
 
   isRunning(): boolean {
     return this.game.isRunning ? this.game.isRunning() : false;
+  }
+
+  getScriptLoader() {
+    return this.game.getScriptLoader?.() || null;
+  }
+
+  getMaterialLibrary() {
+    return this.game.getMaterialLibrary?.() || null;
+  }
+
+  getRenderer() {
+    return this.game.getRenderer?.() || null;
+  }
+
+  getPhysicsWorld() {
+    return this.game.getPhysicsWorld?.() || null;
   }
 }
 

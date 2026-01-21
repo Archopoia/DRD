@@ -131,7 +131,7 @@ export class EditorCore {
   /**
    * Add object to scene
    */
-  addObject(type: 'box' | 'sphere' | 'plane' | 'light' | 'group'): THREE.Object3D | null {
+  addObject(type: 'box' | 'sphere' | 'plane' | 'light' | 'group' | 'trigger' | 'spawnPoint' | 'npc' | 'item'): THREE.Object3D | null {
     if (!this.engine) {
       logEditor('addObject: Engine not available');
       return null;

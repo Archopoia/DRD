@@ -42,7 +42,7 @@ export interface IEngine {
   /**
    * Add an object to the scene
    */
-  addObjectToScene(type: 'box' | 'sphere' | 'plane' | 'light' | 'group'): THREE.Object3D | null;
+  addObjectToScene(type: 'box' | 'sphere' | 'plane' | 'light' | 'group' | 'trigger' | 'spawnPoint' | 'npc' | 'item'): THREE.Object3D | null;
 
   /**
    * Update physics body for a mesh (when editor modifies object transform)
@@ -73,5 +73,25 @@ export interface IEngine {
    * Check if game is running
    */
   isRunning(): boolean;
+
+  /**
+   * Get ScriptLoader (for script operations)
+   */
+  getScriptLoader?: () => any;
+
+  /**
+   * Get MaterialLibrary (for material operations)
+   */
+  getMaterialLibrary?: () => any;
+
+  /**
+   * Get RetroRenderer (for brush creation)
+   */
+  getRenderer?: () => any;
+
+  /**
+   * Get PhysicsWorld (for brush creation)
+   */
+  getPhysicsWorld?: () => any;
 }
 

@@ -1,0 +1,16 @@
+{
+  "id": "metal",
+  "name": "Metal",
+  "diffuse": "#666666",
+  "emissive": "#000000",
+  "roughness": 0.2,
+  "metalness": 1.0,
+  "tiling": {
+    "x": 1,
+    "y": 1
+  },
+  "textures": {
+    "diffuse": "textures/metal_diffuse.png",
+    "normal": "textures/metal_normal.png"
+  }
+}

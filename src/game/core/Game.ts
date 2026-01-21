@@ -17,6 +17,9 @@ import { SceneStorage } from '../ecs/storage/SceneStorage';
 import { SceneSerializer } from '../ecs/serialization/SceneSerializer';
 import { Entity } from '../ecs/Entity';
 import { logScene } from '@/editor/utils/debugLogger';
+import { ScriptLoader } from '../scripts/ScriptLoader';
+import { TriggerComponent } from '../ecs/components/TriggerComponent';
+import { MaterialLibrary } from '../assets/MaterialLibrary';
 
 /**
  * Main game class that orchestrates all game systems
@@ -38,6 +41,8 @@ export class Game {
   private entityFactory: EntityFactory | null = null;
   private prefabManager: PrefabManager | null = null;
   private sceneStorage: SceneStorage | null = null;
+  private scriptLoader: ScriptLoader | null = null;
+  private materialLibrary: MaterialLibrary | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     Debug.startMeasure('Game.constructor');
@@ -102,13 +107,31 @@ export class Game {
       // Initialize ECS system
       Debug.log('Game', 'Initializing ECS system...');
       this.entityManager = new EntityManager(this.scene.scene, this.renderer, this.physicsWorld);
-      this.entityFactory = new EntityFactory(this.entityManager, this.renderer, this.physicsWorld);
+      
+      // Initialize script loader first (needed for entity factory)
+      this.scriptLoader = new ScriptLoader();
+      
+      // Initialize material library
+      Debug.log('Game', 'Initializing material library...');
+      this.materialLibrary = new MaterialLibrary();
+      this.materialLibrary.initialize().catch(err => {
+        Debug.warn('Game', 'Failed to initialize material library', err);
+      });
+      
+      this.entityFactory = new EntityFactory(this.entityManager, this.renderer, this.physicsWorld, this.scriptLoader);
       this.prefabManager = new PrefabManager();
       this.sceneStorage = new SceneStorage();
       // Initialize storage asynchronously
       this.sceneStorage.initialize().catch(err => {
         Debug.warn('Game', 'Failed to initialize scene storage', err);
       });
+      
+      // Script loader already initialized before EntityFactory
+      this.setScriptLoaderForTriggers();
+      
+      // Set MaterialLibrary for all existing MaterialComponents
+      this.setMaterialLibraryForComponents();
+      
       Debug.log('Game', 'ECS system initialized');
 
       // Setup game loop
@@ -288,7 +311,7 @@ export class Game {
   /**
    * Add an object to the scene (for editor) - Now uses ECS EntityFactory
    */
-  addObjectToScene(type: 'box' | 'sphere' | 'plane' | 'light' | 'group'): THREE.Object3D | null {
+  addObjectToScene(type: 'box' | 'sphere' | 'plane' | 'light' | 'group' | 'trigger' | 'spawnPoint' | 'npc' | 'item'): THREE.Object3D | null {
     try {
       if (!this.entityFactory || !this.entityManager) {
         Debug.error('Game', 'ECS system not initialized');
@@ -297,7 +320,7 @@ export class Game {
 
       // Use EntityFactory to create entity
       const entity = this.entityFactory.createByType(type, {
-        withPhysics: type !== 'light' && type !== 'group', // Add physics to meshes
+        withPhysics: type !== 'light' && type !== 'group' && type !== 'trigger', // Add physics to meshes (triggers have their own)
         physicsType: 'dynamic',
       });
 
@@ -362,6 +385,57 @@ export class Game {
    */
   getSceneStorage(): SceneStorage | null {
     return this.sceneStorage;
+  }
+
+  /**
+   * Get ScriptLoader (for script operations)
+   */
+  getScriptLoader(): ScriptLoader | null {
+    return this.scriptLoader;
+  }
+
+  /**
+   * Get MaterialLibrary (for material operations)
+   */
+  getMaterialLibrary(): MaterialLibrary | null {
+    return this.materialLibrary;
+  }
+
+  /**
+   * Get PhysicsWorld (for brush creation and physics operations)
+   */
+  getPhysicsWorld(): PhysicsWorld {
+    return this.physicsWorld;
+  }
+
+  /**
+   * Set script loader for all existing trigger components
+   */
+  private setScriptLoaderForTriggers(): void {
+    if (!this.entityManager || !this.scriptLoader) return;
+
+    const entities = this.entityManager.getAllEntities();
+    entities.forEach(entity => {
+      const triggerComponent = this.entityManager!.getComponent<TriggerComponent>(entity, 'TriggerComponent');
+      if (triggerComponent) {
+        triggerComponent.setScriptLoader(this.scriptLoader!);
+      }
+    });
+  }
+
+  /**
+   * Set MaterialLibrary for all existing MaterialComponents
+   */
+  private setMaterialLibraryForComponents(): void {
+    if (!this.materialLibrary || !this.entityManager) return;
+
+    const entities = this.entityManager.getAllEntities();
+    entities.forEach(entity => {
+      const materialComponent = this.entityManager!.getComponent<any>(entity, 'MaterialComponent');
+      if (materialComponent && materialComponent.setMaterialLibrary) {
+        materialComponent.setMaterialLibrary(this.materialLibrary!);
+      }
+    });
   }
 
   /**
@@ -490,6 +564,12 @@ export class Game {
         entityCount: serialized.entities.length,
       });
       SceneSerializer.deserialize(this.entityManager, serialized, this.renderer, this.physicsWorld);
+      
+      // Set script loader for all triggers after deserialization
+      this.setScriptLoaderForTriggers();
+      
+      // Set material library for all material components after deserialization
+      this.setMaterialLibraryForComponents();
       
       const afterLoadEntityCount = this.entityManager.getAllEntities().length;
       const afterLoadSceneChildren = this.scene.scene.children.length;

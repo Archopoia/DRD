@@ -29,7 +29,7 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const editorCameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const editorCameraRef = useRef<THREE.PerspectiveCamera | THREE.OrthographicCamera | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const raycasterRef = useRef<THREE.Raycaster>(new THREE.Raycaster());
   const mouseRef = useRef<THREE.Vector2>(new THREE.Vector2());
@@ -40,6 +40,11 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
   const orbitDistanceRef = useRef(10);
   const orbitAngleRef = useRef({ horizontal: Math.PI / 4, vertical: Math.PI / 3 });
   const orbitTargetRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
+  
+  // View mode state (perspective, top, front, side)
+  type ViewMode = 'perspective' | 'top' | 'front' | 'side';
+  const [viewMode, setViewMode] = useState<ViewMode>('perspective');
+  const orthoSizeRef = useRef(20); // Orthographic camera size
   
   // Grid state
   const gridRef = useRef<THREE.GridHelper | null>(null);
@@ -80,9 +85,9 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
     );
   }, [snapEnabled, snapSize]);
 
-  // Update camera position based on orbit controls
+  // Update camera position based on orbit controls (perspective view)
   const updateCameraPosition = useCallback(() => {
-    if (!editorCameraRef.current) return;
+    if (!editorCameraRef.current || !(editorCameraRef.current instanceof THREE.PerspectiveCamera)) return;
 
     const camera = editorCameraRef.current;
     const distance = orbitDistanceRef.current;
@@ -95,6 +100,47 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
 
     camera.position.set(x, y, z);
     camera.lookAt(target);
+  }, []);
+
+  // Update orthographic camera for 2D views
+  const updateOrthographicCamera = useCallback((mode: ViewMode) => {
+    if (!editorCameraRef.current || !(editorCameraRef.current instanceof THREE.OrthographicCamera)) return;
+    if (!containerRef.current) return;
+
+    const camera = editorCameraRef.current;
+    const container = containerRef.current;
+    const aspect = container.clientWidth / container.clientHeight || 1;
+    const size = orthoSizeRef.current;
+    const target = orbitTargetRef.current;
+
+    // Update orthographic camera bounds
+    camera.left = -size * aspect;
+    camera.right = size * aspect;
+    camera.top = size;
+    camera.bottom = -size;
+    camera.updateProjectionMatrix();
+
+    // Position camera based on view mode
+    switch (mode) {
+      case 'top':
+        // Top view: camera above, looking down
+        camera.position.set(target.x, target.y + 20, target.z);
+        camera.lookAt(target);
+        camera.up.set(0, 0, -1); // Rotate up vector for top view
+        break;
+      case 'front':
+        // Front view: camera in front, looking at scene
+        camera.position.set(target.x, target.y, target.z + 20);
+        camera.lookAt(target);
+        camera.up.set(0, 1, 0);
+        break;
+      case 'side':
+        // Side view: camera to the side, looking at scene
+        camera.position.set(target.x + 20, target.y, target.z);
+        camera.lookAt(target);
+        camera.up.set(0, 1, 0);
+        break;
+    }
   }, []);
 
   // Initialize grid
@@ -171,25 +217,52 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         
         if (editorCameraRef.current) {
-          editorCameraRef.current.aspect = width / height;
-          editorCameraRef.current.updateProjectionMatrix();
+          if (editorCameraRef.current instanceof THREE.PerspectiveCamera) {
+            editorCameraRef.current.aspect = width / height;
+            editorCameraRef.current.updateProjectionMatrix();
+          } else if (editorCameraRef.current instanceof THREE.OrthographicCamera) {
+            const aspect = width / height;
+            const size = orthoSizeRef.current;
+            editorCameraRef.current.left = -size * aspect;
+            editorCameraRef.current.right = size * aspect;
+            editorCameraRef.current.top = size;
+            editorCameraRef.current.bottom = -size;
+            editorCameraRef.current.updateProjectionMatrix();
+          }
         }
       }
     };
 
     updateSize();
     
-    // Create editor camera (perspective)
-    const camera = new THREE.PerspectiveCamera(
-      GAME_CONFIG.FOV,
-      container.clientWidth / container.clientHeight || 1,
-      GAME_CONFIG.NEAR,
-      GAME_CONFIG.FAR
-    );
+    // Create editor camera based on view mode
+    let camera: THREE.PerspectiveCamera | THREE.OrthographicCamera;
     
-    // Position camera for orbit view
-    orbitDistanceRef.current = 15;
-    orbitAngleRef.current = { horizontal: Math.PI / 4, vertical: Math.PI / 3 };
+    if (viewMode === 'perspective') {
+      camera = new THREE.PerspectiveCamera(
+        GAME_CONFIG.FOV,
+        container.clientWidth / container.clientHeight || 1,
+        GAME_CONFIG.NEAR,
+        GAME_CONFIG.FAR
+      );
+      // Position camera for orbit view
+      orbitDistanceRef.current = 15;
+      orbitAngleRef.current = { horizontal: Math.PI / 4, vertical: Math.PI / 3 };
+      updateCameraPosition();
+    } else {
+      // Orthographic camera for 2D views
+      const aspect = container.clientWidth / container.clientHeight || 1;
+      const size = orthoSizeRef.current;
+      camera = new THREE.OrthographicCamera(
+        -size * aspect,
+        size * aspect,
+        size,
+        -size,
+        GAME_CONFIG.NEAR,
+        GAME_CONFIG.FAR
+      );
+      updateOrthographicCamera(viewMode);
+    }
     
     editorCameraRef.current = camera;
     rendererRef.current = renderer;
@@ -198,9 +271,6 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
     if (gizmoRef.current) {
       gizmoRef.current.setCamera(camera);
     }
-    
-    // Initial camera position
-    updateCameraPosition();
 
     // Handle resize
     const resizeObserver = new ResizeObserver(updateSize);
@@ -221,7 +291,7 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
       editorCameraRef.current = null;
       canvasRef.current = null;
     };
-  }, [scene, updateCameraPosition]);
+  }, [scene, updateCameraPosition, viewMode, updateOrthographicCamera]);
 
   // Handle click to select object (gizmo detection is now in handleMouseDown)
   const handleClick = useCallback((e: React.MouseEvent) => {
@@ -401,13 +471,15 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
       // If not gizmo, handle object selection
       handleClick(e);
     } else if (e.button === 1) {
-      // Middle mouse button - pan
+      // Middle mouse button - pan (works in all views)
       e.preventDefault();
       setIsPanning(true);
     } else if (e.button === 2) {
-      // Right click - rotate/orbit
-      e.preventDefault();
-      setIsRotating(true);
+      // Right click - rotate/orbit (only in perspective view)
+      if (viewMode === 'perspective') {
+        e.preventDefault();
+        setIsRotating(true);
+      }
     }
   }, [handleClick, selectedObject, transformMode]);
 
@@ -810,26 +882,32 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
 
     // Gizmo dragging is now handled by document-level event listeners in useEffect
     // Only handle camera controls here
-    if (isRotating) {
-      // Orbit rotation
+    if (isRotating && viewMode === 'perspective') {
+      // Orbit rotation (only in perspective view)
       const sensitivity = 0.01;
       orbitAngleRef.current.horizontal -= deltaX * sensitivity;
       orbitAngleRef.current.vertical += deltaY * sensitivity;
       orbitAngleRef.current.vertical = Math.max(0.1, Math.min(Math.PI - 0.1, orbitAngleRef.current.vertical));
       updateCameraPosition();
     } else if (isPanning) {
-      // Pan camera
-      const sensitivity = 0.005;
-      const right = new THREE.Vector3();
-      const up = new THREE.Vector3();
-      const forward = new THREE.Vector3();
-      editorCameraRef.current.matrixWorld.extractBasis(right, up, forward);
-      right.normalize();
-      up.normalize();
-      
-      orbitTargetRef.current.addScaledVector(right, -deltaX * sensitivity * orbitDistanceRef.current);
-      orbitTargetRef.current.addScaledVector(up, deltaY * sensitivity * orbitDistanceRef.current);
-      updateCameraPosition();
+      // Pan camera (works in all views)
+      if (viewMode === 'perspective' && editorCameraRef.current instanceof THREE.PerspectiveCamera) {
+        // Perspective view panning
+        const sensitivity = 0.005;
+        const right = new THREE.Vector3();
+        const up = new THREE.Vector3();
+        const forward = new THREE.Vector3();
+        editorCameraRef.current.matrixWorld.extractBasis(right, up, forward);
+        right.normalize();
+        up.normalize();
+        
+        orbitTargetRef.current.addScaledVector(right, -deltaX * sensitivity * orbitDistanceRef.current);
+        orbitTargetRef.current.addScaledVector(up, deltaY * sensitivity * orbitDistanceRef.current);
+        updateCameraPosition();
+      } else if (viewMode !== 'perspective' && editorCameraRef.current instanceof THREE.OrthographicCamera) {
+        // Orthographic view panning (handled in separate check above)
+        // This is already handled in the earlier check
+      }
     }
 
     lastMousePosRef.current = { x: e.clientX, y: e.clientY };
@@ -842,6 +920,25 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
   }, []);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
+    // Handle zoom for orthographic views
+    if (viewMode !== 'perspective' && editorCameraRef.current instanceof THREE.OrthographicCamera) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? 1.1 : 0.9;
+      orthoSizeRef.current = Math.max(5, Math.min(100, orthoSizeRef.current * delta));
+      
+      if (containerRef.current) {
+        const aspect = containerRef.current.clientWidth / containerRef.current.clientHeight || 1;
+        const size = orthoSizeRef.current;
+        editorCameraRef.current.left = -size * aspect;
+        editorCameraRef.current.right = size * aspect;
+        editorCameraRef.current.top = size;
+        editorCameraRef.current.bottom = -size;
+        editorCameraRef.current.updateProjectionMatrix();
+      }
+      return;
+    }
+    
+    // Perspective view zoom (orbit distance)
     e.preventDefault();
     
     if (e.ctrlKey || e.metaKey) {
@@ -857,7 +954,7 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
       orbitDistanceRef.current = Math.max(1, Math.min(100, orbitDistanceRef.current + delta));
       updateCameraPosition();
     }
-  }, [updateCameraPosition, zoomSpeed]);
+  }, [updateCameraPosition, zoomSpeed, viewMode]);
 
 
   // Update gizmo position in render loop
@@ -894,14 +991,15 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
   }, [scene, selectedObject]);
 
   // Update orbit target to focus on selected objects (focus on first selected)
-  useEffect(() => {
-    if (selectedObjects.size > 0) {
-      const firstSelected = Array.from(selectedObjects)[0];
-      const box = new THREE.Box3().setFromObject(firstSelected);
-      orbitTargetRef.current = box.getCenter(new THREE.Vector3());
-      updateCameraPosition();
-    }
-  }, [selectedObjects, updateCameraPosition]);
+  // REMOVED: Auto-focus/zoom on selection - user can manually orbit if needed
+  // useEffect(() => {
+  //   if (selectedObjects.size > 0) {
+  //     const firstSelected = Array.from(selectedObjects)[0];
+  //     const box = new THREE.Box3().setFromObject(firstSelected);
+  //     orbitTargetRef.current = box.getCenter(new THREE.Vector3());
+  //     updateCameraPosition();
+  //   }
+  // }, [selectedObjects, updateCameraPosition]);
 
   // Visual selection highlighting is now handled in GameEditor component
 
@@ -917,9 +1015,62 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
       onContextMenu={(e) => e.preventDefault()}
       style={{ cursor: isRotating ? 'grabbing' : isPanning ? 'grabbing' : 'default' }}
     >
-      {/* Grid Controls - Floating panel (top right) */}
+      {/* View Mode Controls - Top left */}
       <div 
-        className="absolute top-2 right-2 bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-lg p-2 z-20 shadow-xl"
+        className="absolute top-2 left-2 bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-lg p-1.5 flex gap-1 z-20 shadow-xl"
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={() => setViewMode('perspective')}
+          className={`px-2 py-1 text-xs font-mono rounded transition-colors ${
+            viewMode === 'perspective'
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-400 hover:text-white hover:bg-gray-700'
+          }`}
+          title="Perspective View"
+        >
+          3D
+        </button>
+        <button
+          onClick={() => setViewMode('top')}
+          className={`px-2 py-1 text-xs font-mono rounded transition-colors ${
+            viewMode === 'top'
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-400 hover:text-white hover:bg-gray-700'
+          }`}
+          title="Top View"
+        >
+          Top
+        </button>
+        <button
+          onClick={() => setViewMode('front')}
+          className={`px-2 py-1 text-xs font-mono rounded transition-colors ${
+            viewMode === 'front'
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-400 hover:text-white hover:bg-gray-700'
+          }`}
+          title="Front View"
+        >
+          Front
+        </button>
+        <button
+          onClick={() => setViewMode('side')}
+          className={`px-2 py-1 text-xs font-mono rounded transition-colors ${
+            viewMode === 'side'
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-400 hover:text-white hover:bg-gray-700'
+          }`}
+          title="Side View"
+        >
+          Side
+        </button>
+      </div>
+
+      {/* Grid Controls - Floating panel (bottom right) */}
+      <div 
+        className="absolute bottom-2 right-2 bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-lg p-2 z-30 shadow-xl"
+        style={{ bottom: '0.5rem', right: '0.5rem' }}
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
@@ -947,6 +1098,26 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
               step="0.1"
               min="0.1"
               max="5"
+              className="w-12 px-1 py-0.5 bg-gray-700 border border-gray-600 rounded text-white text-xs font-mono"
+            />
+          </div>
+        )}
+        {viewMode !== 'perspective' && (
+          <div className="flex items-center gap-2 mt-1">
+            <label className="text-xs text-gray-400 font-mono">Zoom:</label>
+            <input
+              type="number"
+              value={orthoSizeRef.current}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                if (!isNaN(val) && val > 0) {
+                  orthoSizeRef.current = val;
+                  updateOrthographicCamera(viewMode);
+                }
+              }}
+              step="1"
+              min="5"
+              max="100"
               className="w-12 px-1 py-0.5 bg-gray-700 border border-gray-600 rounded text-white text-xs font-mono"
             />
           </div>
@@ -1042,7 +1213,10 @@ export default function GameViewport({ scene, selectedObject, selectedObjects, t
       </div>
       
       {selectedObjects.size > 0 && (
-        <div className="absolute bottom-2 right-2 bg-blue-900/80 border border-blue-700 rounded px-2 py-1 text-xs font-mono text-white pointer-events-none">
+        <div 
+          className="absolute bg-blue-900/80 border border-blue-700 rounded px-2 py-1 text-xs font-mono text-white pointer-events-none z-30"
+          style={{ top: '0.5rem', right: '0.5rem' }}
+        >
           {selectedObjects.size === 1 
             ? `Selected: ${Array.from(selectedObjects)[0].name || Array.from(selectedObjects)[0].type}`
             : `${selectedObjects.size} objects selected`}

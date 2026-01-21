@@ -4,11 +4,13 @@ import { TransformComponent } from '../components/TransformComponent';
 import { MeshRendererComponent, type MeshGeometry } from '../components/MeshRendererComponent';
 import { PhysicsComponent, type PhysicsProperties } from '../components/PhysicsComponent';
 import { LightComponent, type LightProperties } from '../components/LightComponent';
+import { TriggerComponent, type TriggerProperties } from '../components/TriggerComponent';
 import { RetroRenderer } from '../../renderer/RetroRenderer';
 import { PhysicsWorld } from '../../physics/PhysicsWorld';
+import { ScriptLoader } from '../../scripts/ScriptLoader';
 import * as THREE from 'three';
 
-export type EntityType = 'box' | 'sphere' | 'plane' | 'cylinder' | 'light' | 'group';
+export type EntityType = 'box' | 'sphere' | 'plane' | 'cylinder' | 'light' | 'group' | 'trigger' | 'spawnPoint' | 'npc' | 'item';
 
 export interface EntityFactoryOptions {
   name?: string;
@@ -33,7 +35,8 @@ export class EntityFactory {
   constructor(
     private entityManager: EntityManager,
     private renderer: RetroRenderer,
-    private physicsWorld: PhysicsWorld
+    private physicsWorld: PhysicsWorld,
+    private scriptLoader?: ScriptLoader
   ) {}
 
   /**
@@ -281,6 +284,199 @@ export class EntityFactory {
   }
 
   /**
+   * Create a trigger zone entity
+   */
+  createTriggerZone(options: EntityFactoryOptions & {
+    triggerShape?: 'box' | 'sphere' | 'cylinder';
+    triggerSize?: { x: number; y: number; z: number };
+    triggerRadius?: number;
+    triggerHeight?: number;
+    eventType?: 'onEnter' | 'onExit' | 'onStay' | 'onInteract';
+    action?: 'script' | 'loadLevel' | 'spawnEntity' | 'enableEntity' | 'disableEntity';
+    actionData?: Record<string, any>;
+    oneShot?: boolean;
+  } = {}): Entity {
+    const name = options.name || 'Trigger Zone';
+    const entity = this.entityManager.createEntity(name);
+    const position = options.position || { x: 0, y: 1, z: 0 };
+    const rotation = options.rotation || { x: 0, y: 0, z: 0 };
+    const scale = options.scale || { x: 1, y: 1, z: 1 };
+
+    // Add transform component
+    const transform = new TransformComponent(
+      entity,
+      new THREE.Vector3(position.x, position.y, position.z),
+      new THREE.Euler(rotation.x * (Math.PI / 180), rotation.y * (Math.PI / 180), rotation.z * (Math.PI / 180)),
+      new THREE.Vector3(scale.x, scale.y, scale.z)
+    );
+    this.entityManager.addComponent(entity, transform);
+
+    // Add trigger component
+    const triggerProps: TriggerProperties = {
+      shape: options.triggerShape || 'box',
+      size: options.triggerSize || { x: scale.x, y: scale.y, z: scale.z },
+      radius: options.triggerRadius || (scale.x + scale.y) / 4,
+      height: options.triggerHeight || scale.y,
+      eventType: options.eventType || 'onEnter',
+      action: options.action || 'script',
+      actionData: options.actionData || {},
+      oneShot: options.oneShot || false,
+      enabled: true,
+    };
+    const trigger = new TriggerComponent(entity, triggerProps, this.physicsWorld, this.scriptLoader);
+    this.entityManager.addComponent(entity, trigger);
+
+    // Add a visual representation (wireframe box) for editor visualization
+    // This can be toggled visible/invisible in editor
+    const geometry: MeshGeometry = {
+      type: 'box',
+      width: triggerProps.size?.x || scale.x,
+      height: triggerProps.size?.y || scale.y,
+      depth: triggerProps.size?.z || scale.z,
+    };
+    const wireframeColor = 0x00ff00; // Green wireframe for triggers
+    const meshRenderer = new MeshRendererComponent(entity, geometry, wireframeColor, this.renderer);
+    // Create wireframe material for trigger visualization
+    if (meshRenderer.getMesh()) {
+      const mesh = meshRenderer.getMesh() as THREE.Mesh;
+      if (mesh.material instanceof THREE.MeshStandardMaterial) {
+        mesh.material.wireframe = true;
+        mesh.material.transparent = true;
+        mesh.material.opacity = 0.3;
+      }
+      mesh.userData.isTrigger = true;
+    }
+    this.entityManager.addComponent(entity, meshRenderer);
+
+    return entity;
+  }
+
+  /**
+   * Create a spawn point entity (for player start position)
+   */
+  createSpawnPoint(options: EntityFactoryOptions = {}): Entity {
+    const name = options.name || 'Spawn Point';
+    const entity = this.entityManager.createEntity(name);
+    const position = options.position || { x: 0, y: 1, z: 0 };
+    
+    // Add transform component
+    const transform = new TransformComponent(
+      entity,
+      new THREE.Vector3(position.x, position.y, position.z),
+      new THREE.Euler(0, 0, 0),
+      new THREE.Vector3(1, 1, 1)
+    );
+    this.entityManager.addComponent(entity, transform);
+
+    // Add visual marker (small cylinder pointing up)
+    const geometry: MeshGeometry = {
+      type: 'cylinder',
+      cylinderRadius: 0.2,
+      cylinderHeight: 0.5,
+    };
+    const meshRenderer = new MeshRendererComponent(entity, geometry, 0x00ff00, this.renderer);
+    this.entityManager.addComponent(entity, meshRenderer);
+    
+    // Add tag for easy identification
+    entity.addTag('spawnPoint');
+    
+    return entity;
+  }
+
+  /**
+   * Create an NPC entity (non-player character)
+   */
+  createNPC(options: EntityFactoryOptions = {}): Entity {
+    const name = options.name || 'NPC';
+    const entity = this.entityManager.createEntity(name);
+    const position = options.position || { x: 0, y: 1, z: 0 };
+    const color = options.color || 0xffaa00; // Orange/yellow for NPCs
+    
+    // Add transform component
+    const transform = new TransformComponent(
+      entity,
+      new THREE.Vector3(position.x, position.y, position.z),
+      new THREE.Euler(0, 0, 0),
+      new THREE.Vector3(1, 2, 1) // Human-like proportions
+    );
+    this.entityManager.addComponent(entity, transform);
+
+    // Add visual representation (capsule/cylinder body)
+    const geometry: MeshGeometry = {
+      type: 'cylinder',
+      cylinderRadius: 0.3,
+      cylinderHeight: 1.8,
+    };
+    const meshRenderer = new MeshRendererComponent(entity, geometry, color, this.renderer);
+    this.entityManager.addComponent(entity, meshRenderer);
+
+    // Add physics for NPC collision
+    if (options.withPhysics !== false) {
+      const physicsProps: PhysicsProperties = {
+        bodyType: 'kinematic', // NPCs don't fall but can be pushed
+        mass: 1.0,
+        friction: 0.7,
+        restitution: 0.0,
+        colliderShape: 'capsule',
+        colliderSize: { x: 0.3, y: 0.9, z: 0.3 },
+      };
+      const physics = new PhysicsComponent(entity, physicsProps, this.physicsWorld);
+      this.entityManager.addComponent(entity, physics);
+    }
+    
+    // Add tag for easy identification
+    entity.addTag('npc');
+    
+    return entity;
+  }
+
+  /**
+   * Create an item entity (pickup/pickable object)
+   */
+  createItem(options: EntityFactoryOptions = {}): Entity {
+    const name = options.name || 'Item';
+    const entity = this.entityManager.createEntity(name);
+    const position = options.position || { x: 0, y: 1, z: 0 };
+    const color = options.color || 0xffff00; // Yellow/gold for items
+    
+    // Add transform component
+    const transform = new TransformComponent(
+      entity,
+      new THREE.Vector3(position.x, position.y, position.z),
+      new THREE.Euler(0, 0, 0),
+      new THREE.Vector3(0.3, 0.3, 0.3) // Small item
+    );
+    this.entityManager.addComponent(entity, transform);
+
+    // Add visual representation (small sphere or box)
+    const geometry: MeshGeometry = {
+      type: 'sphere',
+      radius: 0.3,
+    };
+    const meshRenderer = new MeshRendererComponent(entity, geometry, color, this.renderer);
+    this.entityManager.addComponent(entity, meshRenderer);
+
+    // Add physics for item (small, lightweight)
+    if (options.withPhysics !== false) {
+      const physicsProps: PhysicsProperties = {
+        bodyType: 'dynamic',
+        mass: 0.1, // Lightweight items
+        friction: 0.5,
+        restitution: 0.3, // Slight bounce
+        colliderShape: 'sphere',
+        colliderSize: { x: 0.3, y: 0.3, z: 0.3 },
+      };
+      const physics = new PhysicsComponent(entity, physicsProps, this.physicsWorld);
+      this.entityManager.addComponent(entity, physics);
+    }
+    
+    // Add tag for easy identification
+    entity.addTag('item');
+    
+    return entity;
+  }
+
+  /**
    * Create entity by type (convenience method)
    */
   createByType(type: EntityType, options: EntityFactoryOptions = {}): Entity {
@@ -297,6 +493,14 @@ export class EntityFactory {
         return this.createLight(options);
       case 'group':
         return this.createGroup(options);
+      case 'trigger':
+        return this.createTriggerZone(options);
+      case 'spawnPoint':
+        return this.createSpawnPoint(options);
+      case 'npc':
+        return this.createNPC(options);
+      case 'item':
+        return this.createItem(options);
       default:
         throw new Error(`Unknown entity type: ${type}`);
     }

@@ -1,0 +1,16 @@
+{
+  "id": "stone",
+  "name": "Stone Wall",
+  "diffuse": "#808080",
+  "emissive": "#000000",
+  "roughness": 0.8,
+  "metalness": 0.0,
+  "tiling": {
+    "x": 1,
+    "y": 1
+  },
+  "textures": {
+    "diffuse": "textures/stone_diffuse.png",
+    "normal": "textures/stone_normal.png"
+  }
+}

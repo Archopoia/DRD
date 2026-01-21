@@ -1,0 +1,16 @@
+{
+  "id": "wood",
+  "name": "Wood",
+  "diffuse": "#8B4513",
+  "emissive": "#000000",
+  "roughness": 0.7,
+  "metalness": 0.0,
+  "tiling": {
+    "x": 1,
+    "y": 1
+  },
+  "textures": {
+    "diffuse": "textures/wood_diffuse.png",
+    "normal": "textures/wood_normal.png"
+  }
+}
