@@ -54,6 +54,8 @@ set(FRAMEWORK_SOURCES
     src/framework/renderer/Renderer2D.cpp
     src/framework/renderer/Sprite.cpp
     src/framework/renderer/Font.cpp
+    src/framework/renderer/Texture.cpp
+    src/framework/renderer/SpriteRenderer.cpp
     src/framework/renderer/RaycastCamera.cpp
     src/framework/renderer/Raycaster.cpp
 )

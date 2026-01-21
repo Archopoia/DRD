@@ -1,7 +1,9 @@
 #include "Raycaster.h"
 #include "RaycastCamera.h"
 #include "Renderer2D.h"
+#include "SpriteRenderer.h"
 #include "game/world/GridMap.h"
+#include <SDL2/SDL_opengl.h>
 #include <cmath>
 #include <algorithm>
 
@@ -10,6 +12,7 @@ namespace Arena {
 float Raycaster::s_wallHeight = 1.0f;
 uint32_t Raycaster::s_floorColor = 0x404040FF;
 uint32_t Raycaster::s_ceilingColor = 0x808080FF;
+uint32_t Raycaster::s_wallTextures[4] = { 0, 0, 0, 0 };
 
 RaycastHit Raycaster::CastRay(const Vec2& origin, const Vec2& direction, const GridMap& map, float maxDistance) {
     RaycastHit hit;
@@ -170,11 +173,54 @@ void Raycaster::RenderFrame(const RaycastCamera& camera, const GridMap& map, int
         
         uint32_t color = Renderer2D::Color(r, g, b, 255);
         
-        // Draw vertical line
-        Renderer2D::DrawLine((float)x, (float)drawStart, (float)x, (float)drawEnd, color);
+        // Draw wall - use texture if available, otherwise use solid color
+        uint32_t wallTex = s_wallTextures[hit.wallType];
+        if (wallTex != 0) {
+            // Draw textured wall
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, wallTex);
+            glColor4f(brightness, brightness, brightness, 1.0f);
+            
+            float texU = hit.wallX; // Where on wall (0-1)
+            float texV0 = 0.0f; // Top of texture
+            float texV1 = 1.0f; // Bottom of texture
+            
+            glBegin(GL_QUADS);
+            glTexCoord2f(texU, texV0);
+            glVertex2i(x, drawStart);
+            glTexCoord2f(texU, texV1);
+            glVertex2i(x, drawEnd);
+            glTexCoord2f(texU + 0.01f, texV1); // Small offset for next pixel
+            glVertex2i(x + 1, drawEnd);
+            glTexCoord2f(texU + 0.01f, texV0);
+            glVertex2i(x + 1, drawStart);
+            glEnd();
+            
+            glDisable(GL_TEXTURE_2D);
+        } else {
+            // Draw solid color line (fallback)
+            Renderer2D::DrawLine((float)x, (float)drawStart, (float)x, (float)drawEnd, color);
+        }
     }
     
     Renderer2D::EndFrame();
+}
+
+void Raycaster::SetWallTexture(uint8_t wallType, uint32_t textureId) {
+    if (wallType < 4) {
+        s_wallTextures[wallType] = textureId;
+    }
+}
+
+uint32_t Raycaster::GetWallTexture(uint8_t wallType) {
+    if (wallType < 4) {
+        return s_wallTextures[wallType];
+    }
+    return 0;
+}
+
+void Raycaster::RenderSprites(SpriteEntity* sprites, int count, const RaycastCamera& camera, int screenWidth, int screenHeight) {
+    SpriteRenderer::RenderSprites(sprites, count, camera, screenWidth, screenHeight);
 }
 
 } // namespace Arena

@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "d:/Toys/WEBSITE/DRD-Webgame/arena-framework",
-      "program": "d:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/Debug/outDebug",
+      "cwd": "d:/Toys/WEBSITE/DRD-Webgame/arena-framework/src/game/data",
+      "program": "d:/Toys/WEBSITE/DRD-Webgame/arena-framework/src/game/data/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

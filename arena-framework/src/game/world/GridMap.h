@@ -3,6 +3,9 @@
 #include <cstddef>
 
 namespace Arena {
+    struct Door;
+}
+namespace Arena {
 
 struct Tile {
     uint8_t wallType;
@@ -40,11 +43,24 @@ public:
     // Generation
     void GenerateSimpleDungeon(int seed = 0);
     void Clear();
+    
+    // Door management
+    Door* GetDoorAt(int x, int y);
+    const Door* GetDoorAt(int x, int y) const;
+    Door* CreateDoorAt(int x, int y);
+    int GetDoorCount() const { return m_doorCount; }
+    Door* GetDoors() { return m_doors; }
+    const Door* GetDoors() const { return m_doors; }
 
 private:
     Tile* m_tiles;
     int m_width;
     int m_height;
+    
+    // Door storage
+    static const int MAX_DOORS = 128;
+    Door* m_doors;
+    int m_doorCount;
 };
 
 } // namespace Arena

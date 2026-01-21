@@ -1,7 +1,9 @@
 #include "Player.h"
 #include "framework/core/Input.h"
 #include "framework/utils/Log.h"
+#include "framework/renderer/Raycaster.h"
 #include "game/world/GridMap.h"
+#include "game/world/Door.h"
 #include <SDL2/SDL.h>
 #include <cmath>
 
@@ -96,7 +98,7 @@ void Player::HandleInput(const InputState& input, float deltaTime, const ChunkMa
 }
 
 void Player::HandleInput(const InputState& input, float deltaTime, const GridMap& map) {
-    // Movement
+    // Normal gameplay mode
     Vec2 moveDir(0.0f, 0.0f);
     
     if (Input::IsKeyDown(SDLK_w)) {
@@ -175,14 +177,35 @@ void Player::Interact(const GridMap& map) {
     Vec2 direction = m_camera.GetDirection();
     Vec2 origin = m_position;
     
-    Collision::InteractionHit hit = Collision::RaycastInteraction(map, origin, direction, m_interactionRange);
+    // Cast ray to find what we're looking at
+    RaycastHit hit = Raycaster::CastRay(origin, direction, map, m_interactionRange);
     
     if (hit.hit) {
-        // Check what we hit (door, item, etc.)
-        // For now, just log
-        Log::Info("Interacted with tile at (%d, %d)", hit.tileX, hit.tileY);
-        
-        m_interactionCooldown = 0.5f; // Prevent spam
+        // Check for door at this position
+        Door* door = const_cast<GridMap&>(map).GetDoorAt(hit.mapX, hit.mapY);
+        if (door) {
+            // Try to open/close door
+            if (DoorSystem::IsOpen(*door)) {
+                DoorSystem::Close(*door);
+                Log::Info("Closed door at (%d, %d)", hit.mapX, hit.mapY);
+            } else if (DoorSystem::CanOpen(*door)) {
+                // Check if locked (for now, assume no key needed - can add inventory check later)
+                int keyId = 0; // TODO: Get from inventory
+                if (DoorSystem::TryOpen(*door, keyId)) {
+                    Log::Info("Opened door at (%d, %d)", hit.mapX, hit.mapY);
+                } else {
+                    Log::Info("Door is locked at (%d, %d)", hit.mapX, hit.mapY);
+                }
+            } else if (DoorSystem::IsLocked(*door)) {
+                Log::Info("Door is locked at (%d, %d)", hit.mapX, hit.mapY);
+            }
+            
+            m_interactionCooldown = 0.5f; // Prevent spam
+        } else {
+            // Other interactions (items, etc.) can be added here
+            Log::Info("Interacted with tile at (%d, %d)", hit.mapX, hit.mapY);
+            m_interactionCooldown = 0.5f;
+        }
     }
 }
 

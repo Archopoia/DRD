@@ -1,8 +1,11 @@
 #include "GridMap.h"
+#include "Door.h"
+#include "framework/math/Vec2.h"
 #include "framework/utils/Log.h"
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
+#include <cmath>
 
 namespace Arena {
 
@@ -10,6 +13,8 @@ GridMap::GridMap()
     : m_tiles(nullptr)
     , m_width(0)
     , m_height(0)
+    , m_doors(nullptr)
+    , m_doorCount(0)
 {
 }
 
@@ -36,6 +41,18 @@ bool GridMap::Create(int width, int height) {
         return false;
     }
     
+    // Allocate door array
+    m_doors = new Door[MAX_DOORS];
+    if (!m_doors) {
+        Log::Error("Failed to allocate memory for doors");
+        delete[] m_tiles;
+        m_tiles = nullptr;
+        m_width = 0;
+        m_height = 0;
+        return false;
+    }
+    m_doorCount = 0;
+    
     Clear();
     
     Log::Info("Created map: %dx%d", width, height);
@@ -47,8 +64,13 @@ void GridMap::Destroy() {
         delete[] m_tiles;
         m_tiles = nullptr;
     }
+    if (m_doors) {
+        delete[] m_doors;
+        m_doors = nullptr;
+    }
     m_width = 0;
     m_height = 0;
+    m_doorCount = 0;
 }
 
 Tile& GridMap::GetTile(int x, int y) {
@@ -69,6 +91,13 @@ const Tile& GridMap::GetTile(int x, int y) const {
 
 bool GridMap::IsSolid(int x, int y) const {
     if (!IsValid(x, y)) return true; // Out of bounds is solid
+    
+    // Check if there's an open door at this position
+    const Door* door = GetDoorAt(x, y);
+    if (door && DoorSystem::IsOpen(*door)) {
+        return false; // Open door is not solid
+    }
+    
     return m_tiles[y * m_width + x].solid;
 }
 
@@ -77,9 +106,10 @@ bool GridMap::IsValid(int x, int y) const {
 }
 
 void GridMap::Clear() {
-    if (!m_tiles) {
+    if (m_tiles) {
         memset(m_tiles, 0, sizeof(Tile) * m_width * m_height);
     }
+    m_doorCount = 0;
 }
 
 bool GridMap::LoadFromFile(const char* path) {
@@ -193,6 +223,68 @@ void GridMap::GenerateSimpleDungeon(int seed) {
     }
     
     Log::Info("Generated dungeon with seed: %d", seed);
+}
+
+Door* GridMap::GetDoorAt(int x, int y) {
+    if (!IsValid(x, y)) {
+        return nullptr;
+    }
+    
+    // Find door at this position
+    for (int i = 0; i < m_doorCount; i++) {
+        int doorX = (int)floorf(m_doors[i].position.x);
+        int doorY = (int)floorf(m_doors[i].position.y);
+        if (doorX == x && doorY == y) {
+            return &m_doors[i];
+        }
+    }
+    
+    return nullptr;
+}
+
+const Door* GridMap::GetDoorAt(int x, int y) const {
+    if (!IsValid(x, y)) {
+        return nullptr;
+    }
+    
+    // Find door at this position
+    for (int i = 0; i < m_doorCount; i++) {
+        int doorX = (int)floorf(m_doors[i].position.x);
+        int doorY = (int)floorf(m_doors[i].position.y);
+        if (doorX == x && doorY == y) {
+            return &m_doors[i];
+        }
+    }
+    
+    return nullptr;
+}
+
+Door* GridMap::CreateDoorAt(int x, int y) {
+    if (!IsValid(x, y)) {
+        return nullptr;
+    }
+    
+    if (m_doorCount >= MAX_DOORS) {
+        Log::Warn("Maximum door count reached");
+        return nullptr;
+    }
+    
+    // Check if door already exists at this position
+    Door* existing = GetDoorAt(x, y);
+    if (existing) {
+        return existing;
+    }
+    
+    // Create new door
+    Door& door = m_doors[m_doorCount];
+    door.position = Vec2((float)x + 0.5f, (float)y + 0.5f);
+    door.state = DoorState::Closed;
+    door.openProgress = 0.0f;
+    door.locked = false;
+    door.lockId = 0;
+    
+    m_doorCount++;
+    return &door;
 }
 
 } // namespace Arena

@@ -37,6 +37,7 @@ events:
       CMAKE_PREFIX_PATH:
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug"
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows"
+        - "C:\\vcpkg\\installed\\x64-windows"
       ENV{PATH}:
         - "C:\\VulkanSDK\\1.4.335.0\\Bin"
         - "C:\\Python314\\Scripts\\"
@@ -95,7 +96,7 @@ events:
       The output was:
       0
       MSBuild version 18.0.5+e22287bf1 for .NET Framework
-      Build started 21.01.2026 02:39:46.
+      Build started 21.01.2026 03:37:15.
       
       Project "D:\\Toys\\WEBSITE\\DRD-Webgame\\arena-framework\\build\\CMakeFiles\\4.2.1\\CompilerIdCXX\\CompilerIdCXX.vcxproj" on node 1 (default targets).
       PrepareForBuild:
@@ -135,7 +136,7 @@ events:
           0 Warning(s)
           0 Error(s)
       
-      Time Elapsed 00:00:01.13
+      Time Elapsed 00:00:00.77
       
       
       Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CompilerIdCXX.exe"
@@ -437,6 +438,7 @@ events:
       CMAKE_PREFIX_PATH:
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug"
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows"
+        - "C:\\vcpkg\\installed\\x64-windows"
       ENV{PATH}:
         - "C:\\VulkanSDK\\1.4.335.0\\Bin"
         - "C:\\Python314\\Scripts\\"
@@ -857,6 +859,7 @@ events:
       CMAKE_PREFIX_PATH:
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug"
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows"
+        - "C:\\vcpkg\\installed\\x64-windows"
       ENV{PATH}:
         - "C:\\VulkanSDK\\1.4.335.0\\Bin"
         - "C:\\Python314\\Scripts\\"
@@ -1189,6 +1192,7 @@ events:
       CMAKE_PREFIX_PATH:
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug"
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows"
+        - "C:\\vcpkg\\installed\\x64-windows"
       ENV{PATH}:
         - "C:\\VulkanSDK\\1.4.335.0\\Bin"
         - "C:\\Python314\\Scripts\\"
@@ -1607,6 +1611,7 @@ events:
       CMAKE_PREFIX_PATH:
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug"
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows"
+        - "C:\\vcpkg\\installed\\x64-windows"
       ENV{PATH}:
         - "C:\\VulkanSDK\\1.4.335.0\\Bin"
         - "C:\\Python314\\Scripts\\"
@@ -1939,6 +1944,7 @@ events:
       CMAKE_PREFIX_PATH:
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug"
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows"
+        - "C:\\vcpkg\\installed\\x64-windows"
       ENV{PATH}:
         - "C:\\VulkanSDK\\1.4.335.0\\Bin"
         - "C:\\Python314\\Scripts\\"
@@ -2010,6 +2016,9 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/bin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/sbin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/bin/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/sbin/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/VulkanSDK/1.4.335.0/Bin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Python314/Scripts/"
@@ -2057,6 +2066,9 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/bin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/sbin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/bin/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/sbin/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/VulkanSDK/1.4.335.0/Bin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Python314/Scripts/"
@@ -2104,6 +2116,9 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/bin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/sbin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/"
+      - "C:/vcpkg/installed/x64-windows/bin/"
+      - "C:/vcpkg/installed/x64-windows/sbin/"
+      - "C:/vcpkg/installed/x64-windows/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/"
       - "C:/VulkanSDK/1.4.335.0/Bin/"
       - "C:/Python314/Scripts/"
@@ -2164,6 +2179,15 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/rc.com"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/rc.exe"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/rc"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/bin/rc.com"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/bin/rc.exe"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/bin/rc"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/sbin/rc.com"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/sbin/rc.exe"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/sbin/rc"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/rc.com"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/rc.exe"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/rc"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/rc.com"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/rc.exe"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/rc"
@@ -2305,6 +2329,15 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/rc.com"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/rc.exe"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/rc"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/bin/rc.com"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/bin/rc.exe"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/bin/rc"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/sbin/rc.com"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/sbin/rc.exe"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/sbin/rc"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/rc.com"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/rc.exe"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/rc"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/rc.com"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/rc.exe"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/rc"
@@ -2446,6 +2479,15 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/rc.com"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/rc.exe"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/rc"
+      - "C:/vcpkg/installed/x64-windows/bin/rc.com"
+      - "C:/vcpkg/installed/x64-windows/bin/rc.exe"
+      - "C:/vcpkg/installed/x64-windows/bin/rc"
+      - "C:/vcpkg/installed/x64-windows/sbin/rc.com"
+      - "C:/vcpkg/installed/x64-windows/sbin/rc.exe"
+      - "C:/vcpkg/installed/x64-windows/sbin/rc"
+      - "C:/vcpkg/installed/x64-windows/rc.com"
+      - "C:/vcpkg/installed/x64-windows/rc.exe"
+      - "C:/vcpkg/installed/x64-windows/rc"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/rc.com"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/rc.exe"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/rc"
@@ -2576,6 +2618,7 @@ events:
       CMAKE_PREFIX_PATH:
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug"
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows"
+        - "C:\\vcpkg\\installed\\x64-windows"
       ENV{PATH}:
         - "C:\\VulkanSDK\\1.4.335.0\\Bin"
         - "C:\\Python314\\Scripts\\"
@@ -2633,8 +2676,8 @@ events:
     checks:
       - "Detecting CXX compiler ABI info"
     directories:
-      source: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/CMakeFiles/CMakeScratch/TryCompile-dz1sxt"
-      binary: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/CMakeFiles/CMakeScratch/TryCompile-dz1sxt"
+      source: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/CMakeFiles/CMakeScratch/TryCompile-g9b7nx"
+      binary: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/CMakeFiles/CMakeScratch/TryCompile-g9b7nx"
     cmakeVariables:
       CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /EHsc"
       CMAKE_CXX_FLAGS_DEBUG: "/Zi /Ob0 /Od /RTC1"
@@ -2648,39 +2691,39 @@ events:
       variable: "CMAKE_CXX_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: 'D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/CMakeFiles/CMakeScratch/TryCompile-dz1sxt'
+        Change Dir: 'D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/CMakeFiles/CMakeScratch/TryCompile-g9b7nx'
         
-        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_08c27.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_225e0.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=18.0 /v:n
         MSBuild version 18.0.5+e22287bf1 for .NET Framework
-        Build started 21.01.2026 02:39:47.
+        Build started 21.01.2026 03:37:16.
         
-        Project "D:\\Toys\\WEBSITE\\DRD-Webgame\\arena-framework\\build\\CMakeFiles\\CMakeScratch\\TryCompile-dz1sxt\\cmTC_08c27.vcxproj" on node 1 (default targets).
+        Project "D:\\Toys\\WEBSITE\\DRD-Webgame\\arena-framework\\build\\CMakeFiles\\CMakeScratch\\TryCompile-g9b7nx\\cmTC_225e0.vcxproj" on node 1 (default targets).
         PrepareForBuild:
           Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
-          Creating directory "D:\\Toys\\WEBSITE\\DRD-Webgame\\arena-framework\\build\\CMakeFiles\\CMakeScratch\\TryCompile-dz1sxt\\Debug\\".
-          Creating directory "cmTC_08c27.dir\\Debug\\cmTC_08c27.tlog\\".
+          Creating directory "D:\\Toys\\WEBSITE\\DRD-Webgame\\arena-framework\\build\\CMakeFiles\\CMakeScratch\\TryCompile-g9b7nx\\Debug\\".
+          Creating directory "cmTC_225e0.dir\\Debug\\cmTC_225e0.tlog\\".
         InitializeBuildStatus:
-          Creating "cmTC_08c27.dir\\Debug\\cmTC_08c27.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
-          Touching "cmTC_08c27.dir\\Debug\\cmTC_08c27.tlog\\unsuccessfulbuild".
+          Creating "cmTC_225e0.dir\\Debug\\cmTC_225e0.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+          Touching "cmTC_225e0.dir\\Debug\\cmTC_225e0.tlog\\unsuccessfulbuild".
         ClCompile:
-          C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /MDd /Fo"cmTC_08c27.dir\\Debug\\\\" /Fd"cmTC_08c27.dir\\Debug\\vc145.pdb" /external:W1 /TP /errorReport:queue "C:\\Program Files\\CMake\\share\\cmake-4.2\\Modules\\CMakeCXXCompilerABI.cpp"
+          C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\CL.exe /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /MDd /Fo"cmTC_225e0.dir\\Debug\\\\" /Fd"cmTC_225e0.dir\\Debug\\vc145.pdb" /external:W1 /TP /errorReport:queue "C:\\Program Files\\CMake\\share\\cmake-4.2\\Modules\\CMakeCXXCompilerABI.cpp"
           Microsoft (R) C/C++ Optimizing Compiler Version 19.50.35722 for x64
           Copyright (C) Microsoft Corporation.  All rights reserved.
-          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /MDd /Fo"cmTC_08c27.dir\\Debug\\\\" /Fd"cmTC_08c27.dir\\Debug\\vc145.pdb" /external:W1 /TP /errorReport:queue "C:\\Program Files\\CMake\\share\\cmake-4.2\\Modules\\CMakeCXXCompilerABI.cpp"
+          cl /c /Zi /W1 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D _MBCS /D "CMAKE_INTDIR=\\"Debug\\"" /EHsc /RTC1 /MDd /Fo"cmTC_225e0.dir\\Debug\\\\" /Fd"cmTC_225e0.dir\\Debug\\vc145.pdb" /external:W1 /TP /errorReport:queue "C:\\Program Files\\CMake\\share\\cmake-4.2\\Modules\\CMakeCXXCompilerABI.cpp"
           CMakeCXXCompilerABI.cpp
         Link:
-          C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\link.exe /OUT:"D:\\Toys\\WEBSITE\\DRD-Webgame\\arena-framework\\build\\CMakeFiles\\CMakeScratch\\TryCompile-dz1sxt\\Debug\\cmTC_08c27.exe" /INCREMENTAL /ILK:"cmTC_08c27.dir\\Debug\\cmTC_08c27.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/CMakeFiles/CMakeScratch/TryCompile-dz1sxt/Debug/cmTC_08c27.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/CMakeFiles/CMakeScratch/TryCompile-dz1sxt/Debug/cmTC_08c27.lib" /MACHINE:X64  /machine:x64 cmTC_08c27.dir\\Debug\\CMakeCXXCompilerABI.obj
-          cmTC_08c27.vcxproj -> D:\\Toys\\WEBSITE\\DRD-Webgame\\arena-framework\\build\\CMakeFiles\\CMakeScratch\\TryCompile-dz1sxt\\Debug\\cmTC_08c27.exe
+          C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\VC\\Tools\\MSVC\\14.50.35717\\bin\\HostX64\\x64\\link.exe /OUT:"D:\\Toys\\WEBSITE\\DRD-Webgame\\arena-framework\\build\\CMakeFiles\\CMakeScratch\\TryCompile-g9b7nx\\Debug\\cmTC_225e0.exe" /INCREMENTAL /ILK:"cmTC_225e0.dir\\Debug\\cmTC_225e0.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/CMakeFiles/CMakeScratch/TryCompile-g9b7nx/Debug/cmTC_225e0.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /IMPLIB:"D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/CMakeFiles/CMakeScratch/TryCompile-g9b7nx/Debug/cmTC_225e0.lib" /MACHINE:X64  /machine:x64 cmTC_225e0.dir\\Debug\\CMakeCXXCompilerABI.obj
+          cmTC_225e0.vcxproj -> D:\\Toys\\WEBSITE\\DRD-Webgame\\arena-framework\\build\\CMakeFiles\\CMakeScratch\\TryCompile-g9b7nx\\Debug\\cmTC_225e0.exe
         FinalizeBuildStatus:
-          Deleting file "cmTC_08c27.dir\\Debug\\cmTC_08c27.tlog\\unsuccessfulbuild".
-          Touching "cmTC_08c27.dir\\Debug\\cmTC_08c27.tlog\\cmTC_08c27.lastbuildstate".
-        Done Building Project "D:\\Toys\\WEBSITE\\DRD-Webgame\\arena-framework\\build\\CMakeFiles\\CMakeScratch\\TryCompile-dz1sxt\\cmTC_08c27.vcxproj" (default targets).
+          Deleting file "cmTC_225e0.dir\\Debug\\cmTC_225e0.tlog\\unsuccessfulbuild".
+          Touching "cmTC_225e0.dir\\Debug\\cmTC_225e0.tlog\\cmTC_225e0.lastbuildstate".
+        Done Building Project "D:\\Toys\\WEBSITE\\DRD-Webgame\\arena-framework\\build\\CMakeFiles\\CMakeScratch\\TryCompile-g9b7nx\\cmTC_225e0.vcxproj" (default targets).
         
         Build succeeded.
             0 Warning(s)
             0 Error(s)
         
-        Time Elapsed 00:00:00.43
+        Time Elapsed 00:00:00.44
         
       exitCode: 0
   -
@@ -2779,6 +2822,7 @@ events:
       CMAKE_PREFIX_PATH:
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug"
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows"
+        - "C:\\vcpkg\\installed\\x64-windows"
       ENV{PATH}:
         - "C:\\VulkanSDK\\1.4.335.0\\Bin"
         - "C:\\Python314\\Scripts\\"
@@ -2827,404 +2871,6 @@ events:
         - "C:/Program Files/CMake"
         - "C:/Program Files (x86)/ArenaFramework"
       CMAKE_FIND_ROOT_PATH: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug;D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows"
-  -
-    kind: "find_package-v1"
-    backtrace:
-      - "build/vcpkg_installed/x64-windows/share/stb/vcpkg-cmake-wrapper.cmake:4 (_find_package)"
-      - "C:/vcpkg/scripts/buildsystems/vcpkg.cmake:862 (include)"
-      - "CMakeLists.txt:30 (find_package)"
-    name: "stb"
-    configs:
-      -
-        filename: "stbConfig.cmake"
-        kind: "cmake"
-      -
-        filename: "stb-config.cmake"
-        kind: "cmake"
-    version_request:
-      exact: false
-    settings:
-      required: "required_explicit"
-      quiet: false
-      global: false
-      policy_scope: true
-      bypass_provider: false
-      names:
-        - "stb"
-      path_suffixes:
-        - ""
-      paths:
-        CMAKE_FIND_USE_CMAKE_PATH: true
-        CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
-        CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-        CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-        CMAKE_FIND_USE_INSTALL_PREFIX: true
-        CMAKE_FIND_USE_PACKAGE_ROOT_PATH: true
-        CMAKE_FIND_USE_CMAKE_PACKAGE_REGISTRY: true
-        CMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY: true
-        CMAKE_FIND_ROOT_PATH_MODE: "BOTH"
-    candidates:
-      -
-        path: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/share/stb/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/share/stb/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/CMakeFiles/pkgRedirects/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/CMakeFiles/pkgRedirects/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/share/stb/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/share/stb/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/VulkanSDK/1.4.335.0/Bin/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/VulkanSDK/1.4.335.0/Bin/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Python314/Scripts/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Python314/Scripts/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Python314/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Python314/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Windows/System32/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Windows/System32/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Windows/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Windows/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Windows/System32/wbem/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Windows/System32/wbem/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Windows/System32/WindowsPowerShell/v1.0/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Windows/System32/WindowsPowerShell/v1.0/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Windows/System32/OpenSSH/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Windows/System32/OpenSSH/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files/NVIDIA Corporation/NVIDIA App/NvDLISR/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files/NVIDIA Corporation/NVIDIA App/NvDLISR/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files (x86)/NVIDIA Corporation/PhysX/Common/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files (x86)/NVIDIA Corporation/PhysX/Common/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files/cursor/resources/app/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files/cursor/resources/app/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files/dotnet/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files/dotnet/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files/Git/cmd/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files/Git/cmd/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files/nodejs/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files/nodejs/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/ProgramData/chocolatey/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/ProgramData/chocolatey/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files/Docker/Docker/resources/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files/Docker/Docker/resources/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files/CMake/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files/CMake/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Users/Hullivan/AppData/Local/Programs/Python/Python312/Scripts/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Users/Hullivan/AppData/Local/Programs/Python/Python312/Scripts/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Users/Hullivan/AppData/Local/Programs/Python/Python312/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Users/Hullivan/AppData/Local/Programs/Python/Python312/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Users/Hullivan/AppData/Local/Programs/Python/Launcher/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Users/Hullivan/AppData/Local/Programs/Python/Launcher/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Users/Hullivan/.local/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Users/Hullivan/.local/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Users/Hullivan/AppData/Local/Microsoft/WindowsApps/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Users/Hullivan/AppData/Local/Microsoft/WindowsApps/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Users/Hullivan/AppData/Local/Programs/Microsoft VS Code/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Users/Hullivan/AppData/Local/Programs/Microsoft VS Code/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Users/Hullivan/AppData/Local/GitHubDesktop/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Users/Hullivan/AppData/Local/GitHubDesktop/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Users/Hullivan/.lmstudio/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Users/Hullivan/.lmstudio/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Users/Hullivan/AppData/Roaming/npm/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Users/Hullivan/AppData/Roaming/npm/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files/CMake/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files/CMake/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files (x86)/stbConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "C:/Program Files (x86)/stb-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-    found: null
-    search_context:
-      CMAKE_PREFIX_PATH:
-        - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug"
-        - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows"
-      ENV{PATH}:
-        - "C:\\VulkanSDK\\1.4.335.0\\Bin"
-        - "C:\\Python314\\Scripts\\"
-        - "C:\\Python314\\"
-        - "C:\\WINDOWS\\system32"
-        - "C:\\WINDOWS"
-        - "C:\\WINDOWS\\System32\\Wbem"
-        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
-        - "C:\\WINDOWS\\System32\\OpenSSH\\"
-        - "C:\\Program Files\\NVIDIA Corporation\\NVIDIA App\\NvDLISR"
-        - "C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common"
-        - "C:\\Program Files\\cursor\\resources\\app\\bin"
-        - "C:\\Program Files\\dotnet\\"
-        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\"
-        - "C:\\Program Files\\Git\\cmd"
-        - "C:\\Program Files\\nodejs\\"
-        - "C:\\ProgramData\\chocolatey\\bin"
-        - "C:\\Program Files\\Docker\\Docker\\resources\\bin"
-        - "C:\\Program Files\\CMake\\bin"
-        - "C:\\Users\\Hullivan\\AppData\\Local\\Programs\\Python\\Python312\\Scripts\\"
-        - "C:\\Users\\Hullivan\\AppData\\Local\\Programs\\Python\\Python312\\"
-        - "C:\\Users\\Hullivan\\AppData\\Local\\Programs\\Python\\Launcher\\"
-        - "C:\\Users\\Hullivan\\.local\\bin"
-        - "C:\\Users\\Hullivan\\.local\\bin"
-        - "C:\\WINDOWS\\system32"
-        - "C:\\WINDOWS"
-        - "C:\\WINDOWS\\System32\\Wbem"
-        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
-        - "C:\\WINDOWS\\System32\\OpenSSH\\"
-        - "C:\\Program Files\\NVIDIA Corporation\\NVIDIA App\\NvDLISR"
-        - "C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common"
-        - "C:\\Program Files\\cursor\\resources\\app\\bin"
-        - "C:\\Program Files\\dotnet\\"
-        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\"
-        - "C:\\Users\\Hullivan\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\Hullivan\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
-        - "C:\\Users\\Hullivan\\.local\\bin"
-        - "C:\\Users\\Hullivan\\AppData\\Local\\GitHubDesktop\\bin"
-        - "C:\\Users\\Hullivan\\.lmstudio\\bin"
-        - "C:\\Users\\Hullivan\\.dotnet\\tools"
-        - "C:\\Users\\Hullivan\\AppData\\Roaming\\npm"
-      CMAKE_INSTALL_PREFIX: "C:/Program Files (x86)/ArenaFramework"
-      CMAKE_SYSTEM_PREFIX_PATH:
-        - "C:/Program Files"
-        - "C:/Program Files (x86)"
-        - "C:/Program Files/CMake"
-        - "C:/Program Files (x86)/ArenaFramework"
-      CMAKE_FIND_ROOT_PATH: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug;D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows"
-...
-
----
-events:
   -
     kind: "find-v1"
     backtrace:
@@ -3247,6 +2893,8 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/include/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/include/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/VulkanSDK/1.4.335.0/Bin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Python314/Scripts/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Python314/"
@@ -3283,11 +2931,15 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/CMake/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files (x86)/ArenaFramework/include/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files (x86)/ArenaFramework/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/include/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/vcpkg_installed/x64-windows/include/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/installed/x64-windows/include/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/include/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/include/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/include/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/VulkanSDK/1.4.335.0/Bin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Python314/Scripts/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Python314/"
@@ -3324,11 +2976,15 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/CMake/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files (x86)/ArenaFramework/include/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files (x86)/ArenaFramework/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/include/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Toys/WEBSITE/DRD-Webgame/arena-framework/vcpkg_installed/x64-windows/include/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/installed/x64-windows/include/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/include/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/include/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/"
+      - "C:/vcpkg/installed/x64-windows/include/"
+      - "C:/vcpkg/installed/x64-windows/"
       - "C:/VulkanSDK/1.4.335.0/Bin/"
       - "C:/Python314/Scripts/"
       - "C:/Python314/"
@@ -3365,12 +3021,16 @@ events:
       - "C:/Program Files/CMake/"
       - "C:/Program Files (x86)/ArenaFramework/include/"
       - "C:/Program Files (x86)/ArenaFramework/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/include/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/vcpkg_installed/x64-windows/include/"
+      - "/installed/x64-windows/include/"
     searched_directories:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/include/stb_image.h"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/stb_image.h"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/include/stb_image.h"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/stb_image.h"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/include/stb_image.h"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/stb_image.h"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/VulkanSDK/1.4.335.0/Bin/stb_image.h"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Python314/Scripts/stb_image.h"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Python314/stb_image.h"
@@ -3407,7 +3067,9 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/CMake/stb_image.h"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files (x86)/ArenaFramework/include/stb_image.h"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files (x86)/ArenaFramework/stb_image.h"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/include/stb_image.h"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/vcpkg_installed/x64-windows/include/stb_image.h"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/installed/x64-windows/include/stb_image.h"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/include/stb_image.h"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/stb_image.h"
     found: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/include/"
@@ -3415,6 +3077,7 @@ events:
       CMAKE_PREFIX_PATH:
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug"
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows"
+        - "C:\\vcpkg\\installed\\x64-windows"
       ENV{PATH}:
         - "C:\\VulkanSDK\\1.4.335.0\\Bin"
         - "C:\\Python314\\Scripts\\"
@@ -3468,7 +3131,7 @@ events:
     backtrace:
       - "C:/vcpkg/scripts/buildsystems/vcpkg.cmake:188 (find_program)"
       - "C:/vcpkg/scripts/buildsystems/vcpkg.cmake:621 (z_vcpkg_set_powershell_path)"
-      - "CMakeLists.txt:76 (add_executable)"
+      - "CMakeLists.txt:87 (add_executable)"
     mode: "program"
     variable: "Z_VCPKG_PWSH_PATH"
     description: "Path to a program."
@@ -3489,6 +3152,9 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/bin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/sbin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/bin/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/sbin/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/VulkanSDK/1.4.335.0/Bin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Python314/Scripts/"
@@ -3536,6 +3202,9 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/bin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/sbin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/bin/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/sbin/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/VulkanSDK/1.4.335.0/Bin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Python314/Scripts/"
@@ -3583,6 +3252,9 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/bin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/sbin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/"
+      - "C:/vcpkg/installed/x64-windows/bin/"
+      - "C:/vcpkg/installed/x64-windows/sbin/"
+      - "C:/vcpkg/installed/x64-windows/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/"
       - "C:/VulkanSDK/1.4.335.0/Bin/"
       - "C:/Python314/Scripts/"
@@ -3643,6 +3315,15 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/pwsh.com"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/pwsh.exe"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/pwsh"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/bin/pwsh.com"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/bin/pwsh.exe"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/bin/pwsh"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/sbin/pwsh.com"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/sbin/pwsh.exe"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/sbin/pwsh"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/pwsh.com"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/pwsh.exe"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/pwsh"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/pwsh.com"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/pwsh.exe"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/pwsh"
@@ -3784,6 +3465,15 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/pwsh.com"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/pwsh.exe"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/pwsh"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/bin/pwsh.com"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/bin/pwsh.exe"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/bin/pwsh"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/sbin/pwsh.com"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/sbin/pwsh.exe"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/sbin/pwsh"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/pwsh.com"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/pwsh.exe"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/pwsh"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/pwsh.com"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/pwsh.exe"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/pwsh"
@@ -3925,6 +3615,15 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/pwsh.com"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/pwsh.exe"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/pwsh"
+      - "C:/vcpkg/installed/x64-windows/bin/pwsh.com"
+      - "C:/vcpkg/installed/x64-windows/bin/pwsh.exe"
+      - "C:/vcpkg/installed/x64-windows/bin/pwsh"
+      - "C:/vcpkg/installed/x64-windows/sbin/pwsh.com"
+      - "C:/vcpkg/installed/x64-windows/sbin/pwsh.exe"
+      - "C:/vcpkg/installed/x64-windows/sbin/pwsh"
+      - "C:/vcpkg/installed/x64-windows/pwsh.com"
+      - "C:/vcpkg/installed/x64-windows/pwsh.exe"
+      - "C:/vcpkg/installed/x64-windows/pwsh"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/pwsh.com"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/pwsh.exe"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/pwsh"
@@ -4055,6 +3754,7 @@ events:
       CMAKE_PREFIX_PATH:
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug"
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows"
+        - "C:\\vcpkg\\installed\\x64-windows"
       ENV{PATH}:
         - "C:\\VulkanSDK\\1.4.335.0\\Bin"
         - "C:\\Python314\\Scripts\\"
@@ -4108,7 +3808,7 @@ events:
     backtrace:
       - "C:/vcpkg/scripts/buildsystems/vcpkg.cmake:193 (find_program)"
       - "C:/vcpkg/scripts/buildsystems/vcpkg.cmake:621 (z_vcpkg_set_powershell_path)"
-      - "CMakeLists.txt:76 (add_executable)"
+      - "CMakeLists.txt:87 (add_executable)"
     mode: "program"
     variable: "Z_VCPKG_BUILTIN_POWERSHELL_PATH"
     description: "Path to a program."
@@ -4129,6 +3829,9 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/bin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/sbin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/bin/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/sbin/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/VulkanSDK/1.4.335.0/Bin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Python314/Scripts/"
@@ -4176,6 +3879,9 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/bin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/sbin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/bin/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/sbin/"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/VulkanSDK/1.4.335.0/Bin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Python314/Scripts/"
@@ -4223,6 +3929,9 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/bin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/sbin/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/"
+      - "C:/vcpkg/installed/x64-windows/bin/"
+      - "C:/vcpkg/installed/x64-windows/sbin/"
+      - "C:/vcpkg/installed/x64-windows/"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/"
       - "C:/VulkanSDK/1.4.335.0/Bin/"
       - "C:/Python314/Scripts/"
@@ -4283,6 +3992,15 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/powershell.com"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/powershell.exe"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/powershell"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/bin/powershell.com"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/bin/powershell.exe"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/bin/powershell"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/sbin/powershell.com"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/sbin/powershell.exe"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/sbin/powershell"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/powershell.com"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/powershell.exe"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/vcpkg/installed/x64-windows/powershell"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/powershell.com"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/powershell.exe"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/powershell"
@@ -4424,6 +4142,15 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/powershell.com"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/powershell.exe"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/powershell"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/bin/powershell.com"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/bin/powershell.exe"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/bin/powershell"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/sbin/powershell.com"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/sbin/powershell.exe"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/sbin/powershell"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/powershell.com"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/powershell.exe"
+      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/vcpkg/installed/x64-windows/powershell"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/powershell.com"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/powershell.exe"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/powershell"
@@ -4565,6 +4292,15 @@ events:
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/powershell.com"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/powershell.exe"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/powershell"
+      - "C:/vcpkg/installed/x64-windows/bin/powershell.com"
+      - "C:/vcpkg/installed/x64-windows/bin/powershell.exe"
+      - "C:/vcpkg/installed/x64-windows/bin/powershell"
+      - "C:/vcpkg/installed/x64-windows/sbin/powershell.com"
+      - "C:/vcpkg/installed/x64-windows/sbin/powershell.exe"
+      - "C:/vcpkg/installed/x64-windows/sbin/powershell"
+      - "C:/vcpkg/installed/x64-windows/powershell.com"
+      - "C:/vcpkg/installed/x64-windows/powershell.exe"
+      - "C:/vcpkg/installed/x64-windows/powershell"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/powershell.com"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/powershell.exe"
       - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/tools/powershell"
@@ -4594,6 +4330,7 @@ events:
       CMAKE_PREFIX_PATH:
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug"
         - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows"
+        - "C:\\vcpkg\\installed\\x64-windows"
       ENV{PATH}:
         - "C:\\VulkanSDK\\1.4.335.0\\Bin"
         - "C:\\Python314\\Scripts\\"
@@ -4641,352 +4378,5 @@ events:
         - "C:/Program Files (x86)"
         - "C:/Program Files/CMake"
         - "C:/Program Files (x86)/ArenaFramework"
-      CMAKE_FIND_ROOT_PATH: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug;D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows"
-...
-
----
-events:
-  -
-    kind: "find-v1"
-    backtrace:
-      - "CMakeLists.txt:99 (find_library)"
-    mode: "library"
-    variable: "OPENGL_LIB"
-    description: "Path to a library."
-    settings:
-      SearchFramework: "LAST"
-      SearchAppBundle: "LAST"
-      CMAKE_FIND_USE_CMAKE_PATH: true
-      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-      CMAKE_FIND_USE_INSTALL_PREFIX: true
-    names:
-      - "opengl32"
-    candidate_directories:
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/lib/manual-link/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/lib/manual-link/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/VulkanSDK/1.4.335.0/Bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Python314/Scripts/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Python314/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Windows/System32/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Windows/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Windows/System32/wbem/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Windows/System32/WindowsPowerShell/v1.0/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Windows/System32/OpenSSH/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/NVIDIA Corporation/NVIDIA App/NvDLISR/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files (x86)/NVIDIA Corporation/PhysX/Common/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/cursor/resources/app/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/dotnet/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/Git/cmd/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/nodejs/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/ProgramData/chocolatey/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/Docker/Docker/resources/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/CMake/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Users/Hullivan/AppData/Local/Programs/Python/Python312/Scripts/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Users/Hullivan/AppData/Local/Programs/Python/Python312/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Users/Hullivan/AppData/Local/Programs/Python/Launcher/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Users/Hullivan/.local/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Users/Hullivan/AppData/Local/Microsoft/WindowsApps/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Users/Hullivan/AppData/Local/Programs/Microsoft VS Code/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Users/Hullivan/AppData/Local/GitHubDesktop/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Users/Hullivan/.lmstudio/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Users/Hullivan/.dotnet/tools/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Users/Hullivan/AppData/Roaming/npm/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files (x86)/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files (x86)/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/CMake/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/CMake/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files (x86)/ArenaFramework/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files (x86)/ArenaFramework/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files (x86)/ArenaFramework/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/lib/manual-link/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/lib/manual-link/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/VulkanSDK/1.4.335.0/Bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Python314/Scripts/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Python314/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Windows/System32/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Windows/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Windows/System32/wbem/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Windows/System32/WindowsPowerShell/v1.0/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Windows/System32/OpenSSH/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/NVIDIA Corporation/NVIDIA App/NvDLISR/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files (x86)/NVIDIA Corporation/PhysX/Common/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/cursor/resources/app/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/dotnet/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/Git/cmd/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/nodejs/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/ProgramData/chocolatey/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/Docker/Docker/resources/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/CMake/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Users/Hullivan/AppData/Local/Programs/Python/Python312/Scripts/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Users/Hullivan/AppData/Local/Programs/Python/Python312/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Users/Hullivan/AppData/Local/Programs/Python/Launcher/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Users/Hullivan/.local/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Users/Hullivan/AppData/Local/Microsoft/WindowsApps/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Users/Hullivan/AppData/Local/Programs/Microsoft VS Code/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Users/Hullivan/AppData/Local/GitHubDesktop/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Users/Hullivan/.lmstudio/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Users/Hullivan/.dotnet/tools/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Users/Hullivan/AppData/Roaming/npm/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files (x86)/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files (x86)/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/CMake/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/CMake/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files (x86)/ArenaFramework/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files (x86)/ArenaFramework/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files (x86)/ArenaFramework/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/lib/manual-link/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/lib/manual-link/"
-      - "C:/VulkanSDK/1.4.335.0/Bin/"
-      - "C:/Python314/Scripts/"
-      - "C:/Python314/"
-      - "C:/Windows/System32/"
-      - "C:/Windows/"
-      - "C:/Windows/System32/wbem/"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
-      - "C:/Windows/System32/OpenSSH/"
-      - "C:/Program Files/NVIDIA Corporation/NVIDIA App/NvDLISR/"
-      - "C:/Program Files (x86)/NVIDIA Corporation/PhysX/Common/"
-      - "C:/Program Files/cursor/resources/app/bin/"
-      - "C:/Program Files/dotnet/"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
-      - "C:/Program Files/Git/cmd/"
-      - "C:/Program Files/nodejs/"
-      - "C:/ProgramData/chocolatey/bin/"
-      - "C:/Program Files/Docker/Docker/resources/bin/"
-      - "C:/Program Files/CMake/bin/"
-      - "C:/Users/Hullivan/AppData/Local/Programs/Python/Python312/Scripts/"
-      - "C:/Users/Hullivan/AppData/Local/Programs/Python/Python312/"
-      - "C:/Users/Hullivan/AppData/Local/Programs/Python/Launcher/"
-      - "C:/Users/Hullivan/.local/bin/"
-      - "C:/Users/Hullivan/AppData/Local/Microsoft/WindowsApps/"
-      - "C:/Users/Hullivan/AppData/Local/Programs/Microsoft VS Code/bin/"
-      - "C:/Users/Hullivan/AppData/Local/GitHubDesktop/bin/"
-      - "C:/Users/Hullivan/.lmstudio/bin/"
-      - "C:/Users/Hullivan/.dotnet/tools/"
-      - "C:/Users/Hullivan/AppData/Roaming/npm/"
-      - "C:/Program Files/lib/"
-      - "C:/Program Files/"
-      - "C:/Program Files (x86)/lib/"
-      - "C:/Program Files (x86)/"
-      - "C:/Program Files/CMake/lib/"
-      - "C:/Program Files/CMake/"
-      - "C:/Program Files (x86)/ArenaFramework/lib/"
-      - "C:/Program Files (x86)/ArenaFramework/"
-      - "C:/Program Files (x86)/ArenaFramework/bin/"
-      - "/bin/"
-    searched_directories:
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/lib/manual-link/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/lib/manual-link/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/VulkanSDK/1.4.335.0/Bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Python314/Scripts/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Python314/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Windows/System32/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Windows/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Windows/System32/wbem/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Windows/System32/WindowsPowerShell/v1.0/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Windows/System32/OpenSSH/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/NVIDIA Corporation/NVIDIA App/NvDLISR/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files (x86)/NVIDIA Corporation/PhysX/Common/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/cursor/resources/app/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/dotnet/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/Git/cmd/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/nodejs/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/ProgramData/chocolatey/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/Docker/Docker/resources/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/CMake/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Users/Hullivan/AppData/Local/Programs/Python/Python312/Scripts/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Users/Hullivan/AppData/Local/Programs/Python/Python312/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Users/Hullivan/AppData/Local/Programs/Python/Launcher/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Users/Hullivan/.local/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Users/Hullivan/AppData/Local/Microsoft/WindowsApps/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Users/Hullivan/AppData/Local/Programs/Microsoft VS Code/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Users/Hullivan/AppData/Local/GitHubDesktop/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Users/Hullivan/.lmstudio/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Users/Hullivan/.dotnet/tools/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Users/Hullivan/AppData/Roaming/npm/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files (x86)/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files (x86)/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/CMake/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files/CMake/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files (x86)/ArenaFramework/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files (x86)/ArenaFramework/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/Program Files (x86)/ArenaFramework/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/lib/manual-link/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/lib/manual-link/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/VulkanSDK/1.4.335.0/Bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Python314/Scripts/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Python314/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Windows/System32/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Windows/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Windows/System32/wbem/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Windows/System32/WindowsPowerShell/v1.0/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Windows/System32/OpenSSH/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/NVIDIA Corporation/NVIDIA App/NvDLISR/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files (x86)/NVIDIA Corporation/PhysX/Common/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/cursor/resources/app/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/dotnet/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/Git/cmd/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/nodejs/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/ProgramData/chocolatey/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/Docker/Docker/resources/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/CMake/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Users/Hullivan/AppData/Local/Programs/Python/Python312/Scripts/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Users/Hullivan/AppData/Local/Programs/Python/Python312/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Users/Hullivan/AppData/Local/Programs/Python/Launcher/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Users/Hullivan/.local/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Users/Hullivan/AppData/Local/Microsoft/WindowsApps/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Users/Hullivan/AppData/Local/Programs/Microsoft VS Code/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Users/Hullivan/AppData/Local/GitHubDesktop/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Users/Hullivan/.lmstudio/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Users/Hullivan/.dotnet/tools/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Users/Hullivan/AppData/Roaming/npm/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files (x86)/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files (x86)/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/CMake/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files/CMake/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files (x86)/ArenaFramework/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files (x86)/ArenaFramework/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/Program Files (x86)/ArenaFramework/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/bin/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/lib/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/lib/manual-link/"
-      - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/lib/manual-link/"
-      - "C:/VulkanSDK/1.4.335.0/Bin/"
-      - "C:/Python314/Scripts/"
-      - "C:/Python314/"
-      - "C:/Windows/System32/"
-      - "C:/Windows/"
-      - "C:/Windows/System32/wbem/"
-      - "C:/Windows/System32/WindowsPowerShell/v1.0/"
-      - "C:/Windows/System32/OpenSSH/"
-      - "C:/Program Files/NVIDIA Corporation/NVIDIA App/NvDLISR/"
-      - "C:/Program Files (x86)/NVIDIA Corporation/PhysX/Common/"
-      - "C:/Program Files/cursor/resources/app/bin/"
-      - "C:/Program Files/dotnet/"
-      - "C:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/"
-      - "C:/Program Files/Git/cmd/"
-      - "C:/Program Files/nodejs/"
-      - "C:/ProgramData/chocolatey/bin/"
-      - "C:/Program Files/Docker/Docker/resources/bin/"
-      - "C:/Program Files/CMake/bin/"
-      - "C:/Users/Hullivan/AppData/Local/Programs/Python/Python312/Scripts/"
-      - "C:/Users/Hullivan/AppData/Local/Programs/Python/Python312/"
-      - "C:/Users/Hullivan/AppData/Local/Programs/Python/Launcher/"
-      - "C:/Users/Hullivan/.local/bin/"
-      - "C:/Users/Hullivan/AppData/Local/Microsoft/WindowsApps/"
-      - "C:/Users/Hullivan/AppData/Local/Programs/Microsoft VS Code/bin/"
-      - "C:/Users/Hullivan/AppData/Local/GitHubDesktop/bin/"
-      - "C:/Users/Hullivan/.lmstudio/bin/"
-      - "C:/Users/Hullivan/.dotnet/tools/"
-      - "C:/Users/Hullivan/AppData/Roaming/npm/"
-      - "C:/Program Files/lib/"
-      - "C:/Program Files/"
-      - "C:/Program Files (x86)/lib/"
-      - "C:/Program Files (x86)/"
-      - "C:/Program Files/CMake/lib/"
-      - "C:/Program Files/CMake/"
-      - "C:/Program Files (x86)/ArenaFramework/lib/"
-      - "C:/Program Files (x86)/ArenaFramework/"
-      - "C:/Program Files (x86)/ArenaFramework/bin/"
-      - "/bin/"
-    found: false
-    search_context:
-      CMAKE_LIBRARY_PATH:
-        - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug/lib/manual-link"
-        - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/lib/manual-link"
-      CMAKE_PREFIX_PATH:
-        - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug"
-        - "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows"
-      ENV{PATH}:
-        - "C:\\VulkanSDK\\1.4.335.0\\Bin"
-        - "C:\\Python314\\Scripts\\"
-        - "C:\\Python314\\"
-        - "C:\\WINDOWS\\system32"
-        - "C:\\WINDOWS"
-        - "C:\\WINDOWS\\System32\\Wbem"
-        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
-        - "C:\\WINDOWS\\System32\\OpenSSH\\"
-        - "C:\\Program Files\\NVIDIA Corporation\\NVIDIA App\\NvDLISR"
-        - "C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common"
-        - "C:\\Program Files\\cursor\\resources\\app\\bin"
-        - "C:\\Program Files\\dotnet\\"
-        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\"
-        - "C:\\Program Files\\Git\\cmd"
-        - "C:\\Program Files\\nodejs\\"
-        - "C:\\ProgramData\\chocolatey\\bin"
-        - "C:\\Program Files\\Docker\\Docker\\resources\\bin"
-        - "C:\\Program Files\\CMake\\bin"
-        - "C:\\Users\\Hullivan\\AppData\\Local\\Programs\\Python\\Python312\\Scripts\\"
-        - "C:\\Users\\Hullivan\\AppData\\Local\\Programs\\Python\\Python312\\"
-        - "C:\\Users\\Hullivan\\AppData\\Local\\Programs\\Python\\Launcher\\"
-        - "C:\\Users\\Hullivan\\.local\\bin"
-        - "C:\\Users\\Hullivan\\.local\\bin"
-        - "C:\\WINDOWS\\system32"
-        - "C:\\WINDOWS"
-        - "C:\\WINDOWS\\System32\\Wbem"
-        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
-        - "C:\\WINDOWS\\System32\\OpenSSH\\"
-        - "C:\\Program Files\\NVIDIA Corporation\\NVIDIA App\\NvDLISR"
-        - "C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common"
-        - "C:\\Program Files\\cursor\\resources\\app\\bin"
-        - "C:\\Program Files\\dotnet\\"
-        - "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\"
-        - "C:\\Users\\Hullivan\\AppData\\Local\\Microsoft\\WindowsApps"
-        - "C:\\Users\\Hullivan\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
-        - "C:\\Users\\Hullivan\\.local\\bin"
-        - "C:\\Users\\Hullivan\\AppData\\Local\\GitHubDesktop\\bin"
-        - "C:\\Users\\Hullivan\\.lmstudio\\bin"
-        - "C:\\Users\\Hullivan\\.dotnet\\tools"
-        - "C:\\Users\\Hullivan\\AppData\\Roaming\\npm"
-      CMAKE_INSTALL_PREFIX: "C:/Program Files (x86)/ArenaFramework"
-      CMAKE_SYSTEM_PREFIX_PATH:
-        - "C:/Program Files"
-        - "C:/Program Files (x86)"
-        - "C:/Program Files/CMake"
-        - "C:/Program Files (x86)/ArenaFramework"
-      CMAKE_SYSTEM_LIBRARY_PATH:
-        - "C:/Program Files (x86)/ArenaFramework/bin"
-        - "C:/Program Files/CMake/bin"
-        - "/bin"
       CMAKE_FIND_ROOT_PATH: "D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows/debug;D:/Toys/WEBSITE/DRD-Webgame/arena-framework/build/vcpkg_installed/x64-windows"
 ...

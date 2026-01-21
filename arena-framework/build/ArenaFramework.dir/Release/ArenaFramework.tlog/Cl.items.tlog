@@ -7,6 +7,8 @@ D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\assets\AssetLoader.cpp
 D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\Renderer2D.cpp;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\ArenaFramework.dir\Release\Renderer2D.obj
 D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\Sprite.cpp;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\ArenaFramework.dir\Release\Sprite.obj
 D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\Font.cpp;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\ArenaFramework.dir\Release\Font.obj
+D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\Texture.cpp;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\ArenaFramework.dir\Release\Texture.obj
+D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\SpriteRenderer.cpp;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\ArenaFramework.dir\Release\SpriteRenderer.obj
 D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\RaycastCamera.cpp;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\ArenaFramework.dir\Release\RaycastCamera.obj
 D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\Raycaster.cpp;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\ArenaFramework.dir\Release\Raycaster.obj
 D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\game\main.cpp;D:\Toys\WEBSITE\DRD-Webgame\arena-framework\build\ArenaFramework.dir\Release\main.obj

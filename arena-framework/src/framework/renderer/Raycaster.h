@@ -33,6 +33,9 @@ public:
     // Render a frame using raycaster
     static void RenderFrame(const RaycastCamera& camera, const Arena::GridMap& map, int screenWidth, int screenHeight);
     
+    // Render sprites (call after RenderFrame)
+    static void RenderSprites(class SpriteEntity* sprites, int count, const RaycastCamera& camera, int screenWidth, int screenHeight);
+    
     // Set rendering options
     static void SetWallHeight(float height) { s_wallHeight = height; }
     static float GetWallHeight() { return s_wallHeight; }
@@ -41,11 +44,16 @@ public:
     static void SetCeilingColor(uint32_t color) { s_ceilingColor = color; }
     static uint32_t GetFloorColor() { return s_floorColor; }
     static uint32_t GetCeilingColor() { return s_ceilingColor; }
+    
+    // Texture management
+    static void SetWallTexture(uint8_t wallType, uint32_t textureId);
+    static uint32_t GetWallTexture(uint8_t wallType);
 
 private:
     static float s_wallHeight;
     static uint32_t s_floorColor;
     static uint32_t s_ceilingColor;
+    static uint32_t s_wallTextures[4]; // One texture per wall type (0-3)
 };
 
 } // namespace Arena

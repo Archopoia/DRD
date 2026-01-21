@@ -438,6 +438,8 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\Renderer2D.cpp" />
     <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\Sprite.cpp" />
     <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\Font.cpp" />
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\Texture.cpp" />
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\SpriteRenderer.cpp" />
     <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\RaycastCamera.cpp" />
     <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\Raycaster.cpp" />
     <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\game\main.cpp" />

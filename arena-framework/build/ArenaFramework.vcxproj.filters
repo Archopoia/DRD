@@ -28,6 +28,12 @@
     <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\Font.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\Texture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\SpriteRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="D:\Toys\WEBSITE\DRD-Webgame\arena-framework\src\framework\renderer\RaycastCamera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

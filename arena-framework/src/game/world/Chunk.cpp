@@ -1,4 +1,5 @@
 #include "Chunk.h"
+#include "MapGenerator.h"
 #include "framework/utils/Log.h"
 #include <cmath>
 #include <cstring>
@@ -197,9 +198,9 @@ bool ChunkManager::IsSolidAtWorldPos(float worldX, float worldY) const {
 }
 
 void ChunkManager::GenerateChunk(Chunk* chunk, int chunkX, int chunkY) {
-    // Simple generation based on chunk coordinates
+    // Generate dungeon using chunk coordinates as seed
     int seed = (chunkX * 73856093) ^ (chunkY * 19349663);
-    chunk->map.GenerateSimpleDungeon(seed);
+    MapGenerator::GenerateRoomsAndCorridors(chunk->map, 10, seed);
 }
 
 } // namespace Arena
